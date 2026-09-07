@@ -1,0 +1,65 @@
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from tenacity import (
+    before_sleep_log,
+    retry,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
+
+from src.settings.settings import DatabaseSettings
+
+logger = logging.getLogger(__name__)
+
+
+class DatabaseClient:
+    def __init__(self, settings: DatabaseSettings) -> None:
+        self.settings = settings
+        self.engine = create_async_engine(
+            settings.url,
+            echo=settings.echo,
+            pool_size=settings.pool_size,
+            max_overflow=settings.max_overflow,
+            pool_pre_ping=True,
+            pool_recycle=1200,
+        )
+        self.session_factory = async_sessionmaker(
+            self.engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+        self._is_connected = False
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, max=10),
+        stop=stop_after_attempt(5),
+        before_sleep=before_sleep_log(logger, 30),  # int 30 — WARNING
+        reraise=True,
+    )
+    async def _ping_db_connection(self) -> None:
+        async with self.engine.begin() as conn:  # type: ignore[misc]
+            await conn.execute(text("SELECT 1"))
+
+    async def connect(self) -> None:
+        if self._is_connected:
+            return
+        await self._ping_db_connection()
+        self._is_connected = True
+        logger.info("Database client connected")
+
+    @asynccontextmanager
+    async def session(self) -> AsyncIterator[AsyncSession]:
+        async with self.session_factory() as session:
+            try:
+                yield session
+            finally:
+                await session.close()
+
+    async def close(self) -> None:
+        await self.engine.dispose()
+        self._is_connected = False
+        logger.info("Database client disconnected")

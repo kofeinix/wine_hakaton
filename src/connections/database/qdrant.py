@@ -1,0 +1,49 @@
+import logging
+
+from qdrant_client import AsyncQdrantClient
+from tenacity import (
+    before_sleep_log,
+    retry,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
+
+from src.settings.settings import QdrantSettings
+
+logger = logging.getLogger(__name__)
+
+
+class QdrantClient:
+    def __init__(self, settings: QdrantSettings) -> None:
+        self.settings = settings
+        self.client = AsyncQdrantClient(
+            url=settings.url,
+            grpc_port=settings.grpc_port,
+            prefer_grpc=settings.prefer_grpc,
+            https=settings.https,
+            api_key=settings.api_key or None,
+            prefix=settings.prefix or None,
+            timeout=settings.timeout,
+        )
+        self._is_connected = False
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, max=10),
+        stop=stop_after_attempt(5),
+        before_sleep=before_sleep_log(logger, 30),  # int 30 — WARNING
+        reraise=True,
+    )
+    async def _ping_qdrant_connection(self) -> None:
+        await self.client.get_collections()
+
+    async def connect(self) -> None:
+        if self._is_connected:
+            return
+        await self._ping_qdrant_connection()
+        self._is_connected = True
+        logger.info("Qdrant client connected")
+
+    async def close(self) -> None:
+        await self.client.close()
+        self._is_connected = False
+        logger.info("Qdrant client disconnected")
