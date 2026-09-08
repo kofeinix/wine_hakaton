@@ -35,6 +35,7 @@ class RateLimiterManager:
         for item in self._config.limiters:
             limiter = self._create_single_limiter(item, raw_client)
             self._limiters[item.name] = limiter
+        logger.info("Redis rate limiters initialized")
         self._started = True
 
     @property
@@ -85,3 +86,4 @@ class RateLimiterManager:
         """Close resources held by limiters and reset state."""
         self._limiters.clear()
         self._started = False
+        logger.info("Redis rate limiters closed")

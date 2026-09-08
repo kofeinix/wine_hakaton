@@ -79,6 +79,7 @@ class AllSettings(BaseSettings):
         env_ignore_empty=True,
         env_nested_delimiter="__",
     )
+    log_level: str = Field(default="INFO")
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)

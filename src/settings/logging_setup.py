@@ -4,7 +4,7 @@ import logging
 import sys
 
 
-def setup_logging(level: int = logging.DEBUG) -> None:
+def setup_logging(level: str = 'INFO') -> None:
     """Настраивает корневой логгер и формат вывода логов.
 
     Args:
