@@ -8,9 +8,9 @@ __pycache__
 .gitignore
 .idea
 .vscode
-*.md
 tests
 docs
 Dockerfile
 docker-compose.yml
 .dockerignore
+models

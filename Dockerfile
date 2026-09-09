@@ -21,16 +21,16 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Run as non-root user
+RUN useradd --create-home --uid 1000 appuser
+
 # Copy the virtual environment from the builder
-COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 
 # Copy application source
-COPY main.py ./
-COPY src ./src
+COPY --chown=appuser:appuser main.py ./
+COPY --chown=appuser:appuser src ./src
 
-# Run as non-root user
-RUN useradd --create-home --uid 1000 appuser \
-    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000

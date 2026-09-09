@@ -3,3 +3,7 @@ __pycache__/
 .env
 .idea/
 .ruff_cache/
+.uv-cache/
+models/*
+!models/yolo/
+!models/yolo/best.onnx

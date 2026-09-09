@@ -72,6 +72,34 @@ class RedisSettings(BaseModel):
     max_connections: int = Field(default=50)
 
 
+class YoloSettings(BaseModel):
+    """YOLO label cropper configuration."""
+
+    model_path: str = Field(
+        default="/models/yolo/best.onnx", description="Path to YOLO ONNX model"
+    )
+
+
+class Siglip2Settings(BaseModel):
+    """SigLIP2 local model configuration."""
+
+    model_id: str = Field(
+        default="google/siglip2-base-patch16-224",
+        description="Hugging Face model id",
+    )
+    model_dir: str = Field(
+        default="/models/siglip2", description="Path to mounted SigLIP2 model files"
+    )
+
+
+class LlmSettings(BaseModel):
+    """Remote LLM API configuration."""
+
+    base_url: str = Field(default="", description="OpenAI-compatible API base URL")
+    api_key: str = Field(default="", description="Remote LLM API key")
+    model: str = Field(default="nuextract3", description="Remote LLM model name")
+
+
 class AllSettings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="ignore",
@@ -83,6 +111,9 @@ class AllSettings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
+    yolo: YoloSettings = Field(default_factory=YoloSettings)
+    siglip2: Siglip2Settings = Field(default_factory=Siglip2Settings)
+    llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)
 
 all_settings = AllSettings()
