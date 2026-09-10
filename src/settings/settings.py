@@ -111,6 +111,18 @@ class LlmSettings(BaseModel):
     )
     keepalive_expiry: float = Field(default=30.0, description="Keepalive expiry")
 
+class MinioSettings(BaseModel):
+    host: str | None = Field(default=None, description="Minio host")
+    port: int = Field(default=None, description="Minio port")
+    access_key: str | None = Field(default=None, description="Minio access key")
+    secret_key: str | None = Field(default=None, description="Minio secret key")
+    bucket: str | None = Field(default=None, description="Minio bucket")
+    verify_ssl: bool = Field(
+        default=False, description="Whether Minio connection uses SSL"
+    )
+    ca_cert_path: str | None = Field(
+        default=None, description="Path to ca certs for Minio"
+    )
 
 class AllSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -127,5 +139,6 @@ class AllSettings(BaseSettings):
     embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)
+    minio: MinioSettings = Field(default_factory=MinioSettings)
 
 all_settings = AllSettings()

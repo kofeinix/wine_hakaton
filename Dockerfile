@@ -30,6 +30,7 @@ COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 # Copy application source
 COPY --chown=appuser:appuser main.py ./
 COPY --chown=appuser:appuser src ./src
+COPY --chown=appuser:appuser scripts ./scripts
 
 USER appuser
 

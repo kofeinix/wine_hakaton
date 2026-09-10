@@ -12,6 +12,7 @@ from tenacity import (
 )
 
 from src.settings.settings import DatabaseSettings
+from src.connections.database.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,12 @@ class DatabaseClient:
         await self._ping_db_connection()
         self._is_connected = True
         logger.info("Database client connected")
+
+    async def create_tables(self) -> None:
+        import src.connections.database.models  # noqa: F401
+
+        async with self.engine.begin() as conn:  # type: ignore[misc]
+            await conn.run_sync(Base.metadata.create_all)
 
     @asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:

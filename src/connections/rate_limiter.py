@@ -4,7 +4,7 @@ from typing import Any
 from limiters import AsyncSemaphore, AsyncTokenBucket
 from redis.asyncio import Redis
 
-from src.connections.database.redis import RedisClient
+from src.connections.redis import RedisClient
 from src.settings.rate_limiter import LimiterConfig, RateLimiterSettings
 
 logger = logging.getLogger(__name__)

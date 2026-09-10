@@ -19,6 +19,88 @@ docker compose up --build
 
 API будет доступен на `http://localhost:8000`.
 
+OpenAPI-документация будет доступна на `http://localhost:8000/docs`.
+
+## Фото в MinIO
+
+Фотографии передаются одним архивом `data/photos.tar.gz`.
+При `docker compose up --build` Compose автоматически:
+
+- запускает `minio-init` на базе `minio/mc`;
+- создает bucket из `MINIO__BUCKET` (по умолчанию `wine`);
+- загружает `data/photos.tar.gz` через MinIO Snowball auto-extract (`X-Amz-Meta-Snowball-Auto-Extract=true`);
+- MinIO сам извлекает содержимое архива в bucket отдельными объектами;
+- сохраняет структуру `data/photos/<wine_id>/<filename>` как `wine/<wine_id>/<filename>` внутри bucket.
+
+## Postgres init
+
+Структура Postgres лежит в `db/init/001_schema.sql`.
+Начальная загрузка CSV-экспорта лежит в `db/init/002_seed_from_csv.sql` и выполняется самим контейнером Postgres без Python.
+
+При первом создании `postgres_data` контейнер:
+
+- создает таблицы `wineries` и `wines`;
+- загружает `data/export/wineries.csv` и `data/export/wines.csv`;
+- не сохраняет в `wines` исходные `url`, `photo_url` и локальные пути;
+- записывает ссылку на MinIO-префикс в `wines.minio_photo_path` в формате `wine/<wine_id>`.
+
+Важно: стандартный Postgres image запускает файлы из `/docker-entrypoint-initdb.d` только на пустом volume. Чтобы полностью переинициализировать локальную БД, удалите volume:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Это удобно для демо: жюри достаточно выполнить быстрый запуск, после чего фотографии уже будут лежать в MinIO.
+Распакованная копия не хранится ни в Docker volume, ни в init-контейнере.
+
+Консоль MinIO доступна на `http://localhost:9001`.
+Данные для входа по умолчанию:
+
+```text
+login: minio
+password: miniosecret
+bucket: wine
+```
+
+Проверка через Docker:
+
+```bash
+docker compose run --rm minio-init
+docker compose exec minio mc ls local/wine
+```
+
+Если нужно пересобрать архив после изменения локальной папки с фото:
+
+```bash
+COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/photos.tar.gz -C data/photos .
+```
+
+## API-заглушки
+
+- `GET /health` - проверка, что API жив.
+- `POST /api/v1/search/image` - принимает изображение этикетки в multipart-поле `image` и возвращает список найденных вин. Сейчас это заглушка для будущего OCR/CV/Qdrant-поиска.
+- `GET /api/v1/wines` - простой список вин с фильтрами `q`, `country`, `grape`, `min_rating`, `limit`.
+- `GET /api/v1/wines/{wine_id}` - детали вина по id.
+- `GET /api/v1/wines/{wine_id}/reviews` - отзывы по id вина.
+- `POST /api/v1/wines/{wine_id}/reviews` - публикация отзыва.
+- `GET /api/v1/dictionaries` - справочники стран, сортов винограда и стилей для фильтров.
+
+Пример поиска по изображению:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/search/image?limit=3" \
+  -F "image=@./label.jpg"
+```
+
+Пример публикации отзыва:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/wines/wine_001/reviews" \
+  -H "Content-Type: application/json" \
+  -d '{"author_name":"Alice","rating":4.5,"text":"Good balance and long finish."}'
+```
+
 ## Подготовить модели
 
 Команда `prepare_models.py` проверяет наличие YOLO ONNX в `models/yolo/best.onnx` и скачивает SigLIP2 в `models/siglip2`.

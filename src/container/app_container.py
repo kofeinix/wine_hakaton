@@ -4,6 +4,7 @@ import signal
 from asyncio import Task
 from typing import Any
 
+from src.api.server import FastApiServer
 from src.container.manager import ConnectionManager
 from src.settings import AllSettings
 
@@ -61,17 +62,19 @@ class AppContainer:
             raise
         try:
             logger.info("Starting FastApi")
-            # self._api = ...
-            # task = asyncio.create_task(self._api.start())
-            # self._tasks.append(task)
+            self._api = FastApiServer(self._connection_manager)
+            task = asyncio.create_task(self._api.start())
+            self._tasks.append(task)
         except Exception:
-            logger.error("Failed to start Bot")
+            logger.error("Failed to start FastAPI")
             raise
 
         await self._shutdown_event.wait()
         await self.stop_app()
 
     async def stop_app(self):
+        if self._api is not None:
+            await self._api.stop()
         for task in self._tasks:
             task.cancel()
         if self._tasks:

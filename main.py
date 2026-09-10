@@ -17,6 +17,7 @@ async def main() -> int:
     setup_logging(settings.log_level)
     app = AppContainer(settings)
     await app.run_app()
+    return 0
 
 
 if __name__ == "__main__":

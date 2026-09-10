@@ -26,6 +26,7 @@ class QdrantClient:
             timeout=settings.timeout,
         )
         self._is_connected = False
+        logger.info('Qdrant client initialized')
 
     @retry(
         wait=wait_exponential_jitter(initial=1, max=10),

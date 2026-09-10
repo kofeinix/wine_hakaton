@@ -1,6 +1,7 @@
 from src.connections.database.postgres import DatabaseClient
-from src.connections.database.qdrant import QdrantClient
-from src.connections.database.redis import RedisClient
+from src.connections.minio import MinioClient
+from src.connections.qdrant import QdrantClient
+from src.connections.redis import RedisClient
 from src.connections.rate_limiter import RateLimiterManager
 from src.llm.langchain_openai import ChatOpenAIWrapper
 from src.settings.settings import AllSettings
@@ -14,6 +15,7 @@ class ConnectionManager:
         self.redis: RedisClient | None = None
         self.rate_limiter: RateLimiterManager | None = None
         self.llm: ChatOpenAIWrapper | None = None
+        self.minio: MinioClient | None = None
         self._initialize()
 
     def _initialize(self):
@@ -23,6 +25,7 @@ class ConnectionManager:
         self.rate_limiter = RateLimiterManager(self.settings.rate_limiter,
                                                self.redis)
         self.llm = ChatOpenAIWrapper(self.settings.llm)
+        self.minio = MinioClient(self.settings.minio)
 
     async def start(self):
         await self.database.connect()
@@ -30,6 +33,7 @@ class ConnectionManager:
         await self.redis.start()
         await self.rate_limiter.start()
         await self.llm.start()
+        await self.minio.start()
 
     async def stop(self):
         await self.database.close()
@@ -37,3 +41,4 @@ class ConnectionManager:
         await self.redis.stop()
         await self.rate_limiter.stop()
         await self.llm.stop()
+        await self.minio.stop()
