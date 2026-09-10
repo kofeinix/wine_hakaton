@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -80,7 +80,7 @@ class YoloSettings(BaseModel):
     )
 
 
-class Siglip2Settings(BaseModel):
+class EmbeddingSettings(BaseModel):
     """SigLIP2 local model configuration."""
 
     model_id: str = Field(
@@ -95,9 +95,21 @@ class Siglip2Settings(BaseModel):
 class LlmSettings(BaseModel):
     """Remote LLM API configuration."""
 
-    base_url: str = Field(default="", description="OpenAI-compatible API base URL")
-    api_key: str = Field(default="", description="Remote LLM API key")
-    model: str = Field(default="nuextract3", description="Remote LLM model name")
+    base_url: str = Field(
+        default="http://localhost:1234/v1", description="LLM base URL"
+    )
+    model_name: str = Field(default="gpt", description="LLM model name")
+    api_key: SecretStr = Field(default="", description="LLM API key")
+    max_tokens: int = Field(default=20000)
+    temperature: float = Field(default=1)
+    timeout: float = Field(default=60.0, description="Request timeout")
+    max_retries: int = Field(default=3, description="Max LLM call retries")
+    backoff: float = Field(default=0.5, description="Backoff factor")
+    max_connections: int = Field(default=100, description="Max HTTP connections")
+    max_keepalive_connections: int = Field(
+        default=20, description="Max keepalive connections"
+    )
+    keepalive_expiry: float = Field(default=30.0, description="Keepalive expiry")
 
 
 class AllSettings(BaseSettings):
@@ -112,7 +124,7 @@ class AllSettings(BaseSettings):
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     yolo: YoloSettings = Field(default_factory=YoloSettings)
-    siglip2: Siglip2Settings = Field(default_factory=Siglip2Settings)
+    embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)
 

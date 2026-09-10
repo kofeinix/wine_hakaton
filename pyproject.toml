@@ -5,7 +5,11 @@ description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
     "asyncpg>=0.31.0",
+    "httpx-retries>=0.6.0",
     "huggingface-hub>=1.2.3",
+    "langchain-openai>=1.6.1",
+    "numind>=0.4.0",
+    "pillow>=12.3.0",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "qdrant-client>=1.19.0",

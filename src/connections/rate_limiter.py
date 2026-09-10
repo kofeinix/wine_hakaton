@@ -52,7 +52,6 @@ class RateLimiterManager:
             "capacity": item.capacity,
             "max_sleep": item.max_sleep,
             "connection": raw_client,
-            "corporate_prefix": item.prefix,
         }
         if item.mode == "semaphore":
             if not item.semaphore:
