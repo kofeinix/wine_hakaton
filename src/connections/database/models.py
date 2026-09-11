@@ -59,6 +59,5 @@ class Wine(Base):
         nullable=False,
         default=list,
     )
-    minio_photo_path: Mapped[str | None] = mapped_column(Text)
 
     winery: Mapped[Winery | None] = relationship(back_populates="wines")

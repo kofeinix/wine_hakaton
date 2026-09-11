@@ -34,17 +34,20 @@ OpenAPI-документация будет доступна на `http://localh
 
 ## Postgres init
 
-Структура Postgres лежит в `db/init/001_schema.sql`.
-Начальная загрузка CSV-экспорта лежит в `db/init/002_seed_from_csv.sql` и выполняется самим контейнером Postgres без Python.
+Начальная загрузка Postgres выполняется отдельным Compose-сервисом `db-init`.
+Он использует тот же Docker image, что и приложение, запускает `scripts/init_database.py`, создает таблицы через SQLAlchemy-модели из `src/connections/database/models.py` и загружает JSON-экспорт из `data/export`.
 
-При первом создании `postgres_data` контейнер:
+При `docker compose up --build` сервис `db-init`:
 
+- ждет healthy `postgres`;
 - создает таблицы `wineries` и `wines`;
-- загружает `data/export/wineries.csv` и `data/export/wines.csv`;
-- не сохраняет в `wines` исходные `url`, `photo_url` и локальные пути;
-- записывает ссылку на MinIO-префикс в `wines.minio_photo_path` в формате `wine/<wine_id>`.
+- валидирует и нормализует `data/export/wineries.json` и `data/export/wines.json`;
+- загружает данные через idempotent upsert;
+- не сохраняет в `wines` исходные `url`, `photo_url` и пути к фото.
 
-Важно: стандартный Postgres image запускает файлы из `/docker-entrypoint-initdb.d` только на пустом volume. Чтобы полностью переинициализировать локальную БД, удалите volume:
+Пути к фото не хранятся в Postgres. Код приложения должен строить MinIO-префикс набора фото из bucket/prefix и `Wine.wine_id`, например `wine/<wine_id>`.
+
+Чтобы полностью переинициализировать локальную БД, удалите volume:
 
 ```bash
 docker compose down -v
@@ -53,6 +56,65 @@ docker compose up --build
 
 Это удобно для демо: жюри достаточно выполнить быстрый запуск, после чего фотографии уже будут лежать в MinIO.
 Распакованная копия не хранится ни в Docker volume, ни в init-контейнере.
+
+Запустить только импорт БД повторно можно так:
+
+```bash
+docker compose run --rm db-init
+```
+
+## Qdrant init
+
+Векторы для поиска по фото генерируются отдельным скриптом из главных фотографий вина. Главной считается фотография из `data/photos.tar.gz` с именем `main*.webp` внутри папки конкретного `wine_id`.
+
+Сгенерировать файл эмбеддингов:
+
+```bash
+uv run python scripts/generate_wine_embeddings.py \
+  --photos-archive data/photos.tar.gz \
+  --model-dir models/siglip2 \
+  --output data/embeddings/wine_main_siglip2.jsonl.gz
+```
+
+Для диагностики производительности добавьте `--profile`; скрипт покажет время чтения/декода из `tar.gz`, preprocessing, переноса на device, inference и записи JSONL:
+
+```bash
+uv run python scripts/generate_wine_embeddings.py \
+  --photos-archive data/photos.tar.gz \
+  --model-dir models/siglip2 \
+  --output data/embeddings/wine_main_siglip2.jsonl.gz \
+  --batch-size 16 \
+  --device auto \
+  --profile
+```
+
+Файл содержит JSONL-записи с `wine_id`, `main_photo_path` и нормализованным SigLIP2-вектором. Он нужен как воспроизводимый промежуточный артефакт: когда изменится датасет, достаточно пересобрать этот файл и заново выполнить init Qdrant.
+
+После генерации файла `qdrant-init` выполнится автоматически при обычном запуске:
+
+```bash
+docker compose up -d --build
+```
+
+Запустить только переинициализацию Qdrant можно так:
+
+```bash
+docker compose run --rm qdrant-init
+```
+
+Сервис `qdrant-init`:
+
+- ждет healthy `qdrant`;
+- читает `/data/embeddings/wine_main_siglip2.jsonl.gz`;
+- пересоздает коллекцию `QDRANT__COLLECTION_NAME` (по умолчанию `wine_vectors`);
+- записывает точки с id = `wine_id`;
+- кладет в payload `wine_id` и `main_photo_path`.
+
+Если нужно сохранить существующую коллекцию и только сделать upsert точек:
+
+```bash
+docker compose run --rm qdrant-init python scripts/init_qdrant.py --no-recreate
+```
 
 Консоль MinIO доступна на `http://localhost:9001`.
 Данные для входа по умолчанию:

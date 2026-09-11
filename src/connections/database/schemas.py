@@ -63,7 +63,6 @@ class WineBase(BaseModel):
         default_factory=list,
         validation_alias=AliasChoices("food_pairings", "food_pairing"),
     )
-    minio_photo_path: str | None = None
 
     @field_validator(
         "winery_id",
@@ -76,7 +75,6 @@ class WineBase(BaseModel):
         "description",
         "serving_temperature",
         "alcohol",
-        "minio_photo_path",
         mode="before",
     )
     @classmethod

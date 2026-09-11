@@ -12,12 +12,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
       minio:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
       qdrant:
         condition: service_healthy
+      qdrant-init:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     ports:
@@ -36,8 +40,6 @@ services:
       POSTGRES_PASSWORD: ${DATABASE__PASSWORD:-wine}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-      - ./data/export:/seed/export:ro
     ports:
       - "${DATABASE__PORT:-5432}:5432"
     healthcheck:
@@ -46,6 +48,31 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wine_hakaton_db_init
+    restart: "no"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE__HOST: postgres
+      DATABASE__PORT: 5432
+      DATABASE__DB_NAME: ${DATABASE__DB_NAME:-wine_hakaton}
+      DATABASE__USER: ${DATABASE__USER:-wine}
+      DATABASE__PASSWORD: ${DATABASE__PASSWORD:-wine}
+    volumes:
+      - ./data:/data:ro
+    command:
+      - python
+      - scripts/init_database.py
+      - --export-dir
+      - /data/export
 
   minio:
     image: minio/minio:latest
@@ -76,7 +103,7 @@ services:
         condition: service_healthy
     environment:
       MINIO__HOST: minio
-      MINIO__PORT: 9000
+      MINIO__PORT:  ${MINIO__PORT:-9000}
       MINIO__ACCESS_KEY: ${MINIO__ACCESS_KEY:-minio}
       MINIO__SECRET_KEY: ${MINIO__SECRET_KEY:-miniosecret}
       MINIO__BUCKET: ${MINIO__BUCKET:-wine}
@@ -112,6 +139,31 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  qdrant-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wine_hakaton_qdrant_init
+    restart: "no"
+    env_file:
+      - .env
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      QDRANT__HOST: qdrant
+      QDRANT__PORT: ${QDRANT__PORT:-6333}
+      QDRANT__GRPC_PORT: ${QDRANT__GRPC_PORT:-6334}
+      QDRANT__COLLECTION_NAME: ${QDRANT__COLLECTION_NAME:-wine_vectors}
+      QDRANT__API_KEY: ${QDRANT__API_KEY:-}
+    volumes:
+      - ./data:/data:ro
+    command:
+      - python
+      - scripts/init_qdrant.py
+      - --embeddings-path
+      - /data/embeddings/wine_main_siglip2.jsonl.gz
 
   redis:
     image: redis:7-alpine
