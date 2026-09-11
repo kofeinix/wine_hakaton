@@ -66,6 +66,7 @@ async def init_qdrant(
     collection_name: str,
     batch_size: int,
     recreate: bool,
+    indexing_threshold: int,
 ) -> None:
     qdrant = QdrantClient(all_settings.qdrant)
     await qdrant.connect()
@@ -85,6 +86,9 @@ async def init_qdrant(
                     size=size,
                     distance=qdrant_models.Distance.COSINE,
                 ),
+                optimizers_config=qdrant_models.OptimizersConfigDiff(
+                    indexing_threshold=indexing_threshold,
+                ),
             )
         elif not await qdrant.client.collection_exists(collection_name):
             await qdrant.client.create_collection(
@@ -92,6 +96,16 @@ async def init_qdrant(
                 vectors_config=qdrant_models.VectorParams(
                     size=size,
                     distance=qdrant_models.Distance.COSINE,
+                ),
+                optimizers_config=qdrant_models.OptimizersConfigDiff(
+                    indexing_threshold=indexing_threshold,
+                ),
+            )
+        else:
+            await qdrant.client.update_collection(
+                collection_name=collection_name,
+                optimizers_config=qdrant_models.OptimizersConfigDiff(
+                    indexing_threshold=indexing_threshold,
                 ),
             )
 
@@ -131,6 +145,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--embeddings-path", type=Path, default=DEFAULT_EMBEDDINGS_PATH)
     parser.add_argument("--collection-name", default=all_settings.qdrant.collection_name)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--indexing-threshold", type=int, default=1)
     parser.add_argument("--no-recreate", action="store_true")
     return parser.parse_args()
 
@@ -144,5 +159,6 @@ if __name__ == "__main__":
             collection_name=args.collection_name,
             batch_size=args.batch_size,
             recreate=not args.no_recreate,
+            indexing_threshold=args.indexing_threshold,
         )
     )
