@@ -11,13 +11,20 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.connections.database.models import Grape, Producer, Region, Wine, WineGrape, WineImage
 from src.connections.database.postgres import DatabaseClient
-from src.connections.database.models import Wine, Winery
-from src.connections.database.schemas import WineCreate, WineryCreate
+from src.connections.database.schemas import (
+    GrapeCreate,
+    ProducerCreate,
+    RegionCreate,
+    WineCreate,
+    WineGrapeCreate,
+    WineImageCreate,
+)
 from src.settings.settings import all_settings
 
 
-DEFAULT_EXPORT_DIR = Path("/data/export")
+DEFAULT_DB_DIR = Path("/data/db")
 ASYNC_PG_MAX_QUERY_ARGUMENTS = 32767
 
 logger = logging.getLogger(__name__)
@@ -25,10 +32,6 @@ logger = logging.getLogger(__name__)
 
 def load_json(path: Path) -> list[dict]:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def wine_payload(row: dict) -> dict:
-    return WineCreate.model_validate(row).model_dump()
 
 
 async def upsert_rows(session, model, rows: list[dict]) -> None:
@@ -54,43 +57,68 @@ async def upsert_rows(session, model, rows: list[dict]) -> None:
         )
 
 
-async def import_export(
-    export_dir: Path,
-    create_tables: bool,
-) -> None:
+async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool) -> None:
     database = DatabaseClient(all_settings.database)
     await database.connect()
 
     try:
+        if drop_existing:
+            await database.drop_tables()
         if create_tables:
             await database.create_tables()
 
-        wineries = [
-            WineryCreate.model_validate(row).model_dump()
-            for row in load_json(export_dir / "wineries.json")
+        producers = [
+            ProducerCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "producers.json")
+        ]
+        regions = [
+            RegionCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "regions.json")
+        ]
+        grapes = [
+            GrapeCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "grapes.json")
         ]
         wines = [
-            wine_payload(row)
-            for row in load_json(export_dir / "wines.json")
+            WineCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "wines.json")
+        ]
+        wine_grapes = [
+            WineGrapeCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "wine_grapes.json")
+        ]
+        wine_images = [
+            WineImageCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "wine_images.json")
         ]
 
         async with database.session() as session:
-            await upsert_rows(session, Winery, wineries)
+            await upsert_rows(session, Producer, producers)
+            await upsert_rows(session, Region, regions)
+            await upsert_rows(session, Grape, grapes)
             await upsert_rows(session, Wine, wines)
+            await upsert_rows(session, WineGrape, wine_grapes)
+            await upsert_rows(session, WineImage, wine_images)
             await session.commit()
+
         logger.info(
-            "Imported %s wineries and %s wines.",
-            len(wineries),
+            "Imported %s producers, %s regions, %s grapes, %s wines, %s wine_grapes, %s wine_images.",
+            len(producers),
+            len(regions),
+            len(grapes),
             len(wines),
+            len(wine_grapes),
+            len(wine_images),
         )
     finally:
         await database.close()
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Import wine export JSON files into Postgres.")
-    parser.add_argument("--export-dir", type=Path, default=DEFAULT_EXPORT_DIR)
+    parser = argparse.ArgumentParser(description="Import normalized wine JSON files into Postgres.")
+    parser.add_argument("--db-dir", type=Path, default=DEFAULT_DB_DIR)
     parser.add_argument("--no-create-tables", action="store_true")
+    parser.add_argument("--drop-existing", action="store_true")
     return parser.parse_args()
 
 
@@ -98,8 +126,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     args = parse_args()
     asyncio.run(
-        import_export(
-            export_dir=args.export_dir,
+        import_db(
+            db_dir=args.db_dir,
             create_tables=not args.no_create_tables,
+            drop_existing=args.drop_existing,
         )
     )

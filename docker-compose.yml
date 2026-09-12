@@ -9,6 +9,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      DATABASE__HOST: postgres
+      DATABASE__PORT: 5432
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,8 +74,8 @@ services:
     command:
       - python
       - scripts/init_database.py
-      - --export-dir
-      - /data/export
+      - --db-dir
+      - /data/db
 
   minio:
     image: minio/minio:latest
@@ -117,9 +120,10 @@ services:
         set -eu
         mc alias set local http://minio:9000 "$$MINIO__ACCESS_KEY" "$$MINIO__SECRET_KEY"
         mc mb --ignore-existing "local/$$MINIO__BUCKET"
+        mc rm --recursive --force "local/$$MINIO__BUCKET" >/dev/null
         mc cp --disable-multipart \
           --attr "X-Amz-Meta-Snowball-Auto-Extract=true" \
-          "$$MINIO_SEED_ARCHIVE" "local/$$MINIO__BUCKET/wine/" >/dev/null
+          "$$MINIO_SEED_ARCHIVE" "local/$$MINIO__BUCKET/" >/dev/null
         echo "MinIO bucket '$$MINIO__BUCKET' is ready with seeded photos."
 
   qdrant:

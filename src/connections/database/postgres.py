@@ -58,6 +58,12 @@ class DatabaseClient:
         async with self.engine.begin() as conn:  # type: ignore[misc]
             await conn.run_sync(Base.metadata.create_all)
 
+    async def drop_tables(self) -> None:
+        import src.connections.database.models  # noqa: F401
+
+        async with self.engine.begin() as conn:  # type: ignore[misc]
+            await conn.run_sync(Base.metadata.drop_all)
+
     @asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
         async with self.session_factory() as session:

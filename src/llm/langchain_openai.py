@@ -2,14 +2,18 @@ import json
 import logging
 from contextlib import nullcontext
 from http import HTTPMethod
+from io import BytesIO
 from typing import Optional, Union
+import base64
 
 import httpx
 from httpx import AsyncHTTPTransport
 from httpx_retries import Retry, RetryTransport
-from langchain_core.messages import HumanMessage, BaseMessage
+from langchain_core.messages import BaseMessage, ChatMessage, HumanMessage
 from langchain_core.outputs import LLMResult
 from limiters import AsyncSemaphore, AsyncTokenBucket
+from numind.nuextract_utils import convert_json_schema_to_nuextract_template
+from PIL import Image, ImageOps
 from pydantic import BaseModel
 
 from langchain_openai import ChatOpenAI
@@ -119,7 +123,7 @@ class ChatOpenAIWrapper:
             model=self.config.model_name,
             api_key=self.config.api_key,
             temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
+            max_tokens=min(self.config.max_tokens, 800),
             base_url=self.config.base_url,
             http_async_client=self._http_client,
             max_retries=0,  # логикой управляет http_async_client
@@ -138,11 +142,16 @@ class ChatOpenAIWrapper:
         # Test connection
         try:
             models = await self._chat.root_async_client.models.list()
-            logger.info("Connection check succeeded: API reachable and key valid.")
-            logger.debug(f"Available models {models=}")
+            available_models = {model.id for model in models.data}
         except Exception:
-            logger.info("Connection check failed: API is not reachable")
+            logger.exception("Connection check failed: API is not reachable")
             raise
+        if self.config.model_name not in available_models:
+
+            raise Exception("Configured LLM model %s is unavailable",
+                           self.config.model_name,)
+        logger.info("Connection check succeeded: API reachable and key valid.")
+        logger.debug(f"Available models {models=}")
 
     async def stop(self) -> None:
         if self._http_client is not None:
@@ -157,26 +166,58 @@ class ChatOpenAIWrapper:
             raise RuntimeError("ChatOpenAIWrapper not started. Call start() first.")
         return self._chat
 
-    async def analyze_image(self, image_url) -> str:
+    def _is_ollama(self) -> bool:
+        return self.config.is_ollama_infer
+
+    @staticmethod
+    def _image_data_url(image_bytes: bytes, max_side: int = 1024) -> str:
+
+        with Image.open(BytesIO(image_bytes)) as image:
+            image = ImageOps.exif_transpose(image).convert("RGB")
+            image.thumbnail((max_side, max_side))
+            buffer = BytesIO()
+            image.save(buffer, format="JPEG", quality=90, optimize=True)
+        return f"data:image/jpeg;base64,{base64.b64encode(buffer.getvalue()).decode('utf-8')}"
+
+    @staticmethod
+    def _strip_empty_think(content: str) -> str:
+        content = content.strip()
+        if content.startswith("<think>") and "</think>" in content:
+            return content.split("</think>", 1)[1].strip()
+        return content
+
+    async def analyze_image(self, image_bytes: bytes) -> WineOutput:
+        conversion = convert_json_schema_to_nuextract_template(
+            WineOutput.model_json_schema()
+        )
+        template = conversion["template"]
+        llm = self.chat.with_structured_output(
+            WineOutput,
+            method="json_mode",
+            include_raw=True,
+        )
         message = HumanMessage(
             content=[
-                {
-                    "type": "text",
-                    "text": (
-                        "Extract wine label data from this image. Return only a valid JSON object "
-                        "matching this template, with null for unknown values and no markdown:\n"
-                        f"{json.dumps(answer_template, indent=2)}"
-                    ),
-                },
-                {"type": "image_url", "image_url": {"url": image_url}}
+                {"type": "image_url", "image_url": {"url": self._image_data_url(image_bytes)}}
             ]
         )
-        response = await self.chat.ainvoke([message])
+
+        messages: list[BaseMessage] = [message]
+        if self._is_ollama():
+            messages.insert(
+                0,
+                ChatMessage(role="template", content=json.dumps(template, ensure_ascii=False)),
+            )
+
+        result = await llm.ainvoke(messages)
+        parsed = result.get("parsed")
+        if isinstance(parsed, WineOutput):
+            return parsed
+
+        raw = result.get("raw")
+        content = self._strip_empty_think(getattr(raw, "content", "") or "")
         try:
-            parsed = WineOutput.model_validate_json(response.content)
-            print("✅ Validated output:")
-            print(parsed.model_dump_json(indent=2))
-        except Exception as e:
-            print("❌ Validation failed. Raw output:")
-            print(response.content)
-            raise e
+            return WineOutput.model_validate_json(content)
+        except Exception:
+            logger.exception("NuExtract response validation failed: %s", content)
+            raise

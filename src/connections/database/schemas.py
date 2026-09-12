@@ -1,7 +1,8 @@
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def _empty_to_none(value: object) -> object:
@@ -10,94 +11,84 @@ def _empty_to_none(value: object) -> object:
     return value
 
 
-def _split_csv_list(value: object) -> object:
-    if value is None:
-        return []
-    if isinstance(value, str):
-        return [item.strip() for item in value.split(",") if item.strip()]
-    return value
-
-
-class WineryBase(BaseModel):
+class ProducerCreate(BaseModel):
+    id: UUID
     name: str = Field(min_length=1)
-    address: str | None = None
-    description: str | None = None
-    vineyard_area: str | None = None
-    region: str | None = None
-    locality: str | None = None
-    climate: str | None = None
 
-    @field_validator("*", mode="before")
+
+class RegionCreate(BaseModel):
+    id: UUID
+    name: str = Field(min_length=1)
+    country: str | None = None
+
+    @field_validator("country", mode="before")
     @classmethod
     def normalize_empty_strings(cls, value: object) -> object:
         return _empty_to_none(value)
 
 
-class WineryCreate(WineryBase):
-    winery_id: UUID
-
-
-class WineryRead(WineryBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    winery_id: UUID
-
-
-class WineBase(BaseModel):
-    winery_id: UUID | None = None
+class GrapeCreate(BaseModel):
+    id: UUID
     name: str = Field(min_length=1)
-    producer: str | None = None
-    rating: Decimal | None = Field(default=None, ge=0, le=5)
+
+
+class WineCreate(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=False)
+
+    id: UUID
+    sku: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    producer_id: UUID
+    region_id: UUID | None = None
+    year: int | None = None
     color: str | None = None
-    wine_type: str | None = None
-    region: str | None = None
-    grape_varieties: list[str] = Field(
-        default_factory=list,
-        validation_alias=AliasChoices("grape_varieties", "grape_variety"),
-    )
-    shade: str | None = None
+    sugar: str | None = None
+    alcohol: float | None = None
+    price: Decimal | None = None
+    stock: int | None = None
     description: str | None = None
-    serving_temperature: str | None = None
-    alcohol: str | None = None
-    food_pairings: list[str] = Field(
-        default_factory=list,
-        validation_alias=AliasChoices("food_pairings", "food_pairing"),
-    )
+    source_url: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    rating: Decimal | None = Field(default=None, ge=0, le=5)
 
     @field_validator(
-        "winery_id",
-        "producer",
-        "rating",
+        "region_id",
+        "year",
         "color",
-        "wine_type",
-        "region",
-        "shade",
-        "description",
-        "serving_temperature",
+        "sugar",
         "alcohol",
+        "price",
+        "stock",
+        "description",
+        "source_url",
+        "rating",
         mode="before",
     )
     @classmethod
     def normalize_empty_strings(cls, value: object) -> object:
         return _empty_to_none(value)
 
-    @field_validator("grape_varieties", "food_pairings", mode="before")
+
+class WineGrapeCreate(BaseModel):
+    wine_id: UUID
+    grape_id: UUID
+    percentage: float | None = None
+
+    @field_validator("percentage", mode="before")
     @classmethod
-    def normalize_lists(cls, value: object) -> object:
-        return _split_csv_list(value)
+    def normalize_empty_strings(cls, value: object) -> object:
+        return _empty_to_none(value)
 
 
-class WineCreate(WineBase):
+class WineImageCreate(BaseModel):
+    id: UUID
     wine_id: UUID
+    source_url: str | None = None
+    is_main: bool
+    minio_path: str = Field(min_length=1)
 
-
-class WineRead(WineBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    wine_id: UUID
-    winery: WineryRead | None = None
-
-
-class WineListRead(BaseModel):
-    items: list[WineRead]
-    total: int = Field(ge=0)
+    @field_validator("source_url", mode="before")
+    @classmethod
+    def normalize_empty_strings(cls, value: object) -> object:
+        return _empty_to_none(value)

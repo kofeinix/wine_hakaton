@@ -1,63 +1,143 @@
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Numeric, Text
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
 from src.connections.database.base import Base
 
 
-class Winery(Base):
-    __tablename__ = "wineries"
+class Producer(Base):
+    __tablename__ = "producers"
 
-    winery_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
-    name: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    address: Mapped[str | None] = mapped_column(Text)
-    description: Mapped[str | None] = mapped_column(Text)
-    vineyard_area: Mapped[str | None] = mapped_column(Text)
-    region: Mapped[str | None] = mapped_column(Text, index=True)
-    locality: Mapped[str | None] = mapped_column(Text)
-    climate: Mapped[str | None] = mapped_column(Text)
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
 
-    wines: Mapped[list[Wine]] = relationship(back_populates="winery")
+    wines: Mapped[list[Wine]] = relationship(back_populates="producer")
+
+
+class Region(Base):
+    __tablename__ = "regions"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    country: Mapped[str | None] = mapped_column(String(255), index=True)
+
+    wines: Mapped[list[Wine]] = relationship(back_populates="region")
+
+
+class Grape(Base):
+    __tablename__ = "grapes"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+
+    wine_links: Mapped[list[WineGrape]] = relationship(back_populates="grape")
 
 
 class Wine(Base):
     __tablename__ = "wines"
     __table_args__ = (
-        CheckConstraint("rating IS NULL OR rating BETWEEN 0 AND 5", name="ck_wines_rating_range"),
-        Index("ix_wines_name_producer", "name", "producer"),
+        Index("ix_wines_color_sugar", "color", "sugar"),
     )
 
-    wine_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
-    winery_id: Mapped[UUID | None] = mapped_column(
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    sku: Mapped[str] = mapped_column(String(500), nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
+    producer_id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
-        ForeignKey("wineries.winery_id", ondelete="SET NULL"),
+        ForeignKey("producers.id", ondelete="RESTRICT"),
+        nullable=False,
         index=True,
     )
-    name: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    producer: Mapped[str | None] = mapped_column(Text, index=True)
-    rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
-    color: Mapped[str | None] = mapped_column(Text)
-    wine_type: Mapped[str | None] = mapped_column(Text, index=True)
-    region: Mapped[str | None] = mapped_column(Text, index=True)
-    grape_varieties: Mapped[list[str]] = mapped_column(
-        ARRAY(Text),
-        nullable=False,
-        default=list,
+    region_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("regions.id", ondelete="SET NULL"),
+        index=True,
     )
-    shade: Mapped[str | None] = mapped_column(Text)
+    year: Mapped[int | None] = mapped_column(Integer)
+    color: Mapped[str | None] = mapped_column(String(50), index=True)
+    sugar: Mapped[str | None] = mapped_column(String(50), index=True)
+    alcohol: Mapped[float | None] = mapped_column(Float)
+    price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    stock: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str | None] = mapped_column(Text)
-    serving_temperature: Mapped[str | None] = mapped_column(Text)
-    alcohol: Mapped[str | None] = mapped_column(Text)
-    food_pairings: Mapped[list[str]] = mapped_column(
-        ARRAY(Text),
+    source_url: Mapped[str | None] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
-        default=list,
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2))
+
+    producer: Mapped[Producer] = relationship(back_populates="wines")
+    region: Mapped[Region | None] = relationship(back_populates="wines")
+    grape_links: Mapped[list[WineGrape]] = relationship(
+        back_populates="wine",
+        cascade="all, delete-orphan",
+    )
+    images: Mapped[list[WineImage]] = relationship(
+        back_populates="wine",
+        cascade="all, delete-orphan",
+        order_by="desc(WineImage.is_main), WineImage.id",
     )
 
-    winery: Mapped[Winery | None] = relationship(back_populates="wines")
+
+class WineGrape(Base):
+    __tablename__ = "wine_grapes"
+
+    wine_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("wines.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+        index=True,
+    )
+    grape_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("grapes.id", ondelete="RESTRICT"),
+        nullable=False,
+        primary_key=True,
+        index=True,
+    )
+    percentage: Mapped[float | None] = mapped_column(Float)
+
+    wine: Mapped[Wine] = relationship(back_populates="grape_links")
+    grape: Mapped[Grape] = relationship(back_populates="wine_links")
+
+
+class WineImage(Base):
+    __tablename__ = "wine_images"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    wine_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("wines.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    source_url: Mapped[str | None] = mapped_column(String(1000))
+    is_main: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
+    minio_path: Mapped[str] = mapped_column(String(1000), nullable=False, index=True)
+
+    wine: Mapped[Wine] = relationship(back_populates="images")

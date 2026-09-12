@@ -4,6 +4,7 @@ import gzip
 import json
 import logging
 import sys
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TextIO
@@ -55,6 +56,18 @@ def vector_size(path: Path) -> int:
     for row in read_embedding_rows(path):
         return len(row["vector"])
     raise ValueError(f"No embeddings found in {path}")
+
+
+def point_id(value: object) -> int | str:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    try:
+        return str(uuid.UUID(str(value)))
+    except ValueError:
+        pass
+    return str(value)
 
 
 def embedding_count(path: Path) -> int:
@@ -113,10 +126,10 @@ async def init_qdrant(
         for batch in batched(read_embedding_rows(embeddings_path), batch_size):
             points = [
                 qdrant_models.PointStruct(
-                    id=row["wine_id"],
+                    id=point_id(row["wine_id"]),
                     vector=row["vector"],
                     payload={
-                        "wine_id": row["wine_id"],
+                        "wine_id": str(row["wine_id"]),
                         "main_photo_path": row.get("main_photo_path"),
                     },
                 )

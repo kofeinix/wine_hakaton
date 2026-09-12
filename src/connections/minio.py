@@ -1,5 +1,6 @@
 import io
 import logging
+import mimetypes
 import ssl
 
 from datetime import timedelta
@@ -12,6 +13,18 @@ from aiohttp import ClientSession
 from src.settings.settings import MinioSettings
 
 logger = logging.getLogger(__name__)
+
+
+class MinioObjectInfo:
+    def __init__(
+        self,
+        object_name: str,
+        size: int | None = None,
+        content_type: str | None = None,
+    ) -> None:
+        self.object_name = object_name
+        self.size = size
+        self.content_type = content_type
 
 
 class MinioClient:
@@ -172,7 +185,10 @@ class MinioClient:
         """
         if "/" in minio_link:
             parts = minio_link.split("/", 1)
-            bucket, obj = parts[0], parts[1]
+            if parts[0] == self.bucket:
+                bucket, obj = parts[0], parts[1]
+            else:
+                bucket, obj = self.bucket, minio_link
         else:
             bucket, obj = self.bucket, minio_link
         return bucket, obj
@@ -210,6 +226,59 @@ class MinioClient:
             )
             return None
 
+    async def get_file_with_content_type(self, filename: str) -> tuple[io.BytesIO, str] | None:
+        if self.storage is None:
+            raise RuntimeError("MinioClient not started. Call start() first.")
+
+        bucket, object_name = self.parse_minio_link(filename)
+        try:
+            response = await self.storage.get_object(
+                bucket_name=bucket,
+                object_name=object_name,
+            )
+            header_content_type = response.headers.get("content-type")
+            guessed_content_type = mimetypes.guess_type(object_name)[0]
+            content_type = (
+                guessed_content_type
+                if header_content_type in {None, "application/octet-stream", "binary/octet-stream"}
+                else header_content_type
+            ) or "application/octet-stream"
+            file_data = io.BytesIO(await response.read())
+            file_data.seek(0)
+            response.close()
+            response.release()
+            return file_data, content_type
+        except Exception:
+            logger.exception(
+                "Exception occurred during downloading file %s from bucket %s.",
+                object_name,
+                bucket,
+            )
+            return None
+
+    async def list_files(self, prefix: str, recursive: bool = True) -> list[MinioObjectInfo]:
+        if self.storage is None:
+            raise RuntimeError("MinioClient not started. Call start() first.")
+
+        objects = self.storage.list_objects(
+            bucket_name=self.bucket,
+            prefix=prefix,
+            recursive=recursive,
+        )
+        result: list[MinioObjectInfo] = []
+        async for item in objects.gen_iterator():
+            object_name = getattr(item, "object_name", None)
+            if not object_name or object_name.endswith("/"):
+                continue
+            result.append(
+                MinioObjectInfo(
+                    object_name=object_name,
+                    size=getattr(item, "size", None),
+                    content_type=mimetypes.guess_type(object_name)[0],
+                )
+            )
+        return result
+
     async def delete_file(self, filename: str) -> None:
         """
         Delete a file from storage.
@@ -231,4 +300,3 @@ class MinioClient:
                 f"Failed to delete file {filename} from minio bucket {self.bucket}",
             )
             raise
-

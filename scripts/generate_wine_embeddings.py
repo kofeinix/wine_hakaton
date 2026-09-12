@@ -24,7 +24,7 @@ from src.settings.settings import all_settings
 
 DEFAULT_PHOTOS_ARCHIVE = Path("data/photos.tar.gz")
 DEFAULT_OUTPUT = Path("data/embeddings/wine_main_siglip2.jsonl.gz")
-DEFAULT_MINIO_PREFIX = "wine"
+DEFAULT_MINIO_PREFIX = ""
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def main_photo_from_member(member: tarfile.TarInfo, minio_prefix: str) -> MainPh
     path = Path(member.name)
     if len(path.parts) < 2:
         return None
-    if not path.name.startswith("main") or path.suffix.lower() != ".webp":
+    if not path.name.startswith("main") or path.suffix.lower() not in {".jpg", ".jpeg", ".webp"}:
         return None
 
     wine_id = path.parts[0]

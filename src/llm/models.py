@@ -1,29 +1,30 @@
-from typing import Literal
-
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 answer_template = {
-    "winery": "verbatim-string",
-    "wine_name": "verbatim-string",
-    "manufacture_date": "date",
-
-    "bottle_color": ["Green", "Dark Green", "Amber", "Clear", "Brown", "Blue", "Other"],
-    "bottle_shape": ["Bordeaux", "Burgundy", "Tall", "Round", "Standard", "Other"],
-
+    "name": "verbatim-string",
+    "producer": "verbatim-string",
+    "wine_type": "verbatim-string",
+    "region": "verbatim-string",
+    "alcohol": "verbatim-string",
+    "vintage": "verbatim-string",
     "label_description": "string",
-
-    "wine_type": ["Red", "White", "Rosé", "Sparkling", "Dessert", "Other"],
-    "alcohol_amount": "number",
-    "volume": "number"
+    "volume": "number",
 }
 
+
 class WineOutput(BaseModel):
-    winery: str | None = None
-    wine_name: str | None = None
-    manufacture_date: str | None = None
-    bottle_color: Literal["Green", "Dark Green", "Amber", "Clear", "Brown", "Blue", "Other"] | None = None
-    bottle_shape: Literal["Bordeaux", "Burgundy", "Tall", "Round", "Standard", "Other"] | None = None
+    name: str | None = None
+    producer: str | None = None
+    wine_type: str | None = None
+    region: str | None = None
+    alcohol: str | None = None
+    vintage: str | None = None
     label_description: str | None = None
-    wine_type: Literal["Red", "White", "Rosé", "Sparkling", "Dessert", "Other"] | None = None
-    alcohol_amount: float | None = None
     volume: float | None = None
+
+    @field_validator("alcohol", mode="before")
+    @classmethod
+    def normalize_alcohol(cls, value: object) -> object:
+        if isinstance(value, int | float):
+            return f"{value:g}%"
+        return value
