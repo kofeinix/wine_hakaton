@@ -1,0 +1,534 @@
+[
+  {
+    "id": "b3bbe2c4-f2fd-57d1-b4eb-2807ab7b4176",
+    "name": "Denisov Winery"
+  },
+  {
+    "id": "f1317c88-fd00-5e5d-8056-16640ef15b5a",
+    "name": "Гусевъ"
+  },
+  {
+    "id": "3d21d649-3b88-5f87-bda5-ce84563b3b35",
+    "name": "Шато АЛВИСА"
+  },
+  {
+    "id": "64834ff9-514f-5d9a-83d8-ee21512e0352",
+    "name": "Винодельня Константина Дзитоева"
+  },
+  {
+    "id": "35017ff2-c3bf-5ccd-8c72-ece96c36bafa",
+    "name": "Шато Пино"
+  },
+  {
+    "id": "cb322431-0eef-5355-a17d-3b36be828bbf",
+    "name": "Kalos Limen"
+  },
+  {
+    "id": "f6687503-b9f8-5373-a901-0f97ead36e15",
+    "name": "Кубань-Вино"
+  },
+  {
+    "id": "42110514-6497-5907-ad4b-1cd00fe5f12d",
+    "name": "Мысхако"
+  },
+  {
+    "id": "030e4d47-350b-5c6f-b4c7-4f441dceb1e6",
+    "name": "Коммуналка"
+  },
+  {
+    "id": "95784188-6348-539f-8c8f-0e9ccf3d6dc0",
+    "name": "Винодельня Братьев Мельниковых"
+  },
+  {
+    "id": "5e5775ee-e291-5410-bb93-99e8e31cfee5",
+    "name": "Chateau de Talu"
+  },
+  {
+    "id": "1c413385-3535-594c-b557-e20f60f49e41",
+    "name": "Массандра"
+  },
+  {
+    "id": "5a8d619c-b3c1-533b-92f5-9675d4680873",
+    "name": "Olymp Winery"
+  },
+  {
+    "id": "1b5ec8e6-9e9f-594f-838d-05087a0b7868",
+    "name": "ЗМВ Коктебель"
+  },
+  {
+    "id": "72ad2e5d-c762-5c73-9083-5ce41a11c717",
+    "name": "Дербент Вино"
+  },
+  {
+    "id": "74286bfb-9a06-54c3-925c-5e3a01f116cb",
+    "name": "Виноградники Гай-Кодзора"
+  },
+  {
+    "id": "938ec731-5c91-5b7a-9bfa-54bb1e4bd655",
+    "name": "Alma Valley"
+  },
+  {
+    "id": "8d426e9e-ee6f-5361-b256-a27654d59416",
+    "name": "Инкерманский ЗМВ"
+  },
+  {
+    "id": "42909a30-9854-5f4d-9b10-2e497e217099",
+    "name": "Скалистый берег"
+  },
+  {
+    "id": "d0a1972a-0d47-50f5-bfd0-1102292b6bae",
+    "name": "Golubitskoe Estate"
+  },
+  {
+    "id": "d3498ae5-2963-5c14-953a-c36874e775a5",
+    "name": "Золотая Балка"
+  },
+  {
+    "id": "fa269f45-5138-5529-84e6-3fb29019fca9",
+    "name": "Цимлянские вина"
+  },
+  {
+    "id": "250160e8-52ae-54b0-abc5-10446a16f070",
+    "name": "Солнечная долина"
+  },
+  {
+    "id": "de0ebe2f-bb3e-5d1a-9537-ac31b4fb072c",
+    "name": "Валерий Захарьин"
+  },
+  {
+    "id": "e0d4223f-695f-59ed-9591-169e1e85774d",
+    "name": "Абрау-Дюрсо"
+  },
+  {
+    "id": "d5f16cbd-bd72-5070-aa39-2413aed95558",
+    "name": "Фанагория"
+  },
+  {
+    "id": "60fc373b-2c98-5f64-a23a-c0db19bb3371",
+    "name": "Le K2"
+  },
+  {
+    "id": "80da3d83-cba3-58ab-a029-494d89117da7",
+    "name": "Uva Vallis"
+  },
+  {
+    "id": "35254a4d-bea7-5e7b-a641-15f5c47600a1",
+    "name": "Литавщук. Litavshchuk vineyards & winery"
+  },
+  {
+    "id": "55ed496d-9db6-5dc4-b1a5-2580624b7b11",
+    "name": "Два Петра"
+  },
+  {
+    "id": "54e0e75d-2621-5d8f-a46f-3d2089332980",
+    "name": "Табия"
+  },
+  {
+    "id": "e1c3bb8a-0e27-5a51-9c24-db45650141df",
+    "name": "ЛОРИО -  семейная винодельня Логуновых"
+  },
+  {
+    "id": "22898099-01d1-5c9b-8453-0ce685874057",
+    "name": "Mantra Estate"
+  },
+  {
+    "id": "e0ee0fa4-edcd-512e-950e-6cf03716f2eb",
+    "name": "Галицкий и Галицкий"
+  },
+  {
+    "id": "9bd44ede-d77f-59d3-9ac2-cbe32af0c12a",
+    "name": "АРАТТИ"
+  },
+  {
+    "id": "6ecdf2f7-8c80-50bf-8710-04aa0d296315",
+    "name": "LETO"
+  },
+  {
+    "id": "0108cfa2-a8d1-5e0a-b68a-00d893247ccf",
+    "name": "AYA Organic Wine & Vineyards"
+  },
+  {
+    "id": "97ed25c0-1346-5752-be8f-83d52eb2aae0",
+    "name": "Усадьба Перовских"
+  },
+  {
+    "id": "ddcfa963-97d5-591f-b1af-673e15dc66b1",
+    "name": "Ведерниковъ"
+  },
+  {
+    "id": "6f4413bb-4fdf-5c9b-92a2-c513697025d7",
+    "name": "Винодельня Бюрнье"
+  },
+  {
+    "id": "f95017bb-c141-533f-bd83-dd8bb4efe657",
+    "name": "KATHARON"
+  },
+  {
+    "id": "da7d97cc-dd54-5711-9505-92a5db74c3c1",
+    "name": "Винодельня Орлова"
+  },
+  {
+    "id": "3759c367-0242-54bb-a178-63fcc195199e",
+    "name": "JD winery"
+  },
+  {
+    "id": "cc2d1850-faf1-5a96-9cc8-04d26d748c93",
+    "name": "Союз-Вино"
+  },
+  {
+    "id": "701ec80c-2e92-5f56-8afc-a92377d77f25",
+    "name": "Rem Akchurin"
+  },
+  {
+    "id": "b234e6af-3bba-5b80-b805-cb968743b109",
+    "name": "Сатера"
+  },
+  {
+    "id": "ed7dbdc1-1b7b-51e4-8fbc-4d2d644c4ae8",
+    "name": "Oleg Repin"
+  },
+  {
+    "id": "83b8bca6-7557-535e-87fa-6bf01c3e2775",
+    "name": "Бельбек"
+  },
+  {
+    "id": "7265b3c5-be71-5889-8993-2c72caf9bfbf",
+    "name": "Новый Свет. Дом шампанских вин"
+  },
+  {
+    "id": "09f71781-2549-5749-a5ea-4c21a710e9b9",
+    "name": "Усадьба Дивноморское"
+  },
+  {
+    "id": "235c7679-e23b-590c-8533-270f779e42bb",
+    "name": "Loco Cimbali"
+  },
+  {
+    "id": "f7f00347-919a-5349-8d73-bf4e2496e4b1",
+    "name": "Золотое Поле"
+  },
+  {
+    "id": "a431d459-9dd7-56da-82c3-194cfb4158cb",
+    "name": "Yaiyla Winery"
+  },
+  {
+    "id": "fb239d99-5a64-56f8-917e-17f806c3ece6",
+    "name": "AGORA WINERY"
+  },
+  {
+    "id": "45ee5eec-4ed1-58a1-8ffd-8923b351498d",
+    "name": "Усадьба Мезыбь"
+  },
+  {
+    "id": "29f0b4ce-d6ab-5216-a840-d3ecee4f5acd",
+    "name": "Винодельня Узунов"
+  },
+  {
+    "id": "a78a3d3a-cabf-50b4-8d41-cb8bed1e5fc3",
+    "name": "Реликта"
+  },
+  {
+    "id": "6c8f5beb-95a2-58cd-871c-75df2c63b74d",
+    "name": "Château Le Grand Vostock"
+  },
+  {
+    "id": "b09bc615-9047-5631-ad7e-e07cf85b050c",
+    "name": "Собер Баш"
+  },
+  {
+    "id": "cca8c3a8-7ccd-5206-91c2-ba8def65a8b3",
+    "name": "Имение Сикоры"
+  },
+  {
+    "id": "07108641-2681-5e35-9fc8-153737fe8673",
+    "name": "Донское винодельческое хозяйство \"Эльбузд\""
+  },
+  {
+    "id": "09901728-b884-5500-ba93-38aa6dc5642f",
+    "name": "Cloudy Winery"
+  },
+  {
+    "id": "2422f938-4030-5bfe-8d5d-7af6a342d593",
+    "name": "Belmas Winery"
+  },
+  {
+    "id": "ee4780f0-3a38-5dd3-ac8a-0fb9db29e260",
+    "name": "Вилла Уркуста"
+  },
+  {
+    "id": "f43db5d4-7882-5ad9-a3f5-2989364b6b64",
+    "name": "Vibes"
+  },
+  {
+    "id": "43aeab91-d4a5-59ff-bea1-310621831c4b",
+    "name": "One Barrel (Уан Баррел)"
+  },
+  {
+    "id": "78367a4d-233a-5b2e-a584-c3c8b158d867",
+    "name": "WINEMAFIA"
+  },
+  {
+    "id": "8aa6db47-97ba-5ea1-aa42-1746ef620065",
+    "name": "Chateau Semiray"
+  },
+  {
+    "id": "4ee1ff9a-bb24-57f0-88f6-6d8cb842b470",
+    "name": "Усадьба Меркотан"
+  },
+  {
+    "id": "655bb70f-60e3-5d09-92c1-c966a0b54ac5",
+    "name": "Cellar Master"
+  },
+  {
+    "id": "690101cd-fe40-548b-8fe8-5c80ecdf751e",
+    "name": "Долина Лефкадия"
+  },
+  {
+    "id": "9f926475-34f9-50d7-b024-12e7077549bd",
+    "name": "MILLSTREAM"
+  },
+  {
+    "id": "8c69287a-82e0-56bc-8901-0e2dd4ff4cb5",
+    "name": "Усадьба Маркотх"
+  },
+  {
+    "id": "7fad048d-1062-56c4-82aa-b78e6ac6a6f4",
+    "name": "Ivan & Ksenia Kruz"
+  },
+  {
+    "id": "cb22c277-9715-58f9-88b0-cdbf70911df7",
+    "name": "Шато Ай-Даниль"
+  },
+  {
+    "id": "657b780d-6d49-5449-8677-c5f2027feeb7",
+    "name": "Винодельня Молчанова"
+  },
+  {
+    "id": "cb15e8cf-d974-595e-8913-33ed4a2584ba",
+    "name": "Николаев и сыновья"
+  },
+  {
+    "id": "dad29fd3-d62d-50a7-92a0-40f6bc4643f2",
+    "name": "Вилла София"
+  },
+  {
+    "id": "123354b1-688e-5eb0-946d-42f7d5d9d3f5",
+    "name": "Зимовец"
+  },
+  {
+    "id": "11708d31-b4f4-5937-9023-d7f9d17e254f",
+    "name": "Tempelhof Winery"
+  },
+  {
+    "id": "96f59cf7-ae7f-5819-98a8-0055260a36c2",
+    "name": "Семейная винодельня Михаила Колесникова"
+  },
+  {
+    "id": "289a65ed-26e9-5db4-8e39-e0d2e570efac",
+    "name": "Раевское"
+  },
+  {
+    "id": "38b4bd11-210f-5400-abaf-87921796af00",
+    "name": "Криница"
+  },
+  {
+    "id": "3ca8cafa-bcc8-5283-8a66-834acd88cf42",
+    "name": "Gunko Winery"
+  },
+  {
+    "id": "65b7d89f-7de3-5062-b6d0-ba1156bd1227",
+    "name": "Усадьба Александровская"
+  },
+  {
+    "id": "5bf0f2aa-450a-5299-a7f8-1030ac7ac37b",
+    "name": "Виктор Сташко"
+  },
+  {
+    "id": "81b1b45f-511e-5ed7-aeb2-83567e3f13c0",
+    "name": "Uppa Winery"
+  },
+  {
+    "id": "b0179c32-e9fb-561a-8c0a-a786d035ace9",
+    "name": "Domaine Lipko"
+  },
+  {
+    "id": "a385fa80-f839-51a9-be85-88b5166801b7",
+    "name": "Bogovich Wine & Vineyard"
+  },
+  {
+    "id": "77dc4241-f0b3-5d66-aaff-5ac330ea30ce",
+    "name": "ESSE"
+  },
+  {
+    "id": "59f7a282-502e-5994-a0cf-3e6d78c5fb8d",
+    "name": "Ароматное"
+  },
+  {
+    "id": "e7e4dca2-a04a-55e3-8723-88c1244b0256",
+    "name": "WINEPARK"
+  },
+  {
+    "id": "6c85a90e-412d-58c5-a2fd-c63f65ca4854",
+    "name": "Villa di Alma"
+  },
+  {
+    "id": "93ca50cb-256c-54de-8501-ee38bdebb66f",
+    "name": "Два Сердца"
+  },
+  {
+    "id": "a1752bde-05ba-5f51-ac10-8a93113f63d5",
+    "name": "Дача Сердюка"
+  },
+  {
+    "id": "17a6420b-c8da-5f07-97aa-e21178de66be",
+    "name": "Винодельня Покровская"
+  },
+  {
+    "id": "2bc72a8d-33c4-586d-9963-219b311e223a",
+    "name": "Винодельня Марченко"
+  },
+  {
+    "id": "09d51d57-8247-5fae-a540-141689be527f",
+    "name": "Винодельня Марко"
+  },
+  {
+    "id": "1ae6b5cc-e4a9-5c36-8dc5-036e6c5e64bf",
+    "name": "Винодельня Жаков"
+  },
+  {
+    "id": "8c3495bd-c671-5ccc-aa63-a80975d0d27c",
+    "name": "Винодельня Бегильдеева"
+  },
+  {
+    "id": "fd5aa475-1af9-5984-ab64-ffb141b0f9aa",
+    "name": "Винодельня Батрак"
+  },
+  {
+    "id": "6eb2aacc-c5fa-5255-8f41-f5bff9de69cb",
+    "name": "Винодельня 78"
+  },
+  {
+    "id": "7baf1ef0-12ef-54bb-8f1f-96573fafdabf",
+    "name": "Винный кооператив Интуиция"
+  },
+  {
+    "id": "6786cf65-e8e0-57b4-8749-68273c81c4f2",
+    "name": "Винный форт Адагум"
+  },
+  {
+    "id": "e2a7342d-fe4d-5a3f-a7d1-95d997d3277c",
+    "name": "ВайнКрафт"
+  },
+  {
+    "id": "95170779-6c35-5a80-9bfc-f95081f8e782",
+    "name": "В2Р"
+  },
+  {
+    "id": "1ec64062-6436-564e-a077-e061a39c9b6d",
+    "name": "Благолюбов"
+  },
+  {
+    "id": "0d128cb7-c827-5e65-a4c2-2b5b6072abc0",
+    "name": "Артвин"
+  },
+  {
+    "id": "8053b86a-fb4c-5a71-8dab-f96f91ede82f",
+    "name": "Andryus Yutsis"
+  },
+  {
+    "id": "1edfba8b-0735-5023-a08a-c1381088fc20",
+    "name": "А. Гордиенко & М. Николаев"
+  },
+  {
+    "id": "1fcfb8a6-8cac-5ddb-88d7-ca00b4573841",
+    "name": "Агролайн"
+  },
+  {
+    "id": "7744bd33-6c58-5fd8-81f7-6115da1f6b17",
+    "name": "GAVRAS"
+  },
+  {
+    "id": "3b3abc3a-edd5-5889-a4c1-dbd0b35762f9",
+    "name": "Ferrum Winery"
+  },
+  {
+    "id": "3535b776-d08a-5ff3-95f9-55232af256f7",
+    "name": "Dubinin Winery"
+  },
+  {
+    "id": "2886dd52-26e9-5262-ae9d-eaae13304810",
+    "name": "Domaine de la Vivandiere"
+  },
+  {
+    "id": "6fc0f13f-ea2f-5702-ba56-f580822cb4fe",
+    "name": "Cock t'est belle"
+  },
+  {
+    "id": "e88baa6f-6652-5db5-baa1-3c036160db76",
+    "name": "Chateau Cachalot"
+  },
+  {
+    "id": "9fe7c2b2-4d40-5269-a0ed-17d7314473fe",
+    "name": "Chateau Andre"
+  },
+  {
+    "id": "401196df-5624-5b09-b91f-dc09b9fc2158",
+    "name": "Bakla Vines"
+  },
+  {
+    "id": "1e46fb39-572f-52e5-9e97-a1a754774697",
+    "name": "Вина Арпачина"
+  },
+  {
+    "id": "7bbad8da-ffdc-5512-a817-516b1160d606",
+    "name": "VinaBani"
+  },
+  {
+    "id": "30e3207f-7de5-5393-8a74-475923e1d29b",
+    "name": "STN Winery"
+  },
+  {
+    "id": "02f1383c-d0b4-53d0-8738-3b6ec15cafbc",
+    "name": "Vino & Nebo"
+  },
+  {
+    "id": "5a26d5a1-eeba-59b7-a2ed-9586bf77a448",
+    "name": "Усадьба Родное Гнездо"
+  },
+  {
+    "id": "dfa8b94f-1897-52c6-b8d5-5bd4dd663f04",
+    "name": "Сенетх"
+  },
+  {
+    "id": "d24f01ca-2abd-5bdc-9afd-c6f0ad3fee2f",
+    "name": "Левокумское"
+  },
+  {
+    "id": "f7b28b97-b8b6-526a-9cb1-403c4d71de57",
+    "name": "Винодельня Бердяева"
+  },
+  {
+    "id": "7fd69e7c-59ab-53b7-83dc-d75dac7c35d8",
+    "name": "Radio Wine"
+  },
+  {
+    "id": "561f2b4e-ae08-563e-bfc1-3d34d1498a1f",
+    "name": "Oxana Istratova Wine"
+  },
+  {
+    "id": "1a188b7d-acaa-5b5e-b6d1-1bdce616fe73",
+    "name": "Nesterov Winery"
+  },
+  {
+    "id": "9b1f8f62-1aa2-5328-8168-05220ee16d5f",
+    "name": "Mons Albus"
+  },
+  {
+    "id": "1bc24967-ddcd-500b-8263-ef03543cc2e5",
+    "name": "LeGato"
+  },
+  {
+    "id": "07ed95b7-0cbc-59cc-92f1-2724aa44aa73",
+    "name": "Неизвестный производитель"
+  }
+]

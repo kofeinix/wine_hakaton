@@ -1,0 +1,47 @@
+[
+  {
+    "id": "d458863e-cafb-5490-972d-93cec978480f",
+    "name": "Самара",
+    "country": null
+  },
+  {
+    "id": "69fa199f-aa3e-5bb7-acef-aec29a11fa3f",
+    "name": "Нижняя Волга",
+    "country": null
+  },
+  {
+    "id": "6f10e5af-7f22-594e-b110-0ce913c688f1",
+    "name": "Дагестан",
+    "country": null
+  },
+  {
+    "id": "76a901dd-4a9b-5eaf-880e-9dc4e7179d6a",
+    "name": "Северная Осетия — Алания",
+    "country": null
+  },
+  {
+    "id": "ebde0e40-76f9-512c-a182-e63b14560c6c",
+    "name": "Кубань",
+    "country": null
+  },
+  {
+    "id": "79efccce-2539-5dda-9c25-5e0492fe1764",
+    "name": "Крым",
+    "country": null
+  },
+  {
+    "id": "ac315008-4835-5da2-b25a-4ca4a94229de",
+    "name": "Долина Дона",
+    "country": null
+  },
+  {
+    "id": "9abc4486-b709-5086-99af-15a3584a5ad7",
+    "name": "Дальневосточная зона",
+    "country": null
+  },
+  {
+    "id": "d21852f9-de42-5a11-8a31-5b4f011af982",
+    "name": "Ставрополье",
+    "country": null
+  }
+]
