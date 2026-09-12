@@ -4,6 +4,9 @@ __pycache__/
 .idea/
 .ruff_cache/
 .uv-cache/
+frontend/node_modules/
+frontend/dist/
 models/*
 !models/yolo/
 !models/yolo/best.onnx
+data/photos.tar.gz

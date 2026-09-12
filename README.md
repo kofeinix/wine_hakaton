@@ -24,6 +24,8 @@ docker compose up --build
 
 API будет доступен на `http://localhost:8000`.
 
+Frontend будет доступен на `http://localhost:5173`.
+
 OpenAPI-документация будет доступна на `http://localhost:8000/docs`.
 
 ## Фото в MinIO
@@ -174,6 +176,32 @@ curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3" \
 
 ```bash
 curl "http://localhost:8000/api/v1/wines/664766e5-a73d-5609-a0d7-cffbbe62d466"
+```
+
+## Frontend
+
+Простой React-интерфейс лежит в `frontend/` и запускается отдельным Compose-сервисом.
+
+При обычном запуске:
+
+```bash
+docker compose up --build
+```
+
+откройте `http://localhost:5173`. Frontend отправляет фото в `POST /api/v1/search/image/extended`, показывает большую карточку лучшего совпадения со всеми пользовательскими параметрами и ниже выводит похожие варианты.
+
+Для локальной frontend-разработки без Docker:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite проксирует `/api` на `http://localhost:8000`. Если API запущен по другому адресу, задайте:
+
+```bash
+VITE_API_TARGET=http://localhost:8000 npm run dev
 ```
 
 ## Подготовить модели

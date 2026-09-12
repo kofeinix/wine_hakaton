@@ -219,7 +219,11 @@ class WineCatalogService:
 
     async def _load_wines_by_ids(self, wine_ids: list[str]) -> dict[str, WineResponse]:
         wines = await self.wine_repository.load_wines_by_ids(wine_ids)
-        return {str(wine.id): self._wine_response(wine) for wine in wines}
+        responses: dict[str, WineResponse] = {}
+        for wine in wines:
+            photos = await self.photo_service.get_wine_photos(wine)
+            responses[str(wine.id)] = self._wine_response(wine, photos=photos.photos)
+        return responses
 
     def _merge_matches(
         self,

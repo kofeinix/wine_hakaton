@@ -32,7 +32,7 @@ class WinePhotoService:
 
     async def get_wine_photos(self, wine: Wine) -> WinePhotoListResponse:
         wine_id = str(wine.id)
-        cache_key = f"wine:{wine_id}:photos:v2"
+        cache_key = f"wine:{wine_id}:photos:v3"
         cached = await self._get_cached_photos(cache_key)
         if cached is not None:
             return WinePhotoListResponse(wine_id=wine_id, photos=cached)
