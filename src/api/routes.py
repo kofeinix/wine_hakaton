@@ -1,17 +1,16 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi.responses import StreamingResponse
 
 from src.api.schemas import (
-    DictionaryResponse,
-    ReviewCreate,
-    ReviewListResponse,
-    ReviewResponse,
+    CompactSearchResponse,
     SearchResponse,
-    WineListResponse,
     WineResponse,
 )
-from src.api.service import WineCatalogService
+from src.api.services import WineCatalogService
+from src.api.services.photo_service import WinePhotoService
+from src.api.utils import _read_image_upload
 
 router = APIRouter()
 
@@ -20,97 +19,100 @@ def get_wine_service(request: Request) -> WineCatalogService:
     return request.app.state.wine_service
 
 
+def get_photo_service(request: Request) -> WinePhotoService:
+    return request.app.state.photo_service
+
+
 WineServiceDep = Annotated[WineCatalogService, Depends(get_wine_service)]
+PhotoServiceDep = Annotated[WinePhotoService, Depends(get_photo_service)]
 
 
-@router.post("/search/image", response_model=SearchResponse, tags=["search"])
+@router.post(
+    "/search/image",
+    response_model=CompactSearchResponse,
+    tags=["search"],
+    summary="Search wine by image",
+    description=(
+        "Accepts a wine bottle or label image and returns compact matches as "
+        "`result: [{wine_id, score}]`. Use `/search/image/extended` for crop, extraction, "
+        "source, and full wine details."
+    ),
+    responses={
+        400: {"description": "Uploaded image is empty"},
+        415: {"description": "Uploaded file is not an image"},
+    },
+)
 async def search_by_image(
     service: WineServiceDep,
-    image: UploadFile = File(..., description="Wine label image"),
-    limit: int = Query(default=5, ge=1, le=20),
+    image: UploadFile = File(..., description="Wine bottle or label image"),
+    limit: int = Query(default=5, ge=1, le=20, description="Maximum number of matches"),
+) -> CompactSearchResponse:
+    image_bytes = await _read_image_upload(image)
+    return await service.search_by_image(
+        image_bytes=image_bytes,
+        limit=limit,
+    )
+
+
+@router.post(
+    "/search/image/extended",
+    response_model=SearchResponse,
+    tags=["search"],
+    summary="Search wine by image with diagnostics",
+    description=(
+        "Runs the same image search pipeline as `/search/image`, but returns YOLO crop metadata, "
+        "NuExtract fields from the full image and crop, full wine records, and source scores."
+    ),
+    responses={
+        400: {"description": "Uploaded image is empty"},
+        415: {"description": "Uploaded file is not an image"},
+    },
+)
+async def search_by_image_extended(
+    service: WineServiceDep,
+    image: UploadFile = File(..., description="Wine bottle or label image"),
+    limit: int = Query(default=5, ge=1, le=20, description="Maximum number of matches"),
 ) -> SearchResponse:
-    if image.content_type is None or not image.content_type.startswith("image/"):
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Only image uploads are supported",
-        )
-
-    image_bytes = await image.read()
-    if not image_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded image is empty",
-        )
-
-    return service.search_by_image(
+    image_bytes = await _read_image_upload(image)
+    return await service.search_by_image_extended(
         image_bytes=image_bytes,
         filename=image.filename,
-        content_type=image.content_type,
+        content_type=image.content_type or "application/octet-stream",
         limit=limit,
     )
 
 
-@router.get("/wines", response_model=WineListResponse, tags=["wines"])
-async def list_wines(
-    service: WineServiceDep,
-    q: str | None = Query(default=None, description="Search by wine name or producer"),
-    country: str | None = None,
-    grape: str | None = None,
-    min_rating: float | None = Query(default=None, ge=0, le=5),
-    limit: int = Query(default=20, ge=1, le=100),
-) -> WineListResponse:
-    return service.list_wines(
-        q=q,
-        country=country,
-        grape=grape,
-        min_rating=min_rating,
-        limit=limit,
-    )
-
-
-@router.get("/wines/{wine_id}", response_model=WineResponse, tags=["wines"])
+@router.get(
+    "/wines/{wine_id}",
+    response_model=WineResponse,
+    tags=["wines"],
+    summary="Get wine by id",
+    responses={404: {"description": "Wine not found"}},
+)
 async def get_wine(
     wine_id: str,
     service: WineServiceDep,
 ) -> WineResponse:
-    wine = service.get_wine(wine_id)
+    wine = await service.get_wine(wine_id)
     if wine is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine not found")
     return wine
 
 
 @router.get(
-    "/wines/{wine_id}/reviews",
-    response_model=ReviewListResponse,
-    tags=["reviews"],
+    "/wines/{wine_id}/photos/{filename}",
+    tags=["wines"],
+    summary="Get wine photo",
+    responses={404: {"description": "Wine photo not found"}},
 )
-async def get_wine_reviews(
+async def get_wine_photo(
     wine_id: str,
-    service: WineServiceDep,
-) -> ReviewListResponse:
-    if service.get_wine(wine_id) is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine not found")
-    return service.get_reviews(wine_id)
+    filename: str,
+    service: PhotoServiceDep,
+) -> StreamingResponse:
+    photo = await service.get_photo_file_by_wine_id(wine_id, filename)
+    if photo is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine photo not found")
 
-
-@router.post(
-    "/wines/{wine_id}/reviews",
-    response_model=ReviewResponse,
-    status_code=status.HTTP_201_CREATED,
-    tags=["reviews"],
-)
-async def publish_review(
-    wine_id: str,
-    payload: ReviewCreate,
-    service: WineServiceDep,
-) -> ReviewResponse:
-    if service.get_wine(wine_id) is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine not found")
-    return service.create_review(wine_id=wine_id, payload=payload)
-
-
-@router.get("/dictionaries", response_model=DictionaryResponse, tags=["metadata"])
-async def get_dictionaries(
-    service: WineServiceDep,
-) -> DictionaryResponse:
-    return service.get_dictionaries()
+    file_data, content_type = photo
+    return StreamingResponse(file_data, media_type=content_type)

@@ -26,6 +26,7 @@ dependencies = [
     "torch>=2.14.0",
     "transformers>=5.17.0",
     "uvicorn[standard]>=0.38.0",
+    "greenlet>=3.5.5",
 ]
 
 [[tool.uv.index]]

@@ -14,6 +14,11 @@
 cp .env.example .env
 uv sync
 ./prepare_models
+uv run python scripts/generate_wine_embeddings.py \
+  --photos-archive data/photos.tar.gz \
+  --images-json data/db/wine_images.json \
+  --model-dir models/siglip2 \
+  --output data/embeddings/wine_siglip2.jsonl.gz
 docker compose up --build
 ```
 
@@ -35,17 +40,18 @@ OpenAPI-документация будет доступна на `http://localh
 ## Postgres init
 
 Начальная загрузка Postgres выполняется отдельным Compose-сервисом `db-init`.
-Он использует тот же Docker image, что и приложение, запускает `scripts/init_database.py`, создает таблицы через SQLAlchemy-модели из `src/connections/database/models.py` и загружает JSON-экспорт из `data/export`.
+Он использует тот же Docker image, что и приложение, запускает `scripts/init_database.py`, создает таблицы через SQLAlchemy-модели из `src/connections/database/models.py` и загружает нормализованные JSON-файлы из `data/db`.
 
 При `docker compose up --build` сервис `db-init`:
 
 - ждет healthy `postgres`;
-- создает таблицы `wineries` и `wines`;
-- валидирует и нормализует `data/export/wineries.json` и `data/export/wines.json`;
+- создает таблицы `producers`, `regions`, `grapes`, `wines`, `wine_grapes` и `wine_images`;
+- валидирует `data/db/*.json` через Pydantic-схемы;
 - загружает данные через idempotent upsert;
-- не сохраняет в `wines` исходные `url`, `photo_url` и пути к фото.
+- сохраняет в `wines` исходный `url` из `wines.json`;
+- не сохраняет в `wines` исходные `photo_url` и пути к фото.
 
-Пути к фото не хранятся в Postgres. Код приложения должен строить MinIO-префикс набора фото из bucket/prefix и `Wine.wine_id`, например `wine/<wine_id>`.
+Пути к фото не хранятся в таблице `wines`. Для фотографий есть отдельная таблица `wine_images`: она хранит UUID фотографии, `wine_id`, признак главной фотографии и object key в MinIO.
 
 Чтобы полностью переинициализировать локальную БД, удалите volume:
 
@@ -65,15 +71,16 @@ docker compose run --rm db-init
 
 ## Qdrant init
 
-Векторы для поиска по фото генерируются отдельным скриптом из главных фотографий вина. Главной считается фотография из `data/photos.tar.gz` с именем `main*.webp` внутри папки конкретного `wine_id`.
+Векторы для поиска по фото генерируются отдельным скриптом для всех фотографий из `data/photos.tar.gz`, которые есть в `data/db/wine_images.json`.
 
 Сгенерировать файл эмбеддингов:
 
 ```bash
 uv run python scripts/generate_wine_embeddings.py \
   --photos-archive data/photos.tar.gz \
+  --images-json data/db/wine_images.json \
   --model-dir models/siglip2 \
-  --output data/embeddings/wine_main_siglip2.jsonl.gz
+  --output data/embeddings/wine_siglip2.jsonl.gz
 ```
 
 Для диагностики производительности добавьте `--profile`; скрипт покажет время чтения/декода из `tar.gz`, preprocessing, переноса на device, inference и записи JSONL:
@@ -81,14 +88,15 @@ uv run python scripts/generate_wine_embeddings.py \
 ```bash
 uv run python scripts/generate_wine_embeddings.py \
   --photos-archive data/photos.tar.gz \
+  --images-json data/db/wine_images.json \
   --model-dir models/siglip2 \
-  --output data/embeddings/wine_main_siglip2.jsonl.gz \
+  --output data/embeddings/wine_siglip2.jsonl.gz \
   --batch-size 16 \
   --device auto \
   --profile
 ```
 
-Файл содержит JSONL-записи с `wine_id`, `main_photo_path` и нормализованным SigLIP2-вектором. Он нужен как воспроизводимый промежуточный артефакт: когда изменится датасет, достаточно пересобрать этот файл и заново выполнить init Qdrant.
+Файл содержит JSONL-записи с `photo_id` и нормализованным SigLIP2-вектором. `scripts/init_qdrant.py` принимает только этот новый формат; старый файл `wine_main_siglip2.jsonl.gz` с `wine_id`/`main_photo_path` несовместим и должен быть пересобран. Когда изменится датасет, достаточно пересобрать embeddings-файл и заново выполнить init Qdrant.
 
 После генерации файла `qdrant-init` выполнится автоматически при обычном запуске:
 
@@ -105,10 +113,10 @@ docker compose run --rm qdrant-init
 Сервис `qdrant-init`:
 
 - ждет healthy `qdrant`;
-- читает `/data/embeddings/wine_main_siglip2.jsonl.gz`;
+- читает `/data/embeddings/wine_siglip2.jsonl.gz`;
 - пересоздает коллекцию `QDRANT__COLLECTION_NAME` (по умолчанию `wine_vectors`);
-- записывает точки с id = `wine_id`;
-- кладет в payload `wine_id` и `main_photo_path`.
+- записывает точки с id = `photo_id`;
+- не кладет MinIO-ссылки в payload Qdrant; API маппит найденные `photo_id` на `wine_id` через Postgres.
 
 Если нужно сохранить существующую коллекцию и только сделать upsert точек:
 
@@ -138,15 +146,15 @@ docker compose exec minio mc ls local/wine
 COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/photos.tar.gz -C data/photos .
 ```
 
-## API-заглушки
+## API
 
 - `GET /health` - проверка, что API жив.
-- `POST /api/v1/search/image` - принимает изображение этикетки в multipart-поле `image` и возвращает список найденных вин. Сейчас это заглушка для будущего OCR/CV/Qdrant-поиска.
-- `GET /api/v1/wines` - простой список вин с фильтрами `q`, `country`, `grape`, `min_rating`, `limit`.
+- `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`.
+- `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop этикетки, извлеченные NuExtract поля, полные карточки вин, scores и источники совпадения.
 - `GET /api/v1/wines/{wine_id}` - детали вина по id.
-- `GET /api/v1/wines/{wine_id}/reviews` - отзывы по id вина.
-- `POST /api/v1/wines/{wine_id}/reviews` - публикация отзыва.
-- `GET /api/v1/dictionaries` - справочники стран, сортов винограда и стилей для фильтров.
+- `GET /api/v1/wines/{wine_id}/photos/{filename}` - файл фотографии вина из MinIO. URL приходит в `image_url` и `photos[].url` ответа `GET /api/v1/wines/{wine_id}` или extended search.
+
+Старые demo-ручки `GET /api/v1/wines`, `GET/POST /api/v1/wines/{wine_id}/reviews` и `GET /api/v1/dictionaries` удалены вместе с in-memory stub-сервисом.
 
 Пример поиска по изображению:
 
@@ -155,12 +163,17 @@ curl -X POST "http://localhost:8000/api/v1/search/image?limit=3" \
   -F "image=@./label.jpg"
 ```
 
-Пример публикации отзыва:
+Пример расширенного поиска:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/wines/wine_001/reviews" \
-  -H "Content-Type: application/json" \
-  -d '{"author_name":"Alice","rating":4.5,"text":"Good balance and long finish."}'
+curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3" \
+  -F "image=@./label.jpg"
+```
+
+Пример получения карточки вина:
+
+```bash
+curl "http://localhost:8000/api/v1/wines/664766e5-a73d-5609-a0d7-cffbbe62d466"
 ```
 
 ## Подготовить модели

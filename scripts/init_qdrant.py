@@ -19,7 +19,7 @@ from src.connections.qdrant import QdrantClient
 from src.settings.settings import all_settings
 
 
-DEFAULT_EMBEDDINGS_PATH = Path("/data/embeddings/wine_main_siglip2.jsonl.gz")
+DEFAULT_EMBEDDINGS_PATH = Path("/data/embeddings/wine_siglip2.jsonl.gz")
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def read_embedding_rows(path: Path) -> Iterator[dict]:
             if not line.strip():
                 continue
             row = json.loads(line)
-            if "wine_id" not in row or "vector" not in row:
+            if "photo_id" not in row or "vector" not in row:
                 raise ValueError(f"Invalid embedding row at line {line_number}")
             yield row
 
@@ -126,12 +126,9 @@ async def init_qdrant(
         for batch in batched(read_embedding_rows(embeddings_path), batch_size):
             points = [
                 qdrant_models.PointStruct(
-                    id=point_id(row["wine_id"]),
+                    id=point_id(row["photo_id"]),
                     vector=row["vector"],
-                    payload={
-                        "wine_id": str(row["wine_id"]),
-                        "main_photo_path": row.get("main_photo_path"),
-                    },
+                    payload={},
                 )
                 for row in batch
             ]

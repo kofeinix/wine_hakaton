@@ -23,8 +23,8 @@ from src.settings.settings import all_settings
 
 
 DEFAULT_PHOTOS_ARCHIVE = Path("data/photos.tar.gz")
-DEFAULT_OUTPUT = Path("data/embeddings/wine_main_siglip2.jsonl.gz")
-DEFAULT_MINIO_PREFIX = ""
+DEFAULT_IMAGES_JSON = Path("data/db/wine_images.json")
+DEFAULT_OUTPUT = Path("data/embeddings/wine_siglip2.jsonl.gz")
 
 logger = logging.getLogger(__name__)
 
@@ -48,15 +48,15 @@ class StageTimer:
 
 
 @dataclass(frozen=True)
-class MainPhoto:
+class WinePhoto:
+    photo_id: str
     wine_id: str
     archive_path: str
-    minio_path: str
 
 
 @dataclass(frozen=True)
 class PhotoImage:
-    photo: MainPhoto
+    photo: WinePhoto
     image: Image.Image
 
 
@@ -84,22 +84,37 @@ def open_text_writer(path: Path) -> TextIO:
     return path.open("w", encoding="utf-8")
 
 
-def main_photo_from_member(member: tarfile.TarInfo, minio_prefix: str) -> MainPhoto | None:
-    prefix = minio_prefix.strip("/")
+def load_photo_index(images_json: Path) -> dict[str, tuple[str, str]]:
+    with images_json.open("r", encoding="utf-8") as file:
+        rows = json.load(file)
+    return {
+        row["minio_path"].strip("/"): (row["id"], row["wine_id"])
+        for row in rows
+        if row.get("minio_path") and row.get("id") and row.get("wine_id")
+    }
+
+
+def photo_from_member(
+    member: tarfile.TarInfo,
+    photo_index: dict[str, tuple[str, str]],
+) -> WinePhoto | None:
     if not member.isfile():
         return None
     path = Path(member.name)
     if len(path.parts) < 2:
         return None
-    if not path.name.startswith("main") or path.suffix.lower() not in {".jpg", ".jpeg", ".webp"}:
+    if path.suffix.lower() not in {".jpg", ".jpeg", ".webp"}:
         return None
 
-    wine_id = path.parts[0]
-    minio_path = "/".join((prefix, *path.parts)) if prefix else path.as_posix()
-    return MainPhoto(
+    photo_key = path.as_posix().strip("/")
+    photo_row = photo_index.get(photo_key)
+    if photo_row is None:
+        return None
+    photo_id, wine_id = photo_row
+    return WinePhoto(
+        photo_id=photo_id,
         wine_id=wine_id,
         archive_path=member.name,
-        minio_path=minio_path,
     )
 
 
@@ -158,8 +173,7 @@ def write_batch(
         writer.write(
             json.dumps(
                 {
-                    "wine_id": item.photo.wine_id,
-                    "main_photo_path": item.photo.minio_path,
+                    "photo_id": item.photo.photo_id,
                     "vector": vector.tolist(),
                 },
                 ensure_ascii=False,
@@ -178,9 +192,9 @@ def write_batch(
 
 def generate_embeddings(
     photos_archive: Path,
+    images_json: Path,
     output: Path,
     model_dir: Path,
-    minio_prefix: str,
     batch_size: int,
     device_name: str,
     limit: int | None,
@@ -194,23 +208,23 @@ def generate_embeddings(
     model.eval()
     synchronize_device(device)
     logger.info("Loaded SigLIP2 model in %.2fs", time.perf_counter() - start)
+    photo_index = load_photo_index(images_json)
+    logger.info("Loaded %s photo ids from %s", len(photo_index), images_json)
 
     tmp_output = output.with_name(f"{output.name}.tmp")
     written = 0
     totals = StageTimer.empty()
     try:
         with tarfile.open(photos_archive, "r:gz") as archive, open_text_writer(tmp_output) as writer:
-            logger.info("Streaming main wine photos from %s", photos_archive)
+            logger.info("Streaming wine photos from %s", photos_archive)
             batch: list[PhotoImage] = []
-            seen_wine_ids: set[str] = set()
             tar_stage_start = time.perf_counter()
 
             for member in archive:
-                photo = main_photo_from_member(member, minio_prefix)
-                if photo is None or photo.wine_id in seen_wine_ids:
+                photo = photo_from_member(member, photo_index)
+                if photo is None:
                     continue
 
-                seen_wine_ids.add(photo.wine_id)
                 image = load_image(archive, member)
                 batch.append(PhotoImage(photo=photo, image=image))
 
@@ -272,11 +286,11 @@ def generate_embeddings(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate SigLIP2 embeddings for main wine photos.")
+    parser = argparse.ArgumentParser(description="Generate SigLIP2 embeddings for wine photos.")
     parser.add_argument("--photos-archive", type=Path, default=DEFAULT_PHOTOS_ARCHIVE)
+    parser.add_argument("--images-json", type=Path, default=DEFAULT_IMAGES_JSON)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--model-dir", type=Path, default=Path(all_settings.embeddings.model_dir))
-    parser.add_argument("--minio-prefix", default=DEFAULT_MINIO_PREFIX)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--limit", type=int, default=None)
@@ -289,9 +303,9 @@ if __name__ == "__main__":
     args = parse_args()
     generate_embeddings(
         photos_archive=args.photos_archive,
+        images_json=args.images_json,
         output=args.output,
         model_dir=args.model_dir,
-        minio_prefix=args.minio_prefix,
         batch_size=args.batch_size,
         device_name=args.device,
         limit=args.limit,

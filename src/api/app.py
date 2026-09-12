@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
 from src.api.routes import router
-from src.api.service import WineCatalogService
+from src.api.services import WineCatalogService
+from src.api.services.photo_service import WinePhotoService
 from src.container.manager import ConnectionManager
 
 
@@ -9,12 +11,56 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
     app = FastAPI(
         title="WineHakaton API",
         version="0.1.0",
-        description="Vivino-like API template for wine label search and reviews.",
+        summary="Wine label recognition and catalog search API.",
+        description=(
+            "API for matching uploaded wine bottle images against the wine catalog. "
+            "The image search pipeline crops the label with YOLO, extracts label fields "
+            "with NuExtract, embeds the original image with SigLIP2, searches Qdrant by "
+            "vector similarity, and enriches results from Postgres."
+        ),
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
+        swagger_ui_parameters={
+            "displayRequestDuration": True,
+            "defaultModelsExpandDepth": 2,
+            "persistAuthorization": True,
+        },
+        openapi_tags=[
+            {
+                "name": "search",
+                "description": "Image-based wine label recognition and matching.",
+            },
+            {
+                "name": "wines",
+                "description": "Wine catalog lookup and photo delivery.",
+            },
+            {
+                "name": "system",
+                "description": "Service health checks.",
+            },
+        ],
     )
     app.state.connection_manager = connection_manager
-    app.state.wine_service = WineCatalogService(connection_manager)
+    app.state.photo_service = WinePhotoService(connection_manager)
+    app.state.wine_service = WineCatalogService(
+        connection_manager,
+        photo_service=app.state.photo_service,
+    )
 
-    @app.get("/health", tags=["system"])
+    @app.get(
+        "/",
+        include_in_schema=False,
+    )
+    async def swagger_redirect() -> RedirectResponse:
+        return RedirectResponse(url="/docs")
+
+    @app.get(
+        "/health",
+        tags=["system"],
+        summary="Health check",
+        description="Returns a lightweight liveness response for the API process.",
+    )
     async def health_check() -> dict[str, str]:
         return {"status": "ok"}
 

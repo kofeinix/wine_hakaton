@@ -1,6 +1,7 @@
 import logging
 
 from qdrant_client import AsyncQdrantClient
+from qdrant_client.conversions.common_types import QueryResponse
 from tenacity import (
     before_sleep_log,
     retry,
@@ -48,3 +49,17 @@ class QdrantClient:
         await self.client.close()
         self._is_connected = False
         logger.info("Qdrant client disconnected")
+
+    async def search(self, vector: list[float], limit: int) -> QueryResponse | None:
+        if not self._is_connected:
+            raise RuntimeError("Qdrant client not connected")
+        try:
+            return await self.client.query_points(
+                collection_name=self.settings.collection_name,
+                query=vector,
+                limit=limit,
+                with_payload=False,
+            )
+        except Exception:
+            logger.exception("Vector search failure")
+            return None

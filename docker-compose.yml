@@ -167,7 +167,7 @@ services:
       - python
       - scripts/init_qdrant.py
       - --embeddings-path
-      - /data/embeddings/wine_main_siglip2.jsonl.gz
+      - /data/embeddings/wine_siglip2.jsonl.gz
 
   redis:
     image: redis:7-alpine
