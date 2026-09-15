@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     environment:
       VITE_API_TARGET: http://app:8000
+      VITE_ALLOWED_HOSTS: ${VITE_ALLOWED_HOSTS:-}
     depends_on:
       app:
         condition: service_started

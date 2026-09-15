@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 from src.api.routes import router
-from src.api.services import WineCatalogService
-from src.api.services.photo_service import WinePhotoService
+from src.api.services import WineService
 from src.container.manager import ConnectionManager
 
 
@@ -42,11 +41,7 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
         ],
     )
     app.state.connection_manager = connection_manager
-    app.state.photo_service = WinePhotoService(connection_manager)
-    app.state.wine_service = WineCatalogService(
-        connection_manager,
-        photo_service=app.state.photo_service,
-    )
+    app.state.wine_service = WineService(connection_manager)
 
     @app.get(
         "/",

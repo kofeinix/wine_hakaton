@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from src.connections.database.postgres import DatabaseClient
 from src.connections.minio import MinioClient
@@ -6,6 +7,7 @@ from src.connections.qdrant import QdrantClient
 from src.connections.redis import RedisClient
 from src.connections.rate_limiter import RateLimiterManager
 from src.llm.langchain_openai import ChatOpenAIWrapper
+from src.ml.patch_index import WinePatchIndex
 from src.ml.siglip2 import SiglipImageEmbedder
 from src.ml.yolo import YoloLabelCropper
 from src.settings.settings import AllSettings
@@ -24,6 +26,7 @@ class ConnectionManager:
         self.minio: MinioClient | None = None
         self.yolo: YoloLabelCropper | None = None
         self.embeddings: SiglipImageEmbedder | None = None
+        self.patch_index: WinePatchIndex | None = None
         self._initialize()
 
     def _initialize(self):
@@ -36,6 +39,11 @@ class ConnectionManager:
         self.minio = MinioClient(self.settings.minio)
         self.yolo = YoloLabelCropper(self.settings.yolo)
         self.embeddings = SiglipImageEmbedder(self.settings.embeddings)
+        patch_index_path = Path(self.settings.embeddings.patch_index_path)
+        if patch_index_path.is_file():
+            self.patch_index = WinePatchIndex.load(patch_index_path)
+        else:
+            logger.info("Patch index not found at %s; patch rerank disabled", patch_index_path)
 
     async def start(self):
         await self.database.connect()

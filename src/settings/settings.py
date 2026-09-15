@@ -90,6 +90,11 @@ class EmbeddingSettings(BaseModel):
     model_dir: str = Field(
         default="/models/siglip2", description="Path to mounted SigLIP2 model files"
     )
+    patch_index_path: str = Field(
+        default="/data/embeddings/wine_patch_index.jsonl.gz",
+        description="Optional path to offline patch-token index",
+    )
+    device: str = Field(default="auto", description="Embedding device: auto, cpu, cuda, or mps")
 
 
 class LlmSettings(BaseModel):

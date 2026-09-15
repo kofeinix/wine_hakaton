@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import or_, select
@@ -63,47 +62,6 @@ class WineRepository:
             scores[wine_id_str] = max(scores.get(wine_id_str, 0.0), score)
         return scores
 
-
-    async def search_by_terms(self, terms: list[str], limit: int) -> list[Wine]:
-        if not terms:
-            return []
-
-        conditions = []
-        statement = (
-            self._with_wine_options(select(Wine))
-            .join(Wine.producer)
-            .outerjoin(Wine.region)
-            .outerjoin(Wine.grape_links)
-            .outerjoin(WineGrape.grape)
-        )
-
-        for term in terms:
-            pattern = f"%{term}%"
-            conditions.extend(
-                [
-                    Wine.name.ilike(pattern),
-                    Producer.name.ilike(pattern),
-                    Region.name.ilike(pattern),
-                    Region.country.ilike(pattern),
-                    Grape.name.ilike(pattern),
-                    Wine.color.ilike(pattern),
-                    Wine.sugar.ilike(pattern),
-                    Wine.description.ilike(pattern),
-                ]
-            )
-
-        async with self.database.session() as session:
-            return list(
-                (
-                    await session.scalars(
-                        statement
-                        .where(or_(*conditions))
-                        .distinct()
-                        .order_by(Wine.rating.desc().nullslast())
-                        .limit(max(50, limit * 8))
-                    )
-                ).all()
-            )
 
     async def load_wines_by_ids(self, wine_ids: list[str]) -> list[Wine]:
         ids = []

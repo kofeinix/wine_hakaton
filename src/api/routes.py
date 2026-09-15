@@ -8,23 +8,17 @@ from src.api.schemas import (
     SearchResponse,
     WineResponse,
 )
-from src.api.services import WineCatalogService
-from src.api.services.photo_service import WinePhotoService
+from src.api.services import WineService
 from src.api.utils import _read_image_upload
 
 router = APIRouter()
 
 
-def get_wine_service(request: Request) -> WineCatalogService:
-    return request.app.state.wine_service
+def get_wine_service(request: Request) -> WineService:
+    return request.app.state.text_service
 
 
-def get_photo_service(request: Request) -> WinePhotoService:
-    return request.app.state.photo_service
-
-
-WineServiceDep = Annotated[WineCatalogService, Depends(get_wine_service)]
-PhotoServiceDep = Annotated[WinePhotoService, Depends(get_photo_service)]
+WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
 
 
 @router.post(
@@ -43,12 +37,12 @@ PhotoServiceDep = Annotated[WinePhotoService, Depends(get_photo_service)]
     },
 )
 async def search_by_image(
-    service: WineServiceDep,
+    wine_service: WineServiceDep,
     image: UploadFile = File(..., description="Wine bottle or label image"),
     limit: int = Query(default=5, ge=1, le=20, description="Maximum number of matches"),
 ) -> CompactSearchResponse:
     image_bytes = await _read_image_upload(image)
-    return await service.search_by_image(
+    return await wine_service.search_by_image(
         image_bytes=image_bytes,
         limit=limit,
     )
@@ -69,12 +63,12 @@ async def search_by_image(
     },
 )
 async def search_by_image_extended(
-    service: WineServiceDep,
+    wine_service: WineServiceDep,
     image: UploadFile = File(..., description="Wine bottle or label image"),
     limit: int = Query(default=5, ge=1, le=20, description="Maximum number of matches"),
 ) -> SearchResponse:
     image_bytes = await _read_image_upload(image)
-    return await service.search_by_image_extended(
+    return await wine_service.search_by_image_extended(
         image_bytes=image_bytes,
         filename=image.filename,
         content_type=image.content_type or "application/octet-stream",
@@ -91,9 +85,9 @@ async def search_by_image_extended(
 )
 async def get_wine(
     wine_id: str,
-    service: WineServiceDep,
+    wine_service: WineServiceDep,
 ) -> WineResponse:
-    wine = await service.get_wine(wine_id)
+    wine = await wine_service.get_wine(wine_id)
     if wine is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine not found")
     return wine
@@ -108,9 +102,9 @@ async def get_wine(
 async def get_wine_photo(
     wine_id: str,
     filename: str,
-    service: PhotoServiceDep,
+    wine_service: WineServiceDep,
 ) -> StreamingResponse:
-    photo = await service.get_photo_file_by_wine_id(wine_id, filename)
+    photo = await wine_service.get_photo_file_by_wine_id(wine_id, filename)
     if photo is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine photo not found")
 
