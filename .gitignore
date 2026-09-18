@@ -10,3 +10,6 @@ models/*
 !models/yolo/
 !models/yolo/best.onnx
 data/photos.tar.gz
+data/images/*
+data/images_w_vivino/*
+data/eval/*

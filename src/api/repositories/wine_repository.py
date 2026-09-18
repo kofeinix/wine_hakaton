@@ -62,6 +62,25 @@ class WineRepository:
             scores[wine_id_str] = max(scores.get(wine_id_str, 0.0), score)
         return scores
 
+    async def wine_ids_by_photo_ids(self, photo_ids: list[str]) -> dict[str, str]:
+        ids = []
+        for photo_id in dict.fromkeys(photo_ids):
+            try:
+                ids.append(UUID(photo_id))
+            except ValueError:
+                logger.debug("Skipping non-UUID photo id from Qdrant: %s", photo_id)
+
+        if not ids:
+            return {}
+
+        async with self.database.session() as session:
+            rows = (
+                await session.execute(
+                    select(WineImage.id, WineImage.wine_id).where(WineImage.id.in_(ids))
+                )
+            ).all()
+
+        return {str(photo_id): str(wine_id) for photo_id, wine_id in rows}
 
     async def load_wines_by_ids(self, wine_ids: list[str]) -> list[Wine]:
         ids = []

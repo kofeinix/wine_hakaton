@@ -94,6 +94,7 @@ services:
       - scripts/init_database.py
       - --db-dir
       - /data/db
+      - --drop-existing
 
   minio:
     image: minio/minio:latest
@@ -184,8 +185,8 @@ services:
     command:
       - python
       - scripts/init_qdrant.py
-      - --embeddings-path
-      - /data/embeddings/wine_siglip2.jsonl.gz
+      - --embeddings-dir
+      - /data/embeddings
 
   redis:
     image: redis:7-alpine

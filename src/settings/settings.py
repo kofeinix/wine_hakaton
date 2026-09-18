@@ -78,6 +78,14 @@ class YoloSettings(BaseModel):
     model_path: str = Field(
         default="/models/yolo/best.onnx", description="Path to YOLO ONNX model"
     )
+    bottle_model_path: str = Field(
+        default="/models/yolo/yolo26n-seg.onnx",
+        description="Path to YOLO ONNX model for bottle crop",
+    )
+    label_model_path: str = Field(
+        default="/models/yolo/label.onnx",
+        description="Path to YOLO ONNX model for label crop",
+    )
 
 
 class EmbeddingSettings(BaseModel):
@@ -94,7 +102,24 @@ class EmbeddingSettings(BaseModel):
         default="/data/embeddings/wine_patch_index.jsonl.gz",
         description="Optional path to offline patch-token index",
     )
-    device: str = Field(default="auto", description="Embedding device: auto, cpu, cuda, or mps")
+    device: str = Field(
+        default="auto", description="Embedding device: auto, cpu, cuda, or mps"
+    )
+
+
+class DinoV3Settings(BaseModel):
+    """DINOv3 local model configuration."""
+
+    model_id: str = Field(
+        default="facebook/dinov3-vitb16-pretrain-lvd1689m",
+        description="Hugging Face model id",
+    )
+    model_dir: str = Field(
+        default="/models/dinov3", description="Path to mounted DINOv3 model files"
+    )
+    device: str = Field(
+        default="auto", description="DINOv3 device: auto, cpu, cuda, or mps"
+    )
 
 
 class LlmSettings(BaseModel):
@@ -143,6 +168,7 @@ class AllSettings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     yolo: YoloSettings = Field(default_factory=YoloSettings)
     embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
+    dinov3: DinoV3Settings = Field(default_factory=DinoV3Settings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)
     minio: MinioSettings = Field(default_factory=MinioSettings)

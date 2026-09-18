@@ -7,9 +7,10 @@ from src.connections.qdrant import QdrantClient
 from src.connections.redis import RedisClient
 from src.connections.rate_limiter import RateLimiterManager
 from src.llm.langchain_openai import ChatOpenAIWrapper
+from src.ml.dinov3 import DinoV3ImageEmbedder
 from src.ml.patch_index import WinePatchIndex
 from src.ml.siglip2 import SiglipImageEmbedder
-from src.ml.yolo import YoloLabelCropper
+from src.ml.yolo import YoloBottleCropper, YoloLabelCropper
 from src.settings.settings import AllSettings
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,10 @@ class ConnectionManager:
         self.llm: ChatOpenAIWrapper | None = None
         self.minio: MinioClient | None = None
         self.yolo: YoloLabelCropper | None = None
+        self.bottle_yolo: YoloLabelCropper | None = None
+        self.label_yolo: YoloLabelCropper | None = None
         self.embeddings: SiglipImageEmbedder | None = None
+        self.dinov3: DinoV3ImageEmbedder | None = None
         self.patch_index: WinePatchIndex | None = None
         self._initialize()
 
@@ -37,8 +41,17 @@ class ConnectionManager:
                                                self.redis)
         self.llm = ChatOpenAIWrapper(self.settings.llm)
         self.minio = MinioClient(self.settings.minio)
-        self.yolo = YoloLabelCropper(self.settings.yolo)
+        bottle_yolo_settings = self.settings.yolo.model_copy(
+            update={"model_path": self.settings.yolo.bottle_model_path}
+        )
+        label_yolo_settings = self.settings.yolo.model_copy(
+            update={"model_path": self.settings.yolo.label_model_path}
+        )
+        self.bottle_yolo = YoloBottleCropper(bottle_yolo_settings)
+        self.label_yolo = YoloLabelCropper(label_yolo_settings)
+        self.yolo = self.label_yolo
         self.embeddings = SiglipImageEmbedder(self.settings.embeddings)
+        self.dinov3 = DinoV3ImageEmbedder(self.settings.dinov3)
         patch_index_path = Path(self.settings.embeddings.patch_index_path)
         if patch_index_path.is_file():
             self.patch_index = WinePatchIndex.load(patch_index_path)
@@ -52,8 +65,10 @@ class ConnectionManager:
         await self.rate_limiter.start()
         await self.llm.start()
         await self.minio.start()
-        await self.yolo.start()
+        await self.bottle_yolo.start()
+        await self.label_yolo.start()
         await self.embeddings.start()
+        await self.dinov3.start()
 
     async def stop(self):
         await self.database.close()
@@ -62,5 +77,7 @@ class ConnectionManager:
         await self.rate_limiter.stop()
         await self.llm.stop()
         await self.minio.stop()
-        await self.yolo.stop()
+        await self.bottle_yolo.stop()
+        await self.label_yolo.stop()
         await self.embeddings.stop()
+        await self.dinov3.stop()

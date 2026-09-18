@@ -51,15 +51,29 @@ class QdrantClient:
         logger.info("Qdrant client disconnected")
 
     async def search(self, vector: list[float], limit: int) -> QueryResponse | None:
+        return await self.search_collection(
+            collection_name=self.settings.collection_name,
+            vector=vector,
+            limit=limit,
+            with_payload=False,
+        )
+
+    async def search_collection(
+        self,
+        collection_name: str,
+        vector: list[float],
+        limit: int,
+        with_payload: bool = True,
+    ) -> QueryResponse | None:
         if not self._is_connected:
             raise RuntimeError("Qdrant client not connected")
         try:
             return await self.client.query_points(
-                collection_name=self.settings.collection_name,
+                collection_name=collection_name,
                 query=vector,
                 limit=limit,
-                with_payload=False,
+                with_payload=with_payload,
             )
         except Exception:
-            logger.exception("Vector search failure")
+            logger.exception("Vector search failure in collection %s", collection_name)
             return None

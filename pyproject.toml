@@ -27,6 +27,9 @@ dependencies = [
     "transformers>=5.17.0",
     "uvicorn[standard]>=0.38.0",
     "greenlet>=3.5.5",
+    "torchvision>=0.29.0",
+    "ultralytics>=8.4.153",
+    "onnx>=1.22.0",
 ]
 
 [[tool.uv.index]]

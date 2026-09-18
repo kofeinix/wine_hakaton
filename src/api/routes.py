@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 def get_wine_service(request: Request) -> WineService:
-    return request.app.state.text_service
+    return request.app.state.wine_service
 
 
 WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
@@ -39,7 +39,7 @@ WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
 async def search_by_image(
     wine_service: WineServiceDep,
     image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=5, ge=1, le=20, description="Maximum number of matches"),
+    limit: int = Query(default=10, ge=1, le=10, description="Maximum number of matches"),
 ) -> CompactSearchResponse:
     image_bytes = await _read_image_upload(image)
     return await wine_service.search_by_image(
@@ -65,7 +65,7 @@ async def search_by_image(
 async def search_by_image_extended(
     wine_service: WineServiceDep,
     image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=5, ge=1, le=20, description="Maximum number of matches"),
+    limit: int = Query(default=10, ge=1, le=10, description="Maximum number of matches"),
 ) -> SearchResponse:
     image_bytes = await _read_image_upload(image)
     return await wine_service.search_by_image_extended(

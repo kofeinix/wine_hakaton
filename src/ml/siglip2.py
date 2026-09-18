@@ -48,7 +48,16 @@ class SiglipImageEmbedder:
 
 
     def embed(self, image: Image.Image) -> list[float]:
-        return self.embed_features(image).global_vector
+        assert self._processor is not None
+        assert self._model is not None
+        assert self._device is not None
+
+        inputs = self._processor(images=image, return_tensors="pt")
+        inputs = {key: value.to(self._device) for key, value in inputs.items()}
+        with torch.inference_mode():
+            embedding = extract_global_vector(self._model, inputs)
+        global_vectors, _ = features_to_numpy(embedding, None)
+        return global_vectors[0].tolist()
 
     def embed_features(self, image: Image.Image) -> VisionFeatures:
         assert self._processor is not None

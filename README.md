@@ -221,10 +221,19 @@ VITE_API_TARGET=http://localhost:8000 npm run dev
 
 ## Подготовить модели
 
-Команда `prepare_models.py` проверяет наличие YOLO ONNX в `models/yolo/best.onnx` и скачивает SigLIP2 в `models/siglip2`.
+Команда `prepare_models.py` проверяет наличие YOLO ONNX в `models/yolo/best.onnx`,
+скачивает SigLIP2 в `models/siglip2` и DINOv3 в `models/dinov3`.
 
 ```bash
 ./prepare_models
+```
+
+Модель `facebook/dinov3-vitb16-pretrain-lvd1689m` закрыта gated-доступом на
+Hugging Face. Перед скачиванием примите условия модели в Hugging Face и
+передайте токен:
+
+```bash
+HF_TOKEN=<your_token> ./prepare_models
 ```
 
 Модель `google/siglip2-base-patch16-224` занимает около 1.5 GB. Скачивание нужно сделать один раз; повторный запуск переиспользует уже скачанные файлы.
