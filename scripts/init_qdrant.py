@@ -6,6 +6,7 @@ import logging
 import sys
 import uuid
 from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
 
@@ -22,7 +23,13 @@ from src.settings.settings import all_settings
 
 DEFAULT_EMBEDDINGS_PATH = Path("/data/embeddings/wine_siglip2.jsonl.gz")
 DEFAULT_EMBEDDINGS_DIR = Path("/data/embeddings")
-DEFAULT_NPZ_FILES = ("original.npz", "bottle_crop.npz", "label_crop.npz")
+DEFAULT_NPZ_FILES = (
+    "original.npz",
+    "bottle_crop.npz",
+    "label_crop.npz",
+    "original_patches.npz",
+    "label_crop_patches.npz",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,15 +92,48 @@ def scalar_string(value: np.ndarray, fallback: str) -> str:
     return fallback
 
 
-def read_npz_points(path: Path) -> tuple[str, int, list[qdrant_models.PointStruct]]:
+@dataclass(frozen=True)
+class NpzEmbeddingData:
+    collection_name: str
+    vector_size: int
+    is_multivector: bool
+    datatype: qdrant_models.Datatype | None
+    vectors: np.ndarray
+    point_ids: list
+    payloads: list[dict]
+
+
+def read_npz_data(path: Path) -> NpzEmbeddingData:
+    logger.info("Reading NPZ embeddings from %s", path)
     data = np.load(path, allow_pickle=False)
-    vectors = data["vectors"].astype("float32", copy=False)
-    if vectors.ndim != 2:
-        raise ValueError(f"{path}: vectors must be a 2D array")
+    vectors = data["vectors"]
+    if vectors.ndim not in (2, 3):
+        raise ValueError(f"{path}: vectors must be a 2D or 3D array")
+    is_multivector = vectors.ndim == 3
+    if not is_multivector and vectors.dtype != np.float32:
+        vectors = vectors.astype("float32", copy=False)
+    datatype = qdrant_models.Datatype.FLOAT16 if is_multivector and vectors.dtype == np.float16 else None
     if len(vectors) == 0:
-        return scalar_string(data.get("collection", np.array(path.stem)), path.stem), 0, []
+        return NpzEmbeddingData(
+            collection_name=scalar_string(data.get("collection", np.array(path.stem)), path.stem),
+            vector_size=0,
+            is_multivector=is_multivector,
+            datatype=datatype,
+            vectors=vectors,
+            point_ids=[],
+            payloads=[],
+        )
 
     collection_name = scalar_string(data.get("collection", np.array(path.stem)), path.stem)
+    logger.info(
+        "Loaded NPZ %s: collection=%s shape=%s dtype=%s multivector=%s qdrant_datatype=%s",
+        path,
+        collection_name,
+        vectors.shape,
+        vectors.dtype,
+        is_multivector,
+        datatype,
+    )
     point_ids = data["point_ids"].tolist()
     if "payloads_json" in data:
         payloads = [json.loads(value) for value in data["payloads_json"].tolist()]
@@ -120,15 +160,52 @@ def read_npz_points(path: Path) -> tuple[str, int, list[qdrant_models.PointStruc
             f"point_ids={len(point_ids)}, payloads={len(payloads)}"
         )
 
-    points = [
-        qdrant_models.PointStruct(
-            id=str(point_id),
-            vector=vector.tolist(),
-            payload=payload,
+    return NpzEmbeddingData(
+        collection_name=collection_name,
+        vector_size=int(vectors.shape[-1]),
+        is_multivector=is_multivector,
+        datatype=datatype,
+        vectors=vectors,
+        point_ids=point_ids,
+        payloads=payloads,
+    )
+
+
+def read_npz_points(
+    path: Path,
+) -> tuple[str, int, bool, qdrant_models.Datatype | None, list[qdrant_models.PointStruct]]:
+    data = read_npz_data(path)
+    points = list(iter_npz_point_batches(data, batch_size=len(data.vectors)))[0] if len(data.vectors) else []
+    return data.collection_name, data.vector_size, data.is_multivector, data.datatype, points
+
+
+def iter_npz_point_batches(
+    data: NpzEmbeddingData,
+    batch_size: int,
+) -> Iterator[list[qdrant_models.PointStruct]]:
+    total = len(data.vectors)
+    for offset in range(0, total, batch_size):
+        end = min(offset + batch_size, total)
+        logger.info(
+            "Converting NPZ rows %s-%s/%s to Qdrant PointStruct for %s",
+            offset + 1,
+            end,
+            total,
+            data.collection_name,
         )
-        for point_id, vector, payload in zip(point_ids, vectors, payloads, strict=True)
-    ]
-    return collection_name, int(vectors.shape[1]), points
+        yield [
+            qdrant_models.PointStruct(
+                id=str(point_id),
+                vector=vector.tolist(),
+                payload=payload,
+            )
+            for point_id, vector, payload in zip(
+                data.point_ids[offset:end],
+                data.vectors[offset:end],
+                data.payloads[offset:end],
+                strict=True,
+            )
+        ]
 
 
 def batched_points(
@@ -147,14 +224,25 @@ async def init_collection(
     batch_size: int,
     recreate: bool,
     indexing_threshold: int,
+    is_multivector: bool = False,
+    datatype: qdrant_models.Datatype | None = None,
 ) -> None:
+    vector_params = qdrant_models.VectorParams(
+        size=vector_size,
+        distance=qdrant_models.Distance.COSINE,
+        datatype=datatype,
+        multivector_config=(
+            qdrant_models.MultiVectorConfig(
+                comparator=qdrant_models.MultiVectorComparator.MAX_SIM,
+            )
+            if is_multivector
+            else None
+        ),
+    )
     if recreate:
         await qdrant.client.recreate_collection(
             collection_name=collection_name,
-            vectors_config=qdrant_models.VectorParams(
-                size=vector_size,
-                distance=qdrant_models.Distance.COSINE,
-            ),
+            vectors_config=vector_params,
             optimizers_config=qdrant_models.OptimizersConfigDiff(
                 indexing_threshold=indexing_threshold,
             ),
@@ -162,10 +250,7 @@ async def init_collection(
     elif not await qdrant.client.collection_exists(collection_name):
         await qdrant.client.create_collection(
             collection_name=collection_name,
-            vectors_config=qdrant_models.VectorParams(
-                size=vector_size,
-                distance=qdrant_models.Distance.COSINE,
-            ),
+            vectors_config=vector_params,
             optimizers_config=qdrant_models.OptimizersConfigDiff(
                 indexing_threshold=indexing_threshold,
             ),
@@ -187,6 +272,88 @@ async def init_collection(
         )
         total += len(batch)
         logger.info("Uploaded %s/%s vectors to %s", total, len(points), collection_name)
+
+
+async def init_collection_from_npz_data(
+    qdrant: QdrantClient,
+    data: NpzEmbeddingData,
+    batch_size: int,
+    multivector_batch_size: int,
+    recreate: bool,
+    indexing_threshold: int,
+) -> None:
+    await ensure_collection(
+        qdrant=qdrant,
+        collection_name=data.collection_name,
+        vector_size=data.vector_size,
+        recreate=recreate,
+        indexing_threshold=indexing_threshold,
+        is_multivector=data.is_multivector,
+        datatype=data.datatype,
+    )
+
+    total = 0
+    expected = len(data.vectors)
+    effective_batch_size = min(batch_size, multivector_batch_size) if data.is_multivector else batch_size
+    logger.info(
+        "Using upload batch size %s for %s",
+        effective_batch_size,
+        data.collection_name,
+    )
+    for batch in iter_npz_point_batches(data, batch_size=effective_batch_size):
+        await qdrant.client.upsert(
+            collection_name=data.collection_name,
+            points=batch,
+            wait=True,
+        )
+        total += len(batch)
+        logger.info("Uploaded %s/%s vectors to %s", total, expected, data.collection_name)
+
+
+async def ensure_collection(
+    qdrant: QdrantClient,
+    collection_name: str,
+    vector_size: int,
+    recreate: bool,
+    indexing_threshold: int,
+    is_multivector: bool = False,
+    datatype: qdrant_models.Datatype | None = None,
+) -> None:
+    vector_params = qdrant_models.VectorParams(
+        size=vector_size,
+        distance=qdrant_models.Distance.COSINE,
+        datatype=datatype,
+        multivector_config=(
+            qdrant_models.MultiVectorConfig(
+                comparator=qdrant_models.MultiVectorComparator.MAX_SIM,
+            )
+            if is_multivector
+            else None
+        ),
+    )
+    if recreate:
+        await qdrant.client.recreate_collection(
+            collection_name=collection_name,
+            vectors_config=vector_params,
+            optimizers_config=qdrant_models.OptimizersConfigDiff(
+                indexing_threshold=indexing_threshold,
+            ),
+        )
+    elif not await qdrant.client.collection_exists(collection_name):
+        await qdrant.client.create_collection(
+            collection_name=collection_name,
+            vectors_config=vector_params,
+            optimizers_config=qdrant_models.OptimizersConfigDiff(
+                indexing_threshold=indexing_threshold,
+            ),
+        )
+    else:
+        await qdrant.client.update_collection(
+            collection_name=collection_name,
+            optimizers_config=qdrant_models.OptimizersConfigDiff(
+                indexing_threshold=indexing_threshold,
+            ),
+        )
 
 
 async def init_qdrant(
@@ -233,6 +400,7 @@ async def init_qdrant(
 async def init_qdrant_from_npz_dir(
     embeddings_dir: Path,
     batch_size: int,
+    multivector_batch_size: int,
     recreate: bool,
     indexing_threshold: int,
 ) -> None:
@@ -245,26 +413,26 @@ async def init_qdrant_from_npz_dir(
             raise FileNotFoundError(f"No NPZ embeddings found in {embeddings_dir}")
 
         for path in paths:
-            collection_name, size, points = read_npz_points(path)
-            if not points:
+            logger.info("Preparing NPZ file for Qdrant init: %s", path)
+            data = read_npz_data(path)
+            if len(data.vectors) == 0:
                 logger.info("Skipping empty NPZ embeddings file: %s", path)
                 continue
             logger.info(
                 "Initializing Qdrant collection %s from %s vectors in %s",
-                collection_name,
-                len(points),
+                data.collection_name,
+                len(data.vectors),
                 path,
             )
-            await init_collection(
+            await init_collection_from_npz_data(
                 qdrant=qdrant,
-                collection_name=collection_name,
-                vector_size=size,
-                points=points,
                 batch_size=batch_size,
+                multivector_batch_size=multivector_batch_size,
                 recreate=recreate,
                 indexing_threshold=indexing_threshold,
+                data=data,
             )
-            logger.info("Qdrant collection %s initialized with %s vectors", collection_name, len(points))
+            logger.info("Qdrant collection %s initialized with %s vectors", data.collection_name, len(data.vectors))
     finally:
         await qdrant.close()
 
@@ -275,6 +443,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--embeddings-dir", type=Path, default=None)
     parser.add_argument("--collection-name", default=all_settings.qdrant.collection_name)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--multivector-batch-size", type=int, default=8)
     parser.add_argument("--indexing-threshold", type=int, default=1)
     parser.add_argument("--no-recreate", action="store_true")
     return parser.parse_args()
@@ -288,6 +457,7 @@ if __name__ == "__main__":
             init_qdrant_from_npz_dir(
                 embeddings_dir=args.embeddings_dir,
                 batch_size=args.batch_size,
+                multivector_batch_size=args.multivector_batch_size,
                 recreate=not args.no_recreate,
                 indexing_threshold=args.indexing_threshold,
             )

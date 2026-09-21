@@ -41,12 +41,15 @@ class WinePhotoService:
             )
         }
 
-        bottle_crop = self._try_crop("bottle_crop", self.bottle_cropper, original)
-        if bottle_crop is not None:
-            images["bottle_crop"] = bottle_crop.image
-            crops["bottle_crop"] = self._crop_response(bottle_crop)
-        else:
-            crops["bottle_crop"] = CropResponse(available=False)
+        # bottle_crop is intentionally disabled for runtime search. Keep the
+        # implementation nearby while we validate original+label cosine fusion.
+        # bottle_crop = self._try_crop("bottle_crop", self.bottle_cropper, original)
+        # if bottle_crop is not None:
+        #     images["bottle_crop"] = bottle_crop.image
+        #     crops["bottle_crop"] = self._crop_response(bottle_crop)
+        # else:
+        #     crops["bottle_crop"] = CropResponse(available=False)
+        crops["bottle_crop"] = CropResponse(available=False)
 
         label_crop = self._try_crop("label_crop", self.label_cropper, original)
         if label_crop is not None:
@@ -55,8 +58,7 @@ class WinePhotoService:
         else:
             crops["label_crop"] = CropResponse(available=False)
 
-        if bottle_crop is None and label_crop is None:
-            images["bottle_crop"] = original
+        if label_crop is None:
             images["label_crop"] = original
 
         return QueryImageViews(images=images, crops=crops)

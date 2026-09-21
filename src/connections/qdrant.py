@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.conversions.common_types import QueryResponse
@@ -64,6 +65,7 @@ class QdrantClient:
         vector: list[float],
         limit: int,
         with_payload: bool = True,
+        query_filter: Any | None = None,
     ) -> QueryResponse | None:
         if not self._is_connected:
             raise RuntimeError("Qdrant client not connected")
@@ -71,9 +73,30 @@ class QdrantClient:
             return await self.client.query_points(
                 collection_name=collection_name,
                 query=vector,
+                query_filter=query_filter,
                 limit=limit,
                 with_payload=with_payload,
             )
         except Exception:
             logger.exception("Vector search failure in collection %s", collection_name)
             return None
+
+    async def retrieve_vectors(
+        self,
+        collection_name: str,
+        point_ids: list[str],
+    ) -> list:
+        if not self._is_connected:
+            raise RuntimeError("Qdrant client not connected")
+        if not point_ids:
+            return []
+        try:
+            return await self.client.retrieve(
+                collection_name=collection_name,
+                ids=point_ids,
+                with_payload=True,
+                with_vectors=True,
+            )
+        except Exception:
+            logger.exception("Vector retrieve failure in collection %s", collection_name)
+            return []

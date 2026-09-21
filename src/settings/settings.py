@@ -73,18 +73,18 @@ class RedisSettings(BaseModel):
 
 
 class YoloSettings(BaseModel):
-    """YOLO label cropper configuration."""
+    """YOLO cropper configuration."""
 
     model_path: str = Field(
-        default="/models/yolo/best.onnx", description="Path to YOLO ONNX model"
+        default="/models/yolo/label.pt", description="Path or Ultralytics reference for label crop model"
     )
     bottle_model_path: str = Field(
-        default="/models/yolo/yolo26n-seg.onnx",
-        description="Path to YOLO ONNX model for bottle crop",
+        default="/models/yolo/yolo26x-seg.pt",
+        description="Path or Ultralytics reference for bottle segmentation model",
     )
     label_model_path: str = Field(
-        default="/models/yolo/label.onnx",
-        description="Path to YOLO ONNX model for label crop",
+        default="/models/yolo/label.pt",
+        description="Path or Ultralytics reference for label crop model",
     )
 
 
@@ -97,10 +97,6 @@ class EmbeddingSettings(BaseModel):
     )
     model_dir: str = Field(
         default="/models/siglip2", description="Path to mounted SigLIP2 model files"
-    )
-    patch_index_path: str = Field(
-        default="/data/embeddings/wine_patch_index.jsonl.gz",
-        description="Optional path to offline patch-token index",
     )
     device: str = Field(
         default="auto", description="Embedding device: auto, cpu, cuda, or mps"
@@ -119,6 +115,22 @@ class DinoV3Settings(BaseModel):
     )
     device: str = Field(
         default="auto", description="DINOv3 device: auto, cpu, cuda, or mps"
+    )
+    patch_batch_size: int = Field(
+        default=32, description="Batch size for on-the-fly DINOv3 patch-token encoding"
+    )
+
+
+class SearchSettings(BaseModel):
+    """Runtime image search configuration."""
+
+    global_encoder: Literal["siglip2", "dinov3"] = Field(
+        default="siglip2",
+        description="Encoder used for query global vectors in runtime search",
+    )
+    collection_encoder: Literal["siglip2", "dinov3"] = Field(
+        default="siglip2",
+        description="Qdrant collection suffix used for global vector search",
     )
 
 
@@ -169,6 +181,7 @@ class AllSettings(BaseSettings):
     yolo: YoloSettings = Field(default_factory=YoloSettings)
     embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     dinov3: DinoV3Settings = Field(default_factory=DinoV3Settings)
+    search: SearchSettings = Field(default_factory=SearchSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)
     minio: MinioSettings = Field(default_factory=MinioSettings)

@@ -39,12 +39,66 @@ WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
 async def search_by_image(
     wine_service: WineServiceDep,
     image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=10, ge=1, le=10, description="Maximum number of matches"),
+    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
+    views: list[str] = Query(
+        default=[],
+        description="Restrict aggregation to specific views: original, label_crop. Empty = all.",
+    ),
+    stages: list[str] = Query(
+        default=["global", "patches"],
+        description=(
+            "Search pipeline stages: global, patches, llm. "
+            "Legacy values are supported: 1 = global, 2 = global + patches."
+        ),
+    ),
+    main_photos_only: bool = Query(
+        default=False,
+        description="Search only vectors whose payload photo_id is 'main', excluding yandex_* photos.",
+    ),
 ) -> CompactSearchResponse:
     image_bytes = await _read_image_upload(image)
     return await wine_service.search_by_image(
         image_bytes=image_bytes,
         limit=limit,
+        views=views or None,
+        stages=stages,
+        main_photos_only=main_photos_only,
+    )
+
+
+@router.post(
+    "/search/image/catboost",
+    response_model=CompactSearchResponse,
+    tags=["search"],
+    summary="Search wine by image with experimental CatBoost reranker",
+    description=(
+        "Runs a separate experimental image-search copy that builds reranker features from "
+        "Qdrant candidates and applies `models/catboost/wine_reranker.cbm` when available."
+    ),
+    responses={
+        400: {"description": "Uploaded image is empty"},
+        415: {"description": "Uploaded file is not an image"},
+    },
+)
+async def search_by_image_catboost(
+    wine_service: WineServiceDep,
+    image: UploadFile = File(..., description="Wine bottle or label image"),
+    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
+    views: list[str] = Query(
+        default=[],
+        description="Restrict aggregation to specific views: original, label_crop. Empty = all.",
+    ),
+    main_photos_only: bool = Query(
+        default=False,
+        description="Search only vectors whose payload photo_id is 'main', excluding yandex_* photos.",
+    ),
+) -> CompactSearchResponse:
+    image_bytes = await _read_image_upload(image)
+    return await wine_service.search_by_image_catboost(
+        image_bytes=image_bytes,
+        limit=limit,
+        views=views or None,
+        main_photos_only=main_photos_only,
     )
 
 
@@ -65,7 +119,18 @@ async def search_by_image(
 async def search_by_image_extended(
     wine_service: WineServiceDep,
     image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=10, ge=1, le=10, description="Maximum number of matches"),
+    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
+    stages: list[str] = Query(
+        default=["global", "patches"],
+        description=(
+            "Search pipeline stages: global, patches, llm. "
+            "Legacy values are supported: 1 = global, 2 = global + patches."
+        ),
+    ),
+    main_photos_only: bool = Query(
+        default=False,
+        description="Search only vectors whose payload photo_id is 'main', excluding yandex_* photos.",
+    ),
 ) -> SearchResponse:
     image_bytes = await _read_image_upload(image)
     return await wine_service.search_by_image_extended(
@@ -73,6 +138,8 @@ async def search_by_image_extended(
         filename=image.filename,
         content_type=image.content_type or "application/octet-stream",
         limit=limit,
+        stages=stages,
+        main_photos_only=main_photos_only,
     )
 
 

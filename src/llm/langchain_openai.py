@@ -12,13 +12,12 @@ from httpx_retries import Retry, RetryTransport
 from langchain_core.messages import BaseMessage, ChatMessage, HumanMessage
 from langchain_core.outputs import LLMResult
 from limiters import AsyncSemaphore, AsyncTokenBucket
-from numind.nuextract_utils import convert_json_schema_to_nuextract_template
 from PIL import Image, ImageOps
 from pydantic import BaseModel
 
 from langchain_openai import ChatOpenAI
 from src.connections.rate_limiter import RateLimiterManager
-from src.llm.models import answer_template, WineOutput
+from src.llm.models import WineOutput, WineSelectionOutput
 
 from src.settings.settings import LlmSettings
 
@@ -123,20 +122,11 @@ class ChatOpenAIWrapper:
             model=self.config.model_name,
             api_key=self.config.api_key,
             temperature=self.config.temperature,
-            max_tokens=min(self.config.max_tokens, 800),
+            max_tokens=min(self.config.max_tokens, 5000),
             base_url=self.config.base_url,
             http_async_client=self._http_client,
             max_retries=0,  # логикой управляет http_async_client
             timeout=httpx.Timeout(self.config.timeout),
-            extra_body={
-                "chat_template_kwargs": {
-                    "template": json.dumps(answer_template, indent=4),
-                    "instructions": (
-                        "Specify values for entries only if it is present, otherwise empty"
-                    ),
-                    "enable_thinking": False
-                }
-            }
         )
         logger.info("ChatOpenAIWrapper created")
         # Test connection
@@ -187,6 +177,9 @@ class ChatOpenAIWrapper:
         return content
 
     async def analyze_image(self, image_bytes: bytes) -> WineOutput:
+        from numind.nuextract_utils import convert_json_schema_to_nuextract_template
+        from src.llm.models import answer_template
+
         conversion = convert_json_schema_to_nuextract_template(
             WineOutput.model_json_schema()
         )
@@ -221,3 +214,35 @@ class ChatOpenAIWrapper:
         except Exception:
             logger.exception("NuExtract response validation failed: %s", content)
             raise
+
+    async def choose_wine_from_image(
+        self,
+        image_bytes: bytes,
+        candidates: list[dict],
+    ) -> WineSelectionOutput:
+        llm = self.chat.with_structured_output(WineSelectionOutput)
+        candidate_lines = "\n".join(
+            (
+                f"{item['number']}. wine_id={item['wine_id']} | "
+                f"name={item.get('name') or ''} | producer={item.get('producer_name') or ''} | "
+                f"region={item.get('region_name') or ''} | grapes={item.get('grape_name') or ''} | "
+                f"color={item.get('color') or ''} | sugar={item.get('sugar') or ''} | "
+                f"alcohol={item.get('alcohol') or ''}"
+            )
+            for item in candidates
+        )
+        prompt = (
+            "You are matching a user's wine label/bottle photo to one item from a candidate list.\n"
+            "Use the image text, label design, producer, region, grape, color, sugar, and alcohol when visible.\n"
+            "Return structured JSON only. Choose exactly one candidate number from the list. "
+            "If uncertain, still choose the most likely candidate and lower confidence.\n\n"
+            f"Candidates:\n{candidate_lines}"
+        )
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": self._image_data_url(image_bytes)}},
+            ]
+        )
+        result = await llm.ainvoke([message])
+        return result

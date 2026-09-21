@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 
+import numpy as np
 import torch
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModel
@@ -40,14 +41,63 @@ class DinoV3ImageEmbedder:
         logger.info("DINOv3 model loaded")
 
     def embed(self, image: Image.Image) -> list[float]:
-        return self.embed_features(image).global_vector
+        return self.embed_many([image])[0]
+
+    def embed_many(self, images: list[Image.Image]) -> list[list[float]]:
+        assert self._processor is not None
+        assert self._model is not None
+        assert self._device is not None
+
+        if not images:
+            return []
+
+        inputs = self._processor(images=images, return_tensors="pt")
+        inputs = {key: value.to(self._device) for key, value in inputs.items()}
+        with torch.inference_mode():
+            embedding = extract_global_vector(self._model, inputs)
+        global_vectors, _ = features_to_numpy(embedding, None)
+        return global_vectors.tolist()
 
     def embed_patch_tokens(
         self,
         image: Image.Image,
     ) -> tuple[list[list[float]], tuple[int, int] | None]:
-        features = self.embed_features(image)
-        return features.patch_tokens, features.patch_grid
+        return self.embed_patch_tokens_many([image])[0]
+
+    def embed_patch_tokens_many(
+        self,
+        images: list[Image.Image],
+    ) -> list[tuple[list[list[float]], tuple[int, int] | None]]:
+        return [
+            (tokens.tolist() if tokens is not None else [], grid)
+            for tokens, grid in self.embed_patch_token_arrays_many(images)
+        ]
+
+    def embed_patch_token_arrays_many(
+        self,
+        images: list[Image.Image],
+    ) -> list[tuple[np.ndarray | None, tuple[int, int] | None]]:
+        assert self._processor is not None
+        assert self._model is not None
+        assert self._device is not None
+
+        if not images:
+            return []
+
+        results: list[tuple[np.ndarray | None, tuple[int, int] | None]] = []
+        batch_size = max(1, self.settings.patch_batch_size)
+        for offset in range(0, len(images), batch_size):
+            batch = images[offset : offset + batch_size]
+            inputs = self._processor(images=batch, return_tensors="pt")
+            inputs = {key: value.to(self._device) for key, value in inputs.items()}
+            with torch.inference_mode():
+                patch_tokens, patch_grid = extract_patch_tokens(self._model, inputs)
+            if patch_tokens is None:
+                results.extend((None, None) for _image in batch)
+                continue
+            patch_arrays = patch_tokens.detach().cpu().numpy().astype("float32")
+            results.extend((array, patch_grid) for array in patch_arrays)
+        return results
 
     def embed_features(self, image: Image.Image) -> VisionFeatures:
         assert self._processor is not None

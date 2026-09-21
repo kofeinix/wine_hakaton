@@ -49,6 +49,7 @@ class SearchMatchResponse(BaseModel):
     mean_score: float
     n_photos: int
     score_std: float
+    cosine_score: float = 0.0
     wine: WineResponse | None = None
 
 
@@ -60,6 +61,7 @@ class CompactSearchMatch(BaseModel):
     mean_score: float
     n_photos: int
     score_std: float
+    cosine_score: float = 0.0
 
 
 class CompactSearchResponse(BaseModel):

@@ -13,7 +13,7 @@
   - итоговые метрики качества (Accuracy@1, MRR, средние score).
 
 Использование:
-  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N]
+  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global,patches,llm]
 """
 
 from __future__ import annotations
@@ -56,15 +56,30 @@ def collect_images(eval_dir: Path) -> list[tuple[str, Path]]:
     return items
 
 
-async def search_image(client: httpx.AsyncClient, api_url: str, image_path: Path) -> dict:
+async def search_image(
+    client: httpx.AsyncClient,
+    api_url: str,
+    image_path: Path,
+    views: list[str] | None = None,
+    topk: int = 10,
+    stages: list[str] | None = None,
+    main_photos_only: bool = False,
+) -> dict:
     """Выполняет поиск по картинке и возвращает JSON-ответ."""
     mime = MIME_BY_EXT.get(image_path.suffix.lower(), "image/jpeg")
+    params: dict = {"limit": topk}
+    if stages:
+        params["stages"] = stages
+    if views:
+        params["views"] = views
+    if main_photos_only:
+        params["main_photos_only"] = True
     with image_path.open("rb") as f:
         files = {"image": (image_path.name, f, mime)}
         resp = await client.post(
             f"{api_url}{SEARCH_ENDPOINT}",
             files=files,
-            params={"limit": 10},
+            params=params,
             timeout=120.0,
         )
     resp.raise_for_status()
@@ -79,7 +94,14 @@ def rank_of_expected(result: list[dict], expected_id: str) -> int | None:
     return None
 
 
-async def run(api_url: str, limit: int | None) -> None:
+async def run(
+    api_url: str,
+    limit: int | None,
+    views: list[str] | None = None,
+    topk: int = 10,
+    stages: list[str] | None = None,
+    main_photos_only: bool = False,
+) -> None:
     images = collect_images(EVAL_DIR)
     if not images:
         print("Нет изображений для оценки.", file=sys.stderr)
@@ -89,19 +111,33 @@ async def run(api_url: str, limit: int | None) -> None:
         images = images[:limit]
 
     print(f"Всего изображений для оценки: {len(images)}")
-    print(f"API: {api_url}{SEARCH_ENDPOINT}\n")
+    print(f"API: {api_url}{SEARCH_ENDPOINT}")
+    print(f"Views: {views or 'all (original + label_crop)'}")
+    print(f"Stages: {stages or ['global', 'patches']}")
+    print(f"Main photos only: {main_photos_only}")
+    print(f"Top-K: {topk}\n")
 
     rows: list[dict] = []
     async with httpx.AsyncClient() as client:
         for idx, (expected_id, img_path) in enumerate(images, start=1):
             try:
-                data = await search_image(client, api_url, img_path)
+                data = await search_image(
+                    client,
+                    api_url,
+                    img_path,
+                    views=views,
+                    topk=topk,
+                    stages=stages,
+                    main_photos_only=main_photos_only,
+                )
             except Exception as exc:  # noqa: BLE001
                 print(f"[{idx}/{len(images)}] ОШИБКА {img_path.name}: {exc}")
                 rows.append(
                     {
                         "expected": expected_id,
                         "image": img_path.name,
+                        "stages": stages or ["global", "patches"],
+                        "main_photos_only": main_photos_only,
                         "error": str(exc),
                     }
                 )
@@ -109,15 +145,24 @@ async def run(api_url: str, limit: int | None) -> None:
 
             result = data.get("result", [])
             top1 = result[0] if result else None
+            top2 = result[1] if len(result) > 1 else None
             rank = rank_of_expected(result, expected_id)
             correct = rank == 1
+            gap = (top1.get("score", 0.0) - top2.get("score", 0.0)) if top1 and top2 else 0.0
 
             rows.append(
                 {
                     "expected": expected_id,
                     "image": img_path.name,
+                    "stages": stages or ["global", "patches"],
+                    "main_photos_only": main_photos_only,
                     "top1_id": top1.get("wine_id") if top1 else None,
                     "top1_score": top1.get("score") if top1 else None,
+                    "top1_cos": top1.get("cosine_score") if top1 else None,
+                    "top2_id": top2.get("wine_id") if top2 else None,
+                    "top2_score": top2.get("score") if top2 else None,
+                    "top2_cos": top2.get("cosine_score") if top2 else None,
+                    "gap": gap,
                     "rank": rank,
                     "correct": correct,
                     "result": result,
@@ -127,7 +172,9 @@ async def run(api_url: str, limit: int | None) -> None:
             print(
                 f"[{idx}/{len(images)}] {status} {img_path.name} "
                 f"expected={expected_id[:8]} top1={top1.get('wine_id', 'N/A')[:8] if top1 else 'N/A'} "
-                f"score={top1.get('score', 0.0) if top1 else 0.0:.4f} rank={rank}"
+                f"fused={top1.get('score', 0.0) if top1 else 0.0:.4f} "
+                f"raw_cos={top1.get('cosine_score', 0.0) if top1 else 0.0:.4f} "
+                f"fused_gap={gap:.4f} rank={rank}"
             )
 
     print("\n" + "=" * 100)
@@ -135,7 +182,7 @@ async def run(api_url: str, limit: int | None) -> None:
     print("=" * 100)
     header = (
         f"{'Ожидаемый uuid':<38} {'Картинка':<14} {'Top-1 uuid':<38} "
-        f"{'Score':<8} {'Ранг':<5} {'Результат':<6} Конкуренты (uuid:score)"
+        f"{'Fused':<8} {'RawCos':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} Конкуренты (uuid:fused)"
     )
     print(header)
     print("-" * 100)
@@ -150,6 +197,8 @@ async def run(api_url: str, limit: int | None) -> None:
         print(
             f"{row['expected']:<38} {row['image']:<14} "
             f"{str(row['top1_id']):<38} {row['top1_score'] or 0.0:<8.4f} "
+            f"{row['top1_cos'] or 0.0:<8.4f} "
+            f"{row['top2_score'] or 0.0:<8.4f} {row['gap'] or 0.0:<8.4f} "
             f"{str(row['rank']):<5} {'OK' if row['correct'] else 'MISS':<6} {competitors}"
         )
 
@@ -165,7 +214,7 @@ async def run(api_url: str, limit: int | None) -> None:
 
     wine_header = (
         f"{'uuid вина':<38} {'Картинок':<9} {'Попаданий':<10} "
-        f"{'Accuracy':<9} {'Ср. score top-1':<16} {'Лучший ранг'}"
+        f"{'Accuracy':<9} {'Ср. fused top-1':<16} {'Лучший ранг'}"
     )
     print(wine_header)
     print("-" * 100)
@@ -193,8 +242,6 @@ async def run(api_url: str, limit: int | None) -> None:
     acc1 = sum(1 for r in valid if r["correct"]) / n
     # MRR: 1/rank если найден, иначе 0
     mrr = sum(1.0 / r["rank"] for r in valid if r["rank"]) / n
-    # Recall@k: доля, где ожидаемое вино вообще найдено в top-10
-    recall = sum(1 for r in valid if r["rank"] is not None) / n
     avg_score_all = sum(r["top1_score"] or 0.0 for r in valid) / n
     avg_score_correct = sum(
         r["top1_score"] or 0.0 for r in valid if r["correct"]
@@ -206,10 +253,15 @@ async def run(api_url: str, limit: int | None) -> None:
     print(f"Изображений оценено:        {n}")
     print(f"Accuracy@1 (top-1 верный):  {acc1:.2%}")
     print(f"MRR (средний обратный ранг): {mrr:.4f}")
-    print(f"Recall@10 (вино в top-10):  {recall:.2%}")
-    print(f"Средний score top-1 (все):  {avg_score_all:.4f}")
-    print(f"Средний score top-1 (верно): {avg_score_correct:.4f}")
-    print(f"Средний score top-1 (ошибки): {avg_score_wrong:.4f}")
+    print(f"Средний fused top-1 (все):  {avg_score_all:.4f}")
+    print(f"Средний fused top-1 (верно): {avg_score_correct:.4f}")
+    print(f"Средний fused top-1 (ошибки): {avg_score_wrong:.4f}")
+
+    # Recall@k: доля, где ожидаемое вино найдено в top-k.
+    print("\nRecall@k (вино в top-k):")
+    for k in (5, 10, 20, 30, 40, 50):
+        hits = sum(1 for r in valid if r["rank"] is not None and r["rank"] <= k)
+        print(f"  Recall@{k:<3} = {hits / n:.2%}  ({hits}/{n})")
 
     # Сохраняем полный результат в JSON
     out_path = Path(__file__).resolve().parent.parent / "data" / "eval_results.json"
@@ -226,8 +278,60 @@ def main() -> None:
         default=None,
         help="Ограничить число обрабатываемых изображений (для отладки)",
     )
+    parser.add_argument(
+        "--view",
+        action="append",
+        choices=["original", "bottle_crop", "label_crop"],
+        help=(
+            "Ограничить агрегацию одним сигналом. Можно указать несколько раз. "
+            "По умолчанию используются original и label_crop."
+        ),
+    )
+    parser.add_argument(
+        "--topk",
+        type=int,
+        default=10,
+        help="Максимальное число результатов, запрашиваемых у API (для Recall@k). По умолчанию 10.",
+    )
+    parser.add_argument(
+        "--stages",
+        action="append",
+        default=None,
+        help=(
+            "Стадии pipeline: global, patches, llm. Можно указать несколько раз "
+            "или через запятую. Legacy: 1 = global, 2 = global+patches. "
+            "По умолчанию global,patches."
+        ),
+    )
+    parser.add_argument(
+        "--main-photos-only",
+        action="store_true",
+        help="Искать только по векторам main-фото, исключая yandex_* фото.",
+    )
     args = parser.parse_args()
-    asyncio.run(run(args.api_url, args.limit))
+    stages = normalize_stages_arg(args.stages)
+    asyncio.run(
+        run(
+            args.api_url,
+            args.limit,
+            views=args.view,
+            topk=args.topk,
+            stages=stages,
+            main_photos_only=args.main_photos_only,
+        )
+    )
+
+
+def normalize_stages_arg(values: list[str] | None) -> list[str] | None:
+    if not values:
+        return None
+    result: list[str] = []
+    for value in values:
+        for part in value.split(","):
+            item = part.strip()
+            if item:
+                result.append(item)
+    return result
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ from typing import Iterable
 import numpy as np
 import torch
 from PIL import Image, ImageOps
-from transformers import AutoModel, AutoProcessor
+from transformers import AutoImageProcessor, AutoModel, AutoProcessor
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -25,14 +25,8 @@ from src.settings.settings import all_settings
 
 DEFAULT_IMAGES_DIR = Path("data/images")
 DEFAULT_WINES_JSON = Path("data/db/wines.json")
-DEFAULT_MODEL_DIR = Path("models/siglip2")
 DEFAULT_OUTPUT_DIR = Path("data/embeddings")
 VIEWS = ("original", "bottle_crop", "label_crop")
-COLLECTIONS = {
-    "original": "wine_original_siglip2",
-    "bottle_crop": "wine_bottle_crop_siglip2",
-    "label_crop": "wine_label_crop_siglip2",
-}
 POINT_NAMESPACE = uuid.UUID("92670dbe-559b-55c3-ae90-ac7c7b9e50bd")
 
 logger = logging.getLogger(__name__)
@@ -173,7 +167,17 @@ def count_by_view(items: Iterable[ViewImage]) -> dict[str, int]:
     return counts
 
 
-def save_view_npz(output_dir: Path, view: str, points: list[EncodedPoint], vector_size: int) -> Path:
+def collection_name(view: str, collection_encoder: str) -> str:
+    return f"wine_{view}_{collection_encoder}"
+
+
+def save_view_npz(
+    output_dir: Path,
+    view: str,
+    points: list[EncodedPoint],
+    vector_size: int,
+    collection_encoder: str,
+) -> Path:
     if not points:
         raise ValueError(f"Cannot save empty view: {view}")
 
@@ -206,21 +210,29 @@ def save_view_npz(output_dir: Path, view: str, points: list[EncodedPoint], vecto
         slugs=slugs,
         paths=paths,
         payloads_json=payloads_json,
-        collection=np.array(COLLECTIONS[view]),
+        collection=np.array(collection_name(view, collection_encoder)),
         distance=np.array("COSINE"),
     )
     tmp_path.replace(output_path)
     return output_path
 
 
-def index_siglip2_views(
+def load_processor(encoder: str, model_dir: Path):
+    if encoder == "dinov3":
+        return AutoImageProcessor.from_pretrained(model_dir)
+    return AutoProcessor.from_pretrained(model_dir)
+
+
+def index_image_views(
     images_dir: Path,
     wines_json: Path,
+    encoder: str,
     model_dir: Path,
     output_dir: Path,
     batch_size: int,
     device_name: str,
     limit: int | None,
+    collection_encoder: str,
 ) -> None:
     slug_by_wine_id = load_slug_by_wine_id(wines_json)
     all_items = list(iter_view_images(images_dir, slug_by_wine_id))
@@ -233,15 +245,15 @@ def index_siglip2_views(
     logger.info("Found view images: %s", expected)
 
     device = resolve_device(device_name)
-    logger.info("Loading SigLIP2 from %s on %s", model_dir, device)
-    processor = AutoProcessor.from_pretrained(model_dir)
+    logger.info("Loading %s from %s on %s", encoder, model_dir, device)
+    processor = load_processor(encoder, model_dir)
     model = AutoModel.from_pretrained(model_dir, dtype=torch.float32).to(device)
     model.eval()
     synchronize_device(device)
 
     first_points = encode_batch(model, processor, device, [all_items[0]])
     vector_size = int(first_points[0].vector.shape[0])
-    logger.info("SigLIP2 vector size: %s", vector_size)
+    logger.info("%s vector size: %s", encoder, vector_size)
 
     points_by_view: dict[str, list[EncodedPoint]] = {view: [] for view in VIEWS}
     totals = {view: 0 for view in VIEWS}
@@ -256,42 +268,84 @@ def index_siglip2_views(
 
     for view in VIEWS:
         if not points_by_view[view]:
-            logger.info("Skipping %s: no vectors", COLLECTIONS[view])
+            logger.info("Skipping %s: no vectors", collection_name(view, collection_encoder))
             (output_dir / f"{view}.npz").unlink(missing_ok=True)
             (output_dir / f"{view}.tmp.npz").unlink(missing_ok=True)
             continue
-        output_path = save_view_npz(output_dir, view, points_by_view[view], vector_size=vector_size)
+        output_path = save_view_npz(
+            output_dir,
+            view,
+            points_by_view[view],
+            vector_size=vector_size,
+            collection_encoder=collection_encoder,
+        )
         logger.info(
             "Saved %s vectors for %s to %s",
             len(points_by_view[view]),
-            COLLECTIONS[view],
+            collection_name(view, collection_encoder),
             output_path,
         )
 
-    logger.info("Completed SigLIP2 embedding export. totals=%s", totals)
+    logger.info("Completed %s embedding export. totals=%s", encoder, totals)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Export SigLIP2 embeddings for original/bottle/label views to NPZ files.")
+    parser = argparse.ArgumentParser(description="Export global image embeddings for original/bottle/label views to NPZ files.")
     parser.add_argument("--images-dir", type=Path, default=DEFAULT_IMAGES_DIR)
     parser.add_argument("--wines-json", type=Path, default=DEFAULT_WINES_JSON)
-    parser.add_argument("--model-dir", type=Path, default=DEFAULT_MODEL_DIR)
+    parser.add_argument("--encoder", choices=["siglip2", "dinov3"], default="siglip2")
+    parser.add_argument("--model-dir", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--device", default=all_settings.embeddings.device)
+    parser.add_argument("--device", default=None)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument(
+        "--collection-encoder",
+        default=None,
+        help=(
+            "Collection name suffix for NPZ metadata. "
+            "Default: selected encoder. Use 'siglip2' to overwrite current runtime collections."
+        ),
+    )
     return parser.parse_args()
+
+
+def default_model_dir(encoder: str) -> Path:
+    if encoder == "dinov3":
+        return resolve_model_dir(Path(all_settings.dinov3.model_dir))
+    return resolve_model_dir(Path(all_settings.embeddings.model_dir))
+
+
+def resolve_model_dir(path: Path) -> Path:
+    if path.exists():
+        return path
+    if path.is_absolute() and len(path.parts) >= 3 and path.parts[1] == "models":
+        local_path = PROJECT_ROOT / "models" / Path(*path.parts[2:])
+        if local_path.exists():
+            return local_path
+    return path
+
+
+def default_device(encoder: str) -> str:
+    if encoder == "dinov3":
+        return all_settings.dinov3.device
+    return all_settings.embeddings.device
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     args = parse_args()
-    index_siglip2_views(
+    model_dir = args.model_dir or default_model_dir(args.encoder)
+    device = args.device or default_device(args.encoder)
+    collection_encoder = args.collection_encoder or args.encoder
+    index_image_views(
         images_dir=args.images_dir,
         wines_json=args.wines_json,
-        model_dir=args.model_dir,
+        encoder=args.encoder,
+        model_dir=model_dir,
         output_dir=args.output_dir,
         batch_size=args.batch_size,
-        device_name=args.device,
+        device_name=device,
         limit=args.limit,
+        collection_encoder=collection_encoder,
     )

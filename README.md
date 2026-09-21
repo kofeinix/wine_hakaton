@@ -4,7 +4,7 @@
 
 ## Что лежит локально
 
-- `models/yolo/best.onnx` - YOLO26 ONNX-модель для кропа этикеток. Файл хранится в репо и монтируется в контейнер как `/models/yolo/best.onnx`.
+- `models/yolo/label.pt` и `models/yolo/yolo26x-seg.pt` - YOLO PT-модели для кропа этикеток и сегментации бутылки. Файлы монтируются в контейнер как `/models/yolo/*.pt`.
 - `models/siglip2/` - внешняя папка с весами `google/siglip2-base-patch16-224`. Веса не входят в Docker image и не должны коммититься.
 - Qdrant хранит векторы локально в Docker volume.
 
@@ -151,8 +151,8 @@ COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/
 ## API
 
 - `GET /health` - проверка, что API жив.
-- `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`.
-- `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop этикетки, извлеченные NuExtract поля, полные карточки вин, scores и источники совпадения.
+- `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`. Query-параметр `stages` задает pipeline: `global`, `patches`, `llm`. Legacy-значения тоже поддерживаются: `stages=1` = `global`, `stages=2` = `global,patches`. `main_photos_only=true` ограничивает Qdrant-поиск только векторами `photo_id=main`, исключая `yandex_*`.
+- `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop этикетки, извлеченные NuExtract поля, полные карточки вин, scores и источники совпадения. Поддерживает тот же `stages`.
 - `GET /api/v1/wines/{wine_id}` - детали вина по id.
 - `GET /api/v1/wines/{wine_id}/photos/{filename}` - файл фотографии вина из MinIO. URL приходит в `image_url` и `photos[].url` ответа `GET /api/v1/wines/{wine_id}` или extended search.
 
@@ -161,14 +161,14 @@ COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/
 Пример поиска по изображению:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/search/image?limit=3" \
+curl -X POST "http://localhost:8000/api/v1/search/image?limit=3&stages=global,patches&main_photos_only=true" \
   -F "image=@./label.jpg"
 ```
 
 Пример расширенного поиска:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3" \
+curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3&stages=global,patches,llm" \
   -F "image=@./label.jpg"
 ```
 
@@ -221,7 +221,7 @@ VITE_API_TARGET=http://localhost:8000 npm run dev
 
 ## Подготовить модели
 
-Команда `prepare_models.py` проверяет наличие YOLO ONNX в `models/yolo/best.onnx`,
+Команда `prepare_models.py` проверяет наличие YOLO PT-моделей в `models/yolo`,
 скачивает SigLIP2 в `models/siglip2` и DINOv3 в `models/dinov3`.
 
 ```bash
@@ -238,7 +238,35 @@ HF_TOKEN=<your_token> ./prepare_models
 
 Модель `google/siglip2-base-patch16-224` занимает около 1.5 GB. Скачивание нужно сделать один раз; повторный запуск переиспользует уже скачанные файлы.
 
-## YOLO ONNX
+Global-вектора для Qdrant можно экспортировать как SigLIP2 или DINOv3 NPZ:
+
+```bash
+uv run python scripts/index_siglip2_views_qdrant.py --encoder siglip2
+uv run python scripts/index_siglip2_views_qdrant.py --encoder dinov3
+```
+
+По умолчанию DINOv3 создаёт collection metadata `wine_original_dinov3`, `wine_label_crop_dinov3`. Для быстрого A/B через текущие runtime collection names можно перезаписать suffix:
+
+```bash
+uv run python scripts/index_siglip2_views_qdrant.py --encoder dinov3 --collection-encoder siglip2
+uv run python scripts/init_qdrant.py --embeddings-dir data/embeddings
+```
+
+Чтобы приложение считало query-вектора той же моделью, что лежит в Qdrant, задайте runtime encoder:
+
+```env
+SEARCH__GLOBAL_ENCODER=dinov3
+SEARCH__COLLECTION_ENCODER=dinov3
+```
+
+Если вы сгенерировали DINOv3-вектора с `--collection-encoder siglip2`, то для A/B через старые имена коллекций используйте:
+
+```env
+SEARCH__GLOBAL_ENCODER=dinov3
+SEARCH__COLLECTION_ENCODER=siglip2
+```
+
+## YOLO PT
 
 В Docker Compose папка `./models` монтируется read-only:
 
@@ -246,29 +274,29 @@ HF_TOKEN=<your_token> ./prepare_models
 ./models:/models:ro
 ```
 
-Приложение использует дефолтный путь `/models/yolo/best.onnx`. Если модель переэкспортируется из `.pt`, замените только `models/yolo/best.onnx`; зависимость `ultralytics` в runtime не нужна.
+Приложение использует дефолтные пути `/models/yolo/label.pt` и `/models/yolo/yolo26x-seg.pt`. Кропы строятся через `ultralytics.YOLO`, без отдельного decode-кода.
 
-## NuExtract / LLM
+## LLM
 
-Приложение работает с NuExtract через OpenAI-compatible Chat Completions API. Сам инференс можно держать на VPS или запустить локально отдельным процессом, а в `.env` приложения указать только endpoint, ключ и served model name.
+Приложение работает с OpenAI-compatible Chat Completions API. Для stage `llm` нужна vision-модель, например Qwen2.5-VL. Сам инференс можно держать на VPS или запустить локально отдельным процессом, а в `.env` приложения указать endpoint, ключ и served model name.
 
 Минимальная конфигурация для Docker Compose:
 
 ```env
 LLM__BASE_URL=http://host.docker.internal:1234/v1
 LLM__API_KEY=EMPTY
-LLM__MODEL_NAME=nuextract3
+LLM__MODEL_NAME=qwen2.5-vl
 ```
 
-Если NuExtract запущен на VPS, замените `LLM__BASE_URL` на публичный `/v1` endpoint и задайте реальный `LLM__API_KEY` (в рамках хакатона можно запросить у команды ASD):
+Если LLM запущена на VPS, замените `LLM__BASE_URL` на публичный `/v1` endpoint и задайте реальный `LLM__API_KEY`:
 
 ```env
 LLM__BASE_URL=https://vps.example.com/v1
 LLM__API_KEY=change-me
-LLM__MODEL_NAME=nuextract3
+LLM__MODEL_NAME=qwen2.5-vl
 ```
 
-`LLM__MODEL_NAME` должен совпадать с именем, под которым модель отдается сервером. В локальных скриптах это имя задается параметром `--served-model-name` или переменной `NUEXTRACT_SERVED_MODEL_NAME`; по умолчанию используется `nuextract3`.
+`LLM__MODEL_NAME` должен совпадать с именем, под которым модель отдается сервером. Старые NuExtract-скрипты можно использовать как локальный OpenAI-compatible backend, но stage `llm` ожидает vision-модель.
 
 ## Локальный запуск NuExtract
 
@@ -335,6 +363,7 @@ LLM__MODEL_NAME=nuextract3
 
 ## Полезные пути внутри контейнера
 
-- YOLO: `/models/yolo/best.onnx`
+- YOLO label: `/models/yolo/label.pt`
+- YOLO bottle segmentation: `/models/yolo/yolo26x-seg.pt`
 - SigLIP2: `/models/siglip2`
 - Hugging Face cache: `/models/hf-cache`

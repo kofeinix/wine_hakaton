@@ -10,7 +10,7 @@ from ultralytics import YOLO
 
 
 DEFAULT_IMAGES_DIR = Path("data/images")
-DEFAULT_MODEL = Path("models/yolo/yolo26x-seg.onnx")
+DEFAULT_MODEL = "models/yolo/yolo26x-seg.pt"
 BOTTLE_CLASS_ID = 39
 
 logger = logging.getLogger(__name__)
@@ -130,10 +130,14 @@ def process_original(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create bottle_crop.jpg next to every original.jpg using yolo26x-seg."
+        description="Create bottle_crop.jpg next to every original.jpg using a YOLO PT segmentation model."
     )
     parser.add_argument("--images-dir", type=Path, default=DEFAULT_IMAGES_DIR)
-    parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help="Local model path or Ultralytics model reference, for example yolo26x-seg.pt.",
+    )
     parser.add_argument("--conf", type=float, default=0.15)
     parser.add_argument("--margin", type=float, default=0.04)
     parser.add_argument("--quality", type=int, default=92)
@@ -146,8 +150,6 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     args = parse_args()
 
-    if not args.model.is_file():
-        raise FileNotFoundError(args.model)
     if not args.images_dir.is_dir():
         raise NotADirectoryError(args.images_dir)
 
@@ -156,7 +158,7 @@ def main() -> None:
         originals = originals[: args.limit]
 
     logger.info("Loading model: %s", args.model)
-    model = YOLO(str(args.model))
+    model = YOLO(args.model)
 
     processed = 0
     skipped = 0

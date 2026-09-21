@@ -21,6 +21,17 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Runtime shared libraries required by opencv-python, imported by ultralytics.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libgl1 \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender1 \
+        libxcb1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as non-root user
 RUN useradd --create-home --uid 1000 appuser
 

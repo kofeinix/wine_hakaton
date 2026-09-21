@@ -6,13 +6,13 @@ requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.14.3",
     "asyncpg>=0.31.0",
+    "catboost>=1.2.8",
     "fastapi>=0.125.0",
     "httpx-retries>=0.6.0",
     "huggingface-hub>=1.2.3",
     "langchain-openai>=1.6.1",
     "miniopy-async>=1.23.5",
     "numpy>=2.4.0",
-    "onnxruntime>=1.24.0",
     "numind>=0.4.0",
     "pillow>=12.3.0",
     "pydantic>=2.13.5",
@@ -29,7 +29,6 @@ dependencies = [
     "greenlet>=3.5.5",
     "torchvision>=0.29.0",
     "ultralytics>=8.4.153",
-    "onnx>=1.22.0",
 ]
 
 [[tool.uv.index]]

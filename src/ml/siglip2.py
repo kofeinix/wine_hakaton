@@ -47,17 +47,23 @@ class SiglipImageEmbedder:
         logger.info(f"SigLIP2 model loaded")
 
 
-    def embed(self, image: Image.Image) -> list[float]:
+    def embed_many(self, images: list[Image.Image]) -> list[list[float]]:
         assert self._processor is not None
         assert self._model is not None
         assert self._device is not None
 
-        inputs = self._processor(images=image, return_tensors="pt")
+        if not images:
+            return []
+
+        inputs = self._processor(images=images, return_tensors="pt")
         inputs = {key: value.to(self._device) for key, value in inputs.items()}
         with torch.inference_mode():
             embedding = extract_global_vector(self._model, inputs)
         global_vectors, _ = features_to_numpy(embedding, None)
-        return global_vectors[0].tolist()
+        return global_vectors.tolist()
+
+    def embed(self, image: Image.Image) -> list[float]:
+        return self.embed_many([image])[0]
 
     def embed_features(self, image: Image.Image) -> VisionFeatures:
         assert self._processor is not None
