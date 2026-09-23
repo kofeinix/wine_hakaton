@@ -4,7 +4,7 @@
 
 ## Что лежит локально
 
-- `models/yolo/label.pt` и `models/yolo/yolo26x-seg.pt` - YOLO PT-модели для кропа этикеток и сегментации бутылки. Файлы монтируются в контейнер как `/models/yolo/*.pt`.
+- `models/yolo/label.pt` и `models/yolo/yolo26x.pt` - YOLO PT-модели для кропа этикеток и bbox-кропа бутылки. Файлы монтируются в контейнер как `/models/yolo/*.pt`.
 - `models/siglip2/` - внешняя папка с весами `google/siglip2-base-patch16-224`. Веса не входят в Docker image и не должны коммититься.
 - Qdrant хранит векторы локально в Docker volume.
 
@@ -245,6 +245,41 @@ uv run python scripts/index_siglip2_views_qdrant.py --encoder siglip2
 uv run python scripts/index_siglip2_views_qdrant.py --encoder dinov3
 ```
 
+Для расширенного набора фото можно сначала досчитать `bottle_crop` и
+`label_crop` только для нужных photo-папок, а затем экспортировать эмбеддинги
+по тем же маскам:
+
+```bash
+uv run python scripts/prepare_image_views.py \
+  --images-dir data/images_extended \
+  --photo-dir-pattern main 'yandex_*' 'flux_*' 'vivino_*'
+
+# Повторный прогон только по проблемным папкам, по одной папке wine_id/photo_id на строку.
+uv run python scripts/prepare_image_views.py \
+  --images-dir data/images_extended \
+  --photo-dir-file missing_photo_dirs.txt \
+  --overwrite
+
+uv run python scripts/prepare_image_views.py \
+  --images-dir data/images_extended \
+  --photo-dir-file missing_label_dirs.txt \
+  --crop-kind label \
+  --overwrite
+
+uv run python scripts/prepare_image_views.py \
+  --images-dir data/images_extended \
+  --photo-dir-file missing_bottle_dirs.txt \
+  --crop-kind bottle \
+  --overwrite
+
+uv run python scripts/index_siglip2_views_qdrant.py \
+  --images-dir data/images_extended \
+  --encoder siglip2 \
+  --photo-dir-pattern main 'yandex_*' 'flux_*' 'vivino_*'
+
+uv run python scripts/init_qdrant.py --embeddings-dir data/embeddings
+```
+
 По умолчанию DINOv3 создаёт collection metadata `wine_original_dinov3`, `wine_label_crop_dinov3`. Для быстрого A/B через текущие runtime collection names можно перезаписать suffix:
 
 ```bash
@@ -274,7 +309,7 @@ SEARCH__COLLECTION_ENCODER=siglip2
 ./models:/models:ro
 ```
 
-Приложение использует дефолтные пути `/models/yolo/label.pt` и `/models/yolo/yolo26x-seg.pt`. Кропы строятся через `ultralytics.YOLO`, без отдельного decode-кода.
+Приложение использует дефолтные пути `/models/yolo/label.pt` и `/models/yolo/yolo26x.pt`. Кропы строятся через `ultralytics.YOLO`, без отдельного decode-кода.
 
 ## LLM
 
@@ -364,6 +399,6 @@ LLM__MODEL_NAME=nuextract3
 ## Полезные пути внутри контейнера
 
 - YOLO label: `/models/yolo/label.pt`
-- YOLO bottle segmentation: `/models/yolo/yolo26x-seg.pt`
+- YOLO bottle detection: `/models/yolo/yolo26x.pt`
 - SigLIP2: `/models/siglip2`
 - Hugging Face cache: `/models/hf-cache`

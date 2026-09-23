@@ -108,7 +108,6 @@ class YoloLabelCropper(UltralyticsCropper):
 
 
 class YoloBottleCropper(UltralyticsCropper):
-    """Bottle segmentation cropper backed by an Ultralytics PT model."""
+    """Bottle cropper backed by an Ultralytics detection PT model."""
 
     class_id = 39
-    remove_background = True

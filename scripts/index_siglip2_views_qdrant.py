@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import logging
 import sys
@@ -30,6 +31,10 @@ VIEWS = ("original", "bottle_crop", "label_crop")
 POINT_NAMESPACE = uuid.UUID("92670dbe-559b-55c3-ae90-ac7c7b9e50bd")
 
 logger = logging.getLogger(__name__)
+
+
+def matches_any_pattern(value: str, patterns: list[str]) -> bool:
+    return any(fnmatch.fnmatchcase(value, pattern) for pattern in patterns)
 
 
 @dataclass(frozen=True)
@@ -78,7 +83,11 @@ def load_slug_by_wine_id(wines_json: Path) -> dict[str, str]:
     return result
 
 
-def iter_view_images(images_dir: Path, slug_by_wine_id: dict[str, str]) -> Iterable[ViewImage]:
+def iter_view_images(
+    images_dir: Path,
+    slug_by_wine_id: dict[str, str],
+    photo_dir_patterns: list[str],
+) -> Iterable[ViewImage]:
     for wine_dir in sorted((p for p in images_dir.iterdir() if p.is_dir()), key=lambda p: p.name):
         wine_id = wine_dir.name
         slug = slug_by_wine_id.get(wine_id)
@@ -88,6 +97,8 @@ def iter_view_images(images_dir: Path, slug_by_wine_id: dict[str, str]) -> Itera
 
         for photo_dir in sorted((p for p in wine_dir.iterdir() if p.is_dir()), key=lambda p: p.name):
             photo_id = photo_dir.name
+            if not matches_any_pattern(photo_id, photo_dir_patterns):
+                continue
             for view in VIEWS:
                 path = photo_dir / f"{view}.jpg"
                 if path.is_file():
@@ -233,16 +244,17 @@ def index_image_views(
     device_name: str,
     limit: int | None,
     collection_encoder: str,
+    photo_dir_patterns: list[str],
 ) -> None:
     slug_by_wine_id = load_slug_by_wine_id(wines_json)
-    all_items = list(iter_view_images(images_dir, slug_by_wine_id))
+    all_items = list(iter_view_images(images_dir, slug_by_wine_id, photo_dir_patterns))
     if limit is not None:
         all_items = all_items[:limit]
     if not all_items:
-        raise ValueError(f"No view images found under {images_dir}")
+        raise ValueError(f"No view images found under {images_dir} for photo folders {photo_dir_patterns}")
 
     expected = count_by_view(all_items)
-    logger.info("Found view images: %s", expected)
+    logger.info("Found view images: %s for photo folders: %s", expected, photo_dir_patterns)
 
     device = resolve_device(device_name)
     logger.info("Loading %s from %s on %s", encoder, model_dir, device)
@@ -300,6 +312,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default=None)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument(
+        "--photo-dir-pattern",
+        nargs="+",
+        default=["*"],
+        help=(
+            "Photo folder masks to index under each wine directory. "
+            "Example: --photo-dir-pattern main 'yandex_*' 'flux_*' 'vivino_*'."
+        ),
+    )
+    parser.add_argument(
         "--collection-encoder",
         default=None,
         help=(
@@ -348,4 +369,5 @@ if __name__ == "__main__":
         device_name=device,
         limit=args.limit,
         collection_encoder=collection_encoder,
+        photo_dir_patterns=args.photo_dir_pattern,
     )

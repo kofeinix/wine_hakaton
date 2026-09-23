@@ -18,7 +18,7 @@ DEFAULT_SIGLIP2_MODEL_ID = "google/siglip2-base-patch16-224"
 DEFAULT_DINOV3_MODEL_ID = "facebook/dinov3-vitb16-pretrain-lvd1689m"
 YOLO_REQUIRED_FILES = (
     Path("yolo") / "label.pt",
-    Path("yolo") / "yolo26x-seg.pt",
+    Path("yolo") / "yolo26x.pt",
 )
 SIGLIP2_DIR_NAME = "siglip2"
 DINO_V3_DIR_NAME = "dinov3"
@@ -81,7 +81,7 @@ def assert_yolo_model(model_root: Path) -> None:
         raise FileNotFoundError(
             "Missing YOLO PT model(s): "
             + ", ".join(str(path) for path in missing)
-            + ". Put label.pt and yolo26x-seg.pt under models/yolo."
+            + ". Put label.pt and yolo26x.pt under models/yolo."
         )
     print("YOLO PT ready: " + ", ".join(str(model_root / relative) for relative in YOLO_REQUIRED_FILES))
 

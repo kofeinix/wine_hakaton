@@ -12,4 +12,5 @@ models/*
 data/photos.tar.gz
 data/images/*
 data/images_w_vivino/*
+data/images_extended/*
 data/eval/*

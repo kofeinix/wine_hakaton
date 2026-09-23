@@ -29,6 +29,7 @@ dependencies = [
     "greenlet>=3.5.5",
     "torchvision>=0.29.0",
     "ultralytics>=8.4.153",
+    "rapidfuzz>=3.14.6",
 ]
 
 [[tool.uv.index]]

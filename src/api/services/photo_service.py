@@ -8,7 +8,7 @@ from PIL import Image
 
 from src.api.schemas import CropResponse
 from src.ml.utils import open_rgb_image
-from src.ml.yolo import LabelCrop, YoloLabelCropper
+from src.ml.yolo import LabelCrop, YoloBottleCropper, YoloLabelCropper
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class WinePhotoService:
     def __init__(
         self,
         label_cropper: YoloLabelCropper | None = None,
-        bottle_cropper: YoloLabelCropper | None = None,
+        bottle_cropper: YoloBottleCropper | None = None,
     ) -> None:
         self.label_cropper = label_cropper
         self.bottle_cropper = bottle_cropper
@@ -41,15 +41,12 @@ class WinePhotoService:
             )
         }
 
-        # bottle_crop is intentionally disabled for runtime search. Keep the
-        # implementation nearby while we validate original+label cosine fusion.
-        # bottle_crop = self._try_crop("bottle_crop", self.bottle_cropper, original)
-        # if bottle_crop is not None:
-        #     images["bottle_crop"] = bottle_crop.image
-        #     crops["bottle_crop"] = self._crop_response(bottle_crop)
-        # else:
-        #     crops["bottle_crop"] = CropResponse(available=False)
-        crops["bottle_crop"] = CropResponse(available=False)
+        bottle_crop = self._try_crop("bottle_crop", self.bottle_cropper, original)
+        if bottle_crop is not None:
+            images["bottle_crop"] = bottle_crop.image
+            crops["bottle_crop"] = self._crop_response(bottle_crop)
+        else:
+            crops["bottle_crop"] = CropResponse(available=False)
 
         label_crop = self._try_crop("label_crop", self.label_cropper, original)
         if label_crop is not None:
@@ -66,7 +63,7 @@ class WinePhotoService:
     @staticmethod
     def _try_crop(
         view: str,
-        cropper: YoloLabelCropper | None,
+        cropper: YoloLabelCropper | YoloBottleCropper | None,
         image: Image.Image,
     ) -> LabelCrop | None:
         if cropper is None:

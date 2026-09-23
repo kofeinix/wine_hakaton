@@ -42,7 +42,7 @@ async def search_by_image(
     limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
     views: list[str] = Query(
         default=[],
-        description="Restrict aggregation to specific views: original, label_crop. Empty = all.",
+        description="Restrict aggregation to specific views: original, bottle_crop, label_crop. Empty = all.",
     ),
     stages: list[str] = Query(
         default=["global", "patches"],
@@ -86,7 +86,7 @@ async def search_by_image_catboost(
     limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
     views: list[str] = Query(
         default=[],
-        description="Restrict aggregation to specific views: original, label_crop. Empty = all.",
+        description="Restrict aggregation to specific views: original, bottle_crop, label_crop. Empty = all.",
     ),
     main_photos_only: bool = Query(
         default=False,

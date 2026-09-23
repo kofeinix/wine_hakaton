@@ -39,9 +39,9 @@ PATCH_VIEW_COLLECTIONS = {
 }
 
 VIEW_WEIGHTS = {
-    "original": 0.50,
-    # "bottle_crop": 0.25,
-    "label_crop": 0.50,
+    "original": 0.40,
+    "bottle_crop": 0.20,
+    "label_crop": 0.40,
 }
 
 PATCH_VIEW_WEIGHTS = {
@@ -282,8 +282,6 @@ class WineService:
         responses = await asyncio.gather(*search_tasks)
 
         # Собираем cosine score по каждому view: wine_id -> {view: [score по фото]}.
-        # Runtime search now uses original+label_crop cosine fusion; bottle_crop is
-        # disabled above in VIEW_* while we validate it separately.
         wine_view_matches: dict[str, dict[str, list[ViewMatch]]] = {}
         wine_slugs: dict[str, str] = {}
         per_view_counts: dict[str, int] = {}

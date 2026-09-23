@@ -79,8 +79,8 @@ class YoloSettings(BaseModel):
         default="/models/yolo/label.pt", description="Path or Ultralytics reference for label crop model"
     )
     bottle_model_path: str = Field(
-        default="/models/yolo/yolo26x-seg.pt",
-        description="Path or Ultralytics reference for bottle segmentation model",
+        default="/models/yolo/yolo26x.pt",
+        description="Path or Ultralytics reference for bottle detection model",
     )
     label_model_path: str = Field(
         default="/models/yolo/label.pt",

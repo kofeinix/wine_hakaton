@@ -24,7 +24,7 @@ class ConnectionManager:
         self.llm: ChatOpenAIWrapper | None = None
         self.minio: MinioClient | None = None
         self.yolo: YoloLabelCropper | None = None
-        self.bottle_yolo: YoloLabelCropper | None = None
+        self.bottle_yolo: YoloBottleCropper | None = None
         self.label_yolo: YoloLabelCropper | None = None
         self.embeddings: SiglipImageEmbedder | None = None
         self.dinov3: DinoV3ImageEmbedder | None = None

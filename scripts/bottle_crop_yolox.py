@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import logging
 from pathlib import Path
 
@@ -10,10 +11,14 @@ from ultralytics import YOLO
 
 
 DEFAULT_IMAGES_DIR = Path("data/images")
-DEFAULT_MODEL = "models/yolo/yolo26x-seg.pt"
+DEFAULT_MODEL = "models/yolo/yolo26x.pt"
 BOTTLE_CLASS_ID = 39
 
 logger = logging.getLogger(__name__)
+
+
+def matches_any_pattern(value: str, patterns: list[str]) -> bool:
+    return any(fnmatch.fnmatchcase(value, pattern) for pattern in patterns)
 
 
 def save_jpeg(image: Image.Image, path: Path, quality: int) -> None:
@@ -23,8 +28,10 @@ def save_jpeg(image: Image.Image, path: Path, quality: int) -> None:
     image.convert("RGB").save(path, format="JPEG", quality=quality, optimize=True)
 
 
-def iter_original_images(images_dir: Path) -> list[Path]:
-    return sorted(images_dir.rglob("original.jpg"))
+def iter_original_images(images_dir: Path, photo_dir_patterns: list[str]) -> list[Path]:
+    return sorted(
+        path for path in images_dir.rglob("original.jpg") if matches_any_pattern(path.parent.name, photo_dir_patterns)
+    )
 
 
 def extract_bottle_crop(
@@ -34,20 +41,19 @@ def extract_bottle_crop(
     margin_ratio: float,
 ) -> tuple[Image.Image, float] | None:
     """
-    Возвращает (crop на белом фоне, confidence) или None, если бутылка не найдена.
+    Returns a bbox bottle crop and confidence, or None if the bottle is not detected.
     """
     results = model.predict(
         source=str(original_path),
         classes=[BOTTLE_CLASS_ID],
         conf=conf,
-        retina_masks=True,
         verbose=False,
     )
     if not results:
         return None
 
     result = results[0]
-    if result.masks is None or result.boxes is None or len(result.boxes) == 0:
+    if result.boxes is None or len(result.boxes) == 0:
         return None
 
     # берём самое уверенное детектирование
@@ -55,13 +61,7 @@ def extract_bottle_crop(
     best = int(np.argmax(confs))
     confidence = float(confs[best])
 
-    # маска в исходном разрешении изображения (retina_masks=True)
-    mask = result.masks.data[best].cpu().numpy().astype(bool)  # (H, W)
     img_h, img_w = result.orig_shape
-    if mask.shape != (img_h, img_w):
-        mask_img = Image.fromarray((mask * 255).astype(np.uint8), mode="L")
-        mask_img = mask_img.resize((img_w, img_h), Image.Resampling.BILINEAR)
-        mask = np.asarray(mask_img) > 127
 
     # bbox в пикселях исходного изображения + margin
     x1, y1, x2, y2 = result.boxes.xyxy[best].cpu().numpy().astype(float)
@@ -77,12 +77,8 @@ def extract_bottle_crop(
 
     image = Image.open(original_path).convert("RGB")
     crop = image.crop((bx1, by1, bx2, by2))
-    crop_mask = mask[by1:by2, bx1:bx2]
-
-    mask_image = Image.fromarray((crop_mask.astype(np.uint8) * 255), mode="L")
-    white = Image.new("RGB", crop.size, (255, 255, 255))
-    white.paste(crop, mask=mask_image)
-    return white, confidence
+    image.close()
+    return crop, confidence
 
 
 def process_original(
@@ -130,19 +126,28 @@ def process_original(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create bottle_crop.jpg next to every original.jpg using a YOLO PT segmentation model."
+        description="Create bottle_crop.jpg next to every original.jpg using a YOLO PT detection model."
     )
     parser.add_argument("--images-dir", type=Path, default=DEFAULT_IMAGES_DIR)
     parser.add_argument(
         "--model",
         default=DEFAULT_MODEL,
-        help="Local model path or Ultralytics model reference, for example yolo26x-seg.pt.",
+        help="Local model path or Ultralytics model reference, for example yolo26x.pt.",
     )
     parser.add_argument("--conf", type=float, default=0.15)
     parser.add_argument("--margin", type=float, default=0.04)
     parser.add_argument("--quality", type=int, default=92)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument(
+        "--photo-dir-pattern",
+        nargs="+",
+        default=["*"],
+        help=(
+            "Photo folder masks to process under each wine directory. "
+            "Example: --photo-dir-pattern main 'yandex_*' 'flux_*' 'vivino_*'."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -153,9 +158,10 @@ def main() -> None:
     if not args.images_dir.is_dir():
         raise NotADirectoryError(args.images_dir)
 
-    originals = iter_original_images(args.images_dir)
+    originals = iter_original_images(args.images_dir, args.photo_dir_pattern)
     if args.limit is not None:
         originals = originals[: args.limit]
+    logger.info("Found %s originals matching photo folders: %s", len(originals), args.photo_dir_pattern)
 
     logger.info("Loading model: %s", args.model)
     model = YOLO(args.model)
