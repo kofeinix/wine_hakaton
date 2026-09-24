@@ -68,6 +68,21 @@ def normalize_label_crop(image: Image.Image, max_side: int) -> Image.Image:
     return normalized
 
 
+def pad_narrow_image_for_crop(image: Image.Image) -> Image.Image:
+    if image.height <= image.width * 3:
+        return image
+
+    target_width = (image.height + 2) // 3
+    horizontal_padding = target_width - image.width
+    left_padding = horizontal_padding // 2
+    right_padding = horizontal_padding - left_padding
+    return ImageOps.expand(
+        image,
+        border=(left_padding, 0, right_padding, 0),
+        fill=(255, 255, 255),
+    )
+
+
 def iter_source_images(images_dir: Path, photo_dir_patterns: list[str]) -> list[Path]:
     paths: list[Path] = []
     existing_originals = sorted(
@@ -156,27 +171,29 @@ def process_image(
     result["original"] = str(original_path)
     result["view_dir"] = str(view_dir)
 
+    crop_source_image = pad_narrow_image_for_crop(image)
+    bottle_crop = None
     if bottle_cropper is not None:
-        bottle_crop = bottle_cropper.crop(image)
+        bottle_crop = bottle_cropper.crop(crop_source_image)
         if bottle_crop is not None:
             save_jpeg(bottle_crop.image, view_dir / "bottle_crop.jpg", quality)
             result["bottle_confidence"] = round(bottle_crop.confidence, 4)
         else:
-            (view_dir / "bottle_crop.jpg").unlink(missing_ok=True)
             result["bottle_confidence"] = None
 
     if label_cropper is not None:
-        label_crop = label_cropper.crop(image)
+        preferred_region = bottle_crop.box if bottle_crop is not None else None
+        label_crop = label_cropper.crop(crop_source_image, preferred_region=preferred_region)
         if label_crop is not None:
             save_jpeg(label_crop.image, view_dir / "label_crop.jpg", quality)
             normalized = normalize_label_crop(label_crop.image, max_side=normalized_max_side)
             save_jpeg(normalized, view_dir / "normalized_label_crop.jpg", quality)
             result["label_confidence"] = round(label_crop.confidence, 4)
         else:
-            (view_dir / "label_crop.jpg").unlink(missing_ok=True)
-            (view_dir / "normalized_label_crop.jpg").unlink(missing_ok=True)
             result["label_confidence"] = None
 
+    if crop_source_image is not image:
+        crop_source_image.close()
     image.close()
     result["status"] = "processed"
     return result

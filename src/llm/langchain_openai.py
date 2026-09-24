@@ -1,4 +1,3 @@
-import json
 import logging
 from contextlib import nullcontext
 from http import HTTPMethod
@@ -9,7 +8,7 @@ import base64
 import httpx
 from httpx import AsyncHTTPTransport
 from httpx_retries import Retry, RetryTransport
-from langchain_core.messages import BaseMessage, ChatMessage, HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.outputs import LLMResult
 from limiters import AsyncSemaphore, AsyncTokenBucket
 from PIL import Image, ImageOps
@@ -17,7 +16,7 @@ from pydantic import BaseModel
 
 from langchain_openai import ChatOpenAI
 from src.connections.rate_limiter import RateLimiterManager
-from src.llm.models import WineOutput, WineSelectionOutput
+from src.llm.models import WineSelectionOutput
 
 from src.settings.settings import LlmSettings
 
@@ -176,44 +175,29 @@ class ChatOpenAIWrapper:
             return content.split("</think>", 1)[1].strip()
         return content
 
-    async def analyze_image(self, image_bytes: bytes) -> WineOutput:
-        from numind.nuextract_utils import convert_json_schema_to_nuextract_template
-        from src.llm.models import answer_template
-
-        conversion = convert_json_schema_to_nuextract_template(
-            WineOutput.model_json_schema()
-        )
-        template = conversion["template"]
-        llm = self.chat.with_structured_output(
-            WineOutput,
-            method="json_mode",
-            include_raw=True,
-        )
+    async def ocr_image_text(self, image_bytes: bytes) -> str:
         message = HumanMessage(
             content=[
-                {"type": "image_url", "image_url": {"url": self._image_data_url(image_bytes)}}
+                {
+                    "type": "text",
+                    "text": "Text Recognition:",
+                },
+                {"type": "image_url", "image_url": {"url": self._image_data_url(image_bytes)}},
             ]
         )
-
-        messages: list[BaseMessage] = [message]
-        if self._is_ollama():
-            messages.insert(
-                0,
-                ChatMessage(role="template", content=json.dumps(template, ensure_ascii=False)),
-            )
-
-        result = await llm.ainvoke(messages)
-        parsed = result.get("parsed")
-        if isinstance(parsed, WineOutput):
-            return parsed
-
-        raw = result.get("raw")
-        content = self._strip_empty_think(getattr(raw, "content", "") or "")
-        try:
-            return WineOutput.model_validate_json(content)
-        except Exception:
-            logger.exception("NuExtract response validation failed: %s", content)
-            raise
+        result = await self.chat.ainvoke([message])
+        content = getattr(result, "content", "") or ""
+        if isinstance(content, list):
+            parts = []
+            for item in content:
+                if isinstance(item, dict) and item.get("type") == "text":
+                    parts.append(str(item.get("text") or ""))
+                else:
+                    parts.append(str(item))
+            content = "\n".join(parts)
+        else:
+            content = str(content or "")
+        return self._strip_empty_think(content).strip()
 
     async def choose_wine_from_image(
         self,

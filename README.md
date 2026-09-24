@@ -1,6 +1,6 @@
 # WineHakaton
 
-Локальный demo-stack для аналога Vivino: API, Postgres, Redis и Qdrant запускаются через Docker Compose. Тяжелая LLM для извлечения текста может жить на VPS за API, а локальные CV-веса лежат в `./models` и монтируются в контейнер как `/models`.
+Локальный demo-stack для аналога Vivino: API, Postgres, Redis и Qdrant запускаются через Docker Compose. OCR/vision-модель может жить на VPS за API, а локальные CV-веса лежат в `./models` и монтируются в контейнер как `/models`.
 
 ## Что лежит локально
 
@@ -152,7 +152,7 @@ COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/
 
 - `GET /health` - проверка, что API жив.
 - `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`. Query-параметр `stages` задает pipeline: `global`, `patches`, `llm`. Legacy-значения тоже поддерживаются: `stages=1` = `global`, `stages=2` = `global,patches`. `main_photos_only=true` ограничивает Qdrant-поиск только векторами `photo_id=main`, исключая `yandex_*`.
-- `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop этикетки, извлеченные NuExtract поля, полные карточки вин, scores и источники совпадения. Поддерживает тот же `stages`.
+- `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop бутылки/этикетки, OCR rerank, полные карточки вин, scores и источники совпадения. Поддерживает тот же `stages`.
 - `GET /api/v1/wines/{wine_id}` - детали вина по id.
 - `GET /api/v1/wines/{wine_id}/photos/{filename}` - файл фотографии вина из MinIO. URL приходит в `image_url` и `photos[].url` ответа `GET /api/v1/wines/{wine_id}` или extended search.
 
@@ -168,7 +168,7 @@ curl -X POST "http://localhost:8000/api/v1/search/image?limit=3&stages=global,pa
 Пример расширенного поиска:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3&stages=global,patches,llm" \
+curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3&stages=global,patches" \
   -F "image=@./label.jpg"
 ```
 
@@ -311,90 +311,37 @@ SEARCH__COLLECTION_ENCODER=siglip2
 
 Приложение использует дефолтные пути `/models/yolo/label.pt` и `/models/yolo/yolo26x.pt`. Кропы строятся через `ultralytics.YOLO`, без отдельного decode-кода.
 
-## LLM
+## OCR / LLM
 
-Приложение работает с OpenAI-compatible Chat Completions API. Для stage `llm` нужна vision-модель, например Qwen2.5-VL. Сам инференс можно держать на VPS или запустить локально отдельным процессом, а в `.env` приложения указать endpoint, ключ и served model name.
+Приложение работает с OpenAI-compatible Chat Completions API. В базовом flow vision-модель используется для OCR по приоритету `label_crop -> bottle_crop -> original`, затем OCR-текст участвует в fuzzy rerank top-50 кандидатов. Отдельный stage `llm` сохранен как опциональный rerank-кандидат, но по умолчанию frontend и API используют только `global,patches`.
+
+Если YOLO не нашел `label_crop` ни на исходном изображении, ни внутри `bottle_crop`, API считает, что пользователь мог прислать близкое фото этикетки: `label_crop` становится равен `original`, и поиск идет по label collection.
 
 Минимальная конфигурация для Docker Compose:
 
 ```env
 LLM__BASE_URL=http://host.docker.internal:1234/v1
 LLM__API_KEY=EMPTY
-LLM__MODEL_NAME=qwen2.5-vl
+LLM__MODEL_NAME=glm-ocr
 ```
 
-Если LLM запущена на VPS, замените `LLM__BASE_URL` на публичный `/v1` endpoint и задайте реальный `LLM__API_KEY`:
+Если модель запущена на VPS, замените `LLM__BASE_URL` на публичный `/v1` endpoint и задайте реальный `LLM__API_KEY`:
 
 ```env
 LLM__BASE_URL=https://vps.example.com/v1
 LLM__API_KEY=change-me
-LLM__MODEL_NAME=qwen2.5-vl
+LLM__MODEL_NAME=glm-ocr
 ```
-
-`LLM__MODEL_NAME` должен совпадать с именем, под которым модель отдается сервером. Старые NuExtract-скрипты можно использовать как локальный OpenAI-compatible backend, но stage `llm` ожидает vision-модель.
-
-## Локальный запуск NuExtract
-
-Для macOS/Linux используйте корневой скрипт:
-
-```bash
-./run_nuextract.sh --device auto
-```
-
-Для Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run_nuextract.ps1 -Device auto
-```
-
-Скрипты поднимают OpenAI-compatible endpoint и печатают готовые значения для `.env`.
-
-Выбор runtime:
-
-- macOS Apple Silicon: `auto` выбирает `mps` и запускает vLLM-Metal с `numind/NuExtract3-mlx-mxfp8`.
-- macOS Intel: `auto` выбирает `cpu` и запускает Ollama с `numind/nuextract3:q4_k_m`.
-- Linux с NVIDIA GPU: `auto` выбирает `gpu` и запускает vLLM CUDA с `numind/NuExtract3-FP8`.
-- Linux без NVIDIA GPU: `auto` выбирает `cpu` и запускает vLLM CPU с `numind/NuExtract3-W8A8`.
-- Windows: `auto` выбирает `gpu`, если доступен NVIDIA GPU, иначе `cpu`; оба режима идут через Ollama.
-
-Примеры запуска:
-
-```bash
-./run_nuextract.sh mps
-./run_nuextract.sh gpu
-./run_nuextract.sh cpu --max-model-len 4096
-./run_nuextract.sh mps --max-model-len 2048 --served-model-name nuextract3
-./run_nuextract.sh gpu --model numind/NuExtract3-FP8 --port 1234
-./run_nuextract.sh --device mps --clean
-```
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run_nuextract.ps1 -Device cpu
-powershell -ExecutionPolicy Bypass -File .\run_nuextract.ps1 -Device gpu -Port 11434 -ServedModelName nuextract3
-```
-
-Порты по умолчанию отличаются по runtime:
-
-- vLLM/vLLM-Metal: `1234`;
-- Ollama: `11434`.
 
 Если приложение запущено в Docker, в `.env` нужен адрес Docker-хоста, а не `localhost`:
 
 ```env
 LLM__BASE_URL=http://host.docker.internal:1234/v1
 LLM__API_KEY=EMPTY
-LLM__MODEL_NAME=nuextract3
+LLM__MODEL_NAME=glm-ocr
 ```
 
-Для Ollama на дефолтном порту:
-
-```env
-LLM__BASE_URL=http://host.docker.internal:11434/v1
-LLM__API_KEY=ollama
-LLM__MODEL_NAME=nuextract3
-```
-
-Основные параметры `run_nuextract.sh` можно передавать флагами или переменными окружения: `NUEXTRACT_DEVICE`, `NUEXTRACT_HOST`, `NUEXTRACT_PORT`, `NUEXTRACT_MODEL`, `NUEXTRACT_SERVED_MODEL_NAME`, `NUEXTRACT_MAX_MODEL_LEN`, `NUEXTRACT_GPU_MEMORY_UTILIZATION`, `PYTHON_BIN`, `VLLM_VERSION`, `VLLM_METAL_CHANNEL`, `OLLAMA_MODEL`.
+`LLM__MODEL_NAME` должен совпадать с именем, под которым модель отдается сервером.
 
 ## Полезные пути внутри контейнера
 

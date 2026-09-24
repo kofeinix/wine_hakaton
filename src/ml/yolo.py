@@ -20,6 +20,11 @@ class LabelCrop:
 class UltralyticsCropper:
     class_id: int | None = None
     confidence_threshold = 0.15
+    selection_min_confidence = 0.25
+    confidence_weight = 0.35
+    center_weight = 0.45
+    size_weight = 0.20
+    preferred_region_weight = 0.0
     margin_ratio = 0.04
     remove_background = False
 
@@ -38,7 +43,11 @@ class UltralyticsCropper:
         self._model = None
         logger.info("YOLO model unloaded: %s", self.model_ref)
 
-    def crop(self, image: Image.Image) -> LabelCrop | None:
+    def crop(
+        self,
+        image: Image.Image,
+        preferred_region: tuple[int, int, int, int] | None = None,
+    ) -> LabelCrop | None:
         if self._model is None:
             raise RuntimeError("Model is not loaded yet")
 
@@ -57,10 +66,13 @@ class UltralyticsCropper:
         if result.boxes is None or len(result.boxes) == 0:
             return None
 
-        confs = result.boxes.conf.cpu().numpy()
-        best = int(np.argmax(confs))
-        confidence = float(confs[best])
         img_h, img_w = result.orig_shape
+        best = self._select_best_box(result, img_w, img_h, preferred_region=preferred_region)
+        if best is None:
+            return None
+
+        confs = result.boxes.conf.cpu().numpy()
+        confidence = float(confs[best])
 
         x1, y1, x2, y2 = result.boxes.xyxy[best].cpu().numpy().astype(float)
         width = x2 - x1
@@ -102,12 +114,77 @@ class UltralyticsCropper:
         crop.close()
         return white
 
+    @classmethod
+    def _select_best_box(
+        cls,
+        result,
+        img_w: int,
+        img_h: int,
+        preferred_region: tuple[int, int, int, int] | None = None,
+    ) -> int | None:
+        boxes = result.boxes.xyxy.cpu().numpy().astype(float)
+        confs = result.boxes.conf.cpu().numpy().astype(float)
+        valid = confs >= cls.selection_min_confidence
+        if not np.any(valid):
+            return None
+
+        x1 = boxes[:, 0]
+        y1 = boxes[:, 1]
+        x2 = boxes[:, 2]
+        y2 = boxes[:, 3]
+        widths = np.maximum(0.0, x2 - x1)
+        heights = np.maximum(0.0, y2 - y1)
+        areas = widths * heights
+        max_area = float(np.max(areas[valid]))
+        if max_area <= 0:
+            return None
+
+        center_x = x1 + widths / 2
+        dx = (center_x - img_w / 2) / max(img_w / 2, 1)
+        center_scores = np.clip(1.0 - np.abs(dx), 0.0, 1.0)
+        size_scores = areas / max_area
+
+        scores = (
+            cls.confidence_weight * confs
+            + cls.center_weight * center_scores
+            + cls.size_weight * size_scores
+        )
+
+        if preferred_region is not None and cls.preferred_region_weight > 0:
+            region_scores = cls._candidate_coverage_by_region(boxes, preferred_region)
+            scores = scores + cls.preferred_region_weight * region_scores
+
+        scores = np.where(valid, scores, -np.inf)
+        return int(np.argmax(scores))
+
+    @staticmethod
+    def _candidate_coverage_by_region(
+        boxes: np.ndarray,
+        preferred_region: tuple[int, int, int, int],
+    ) -> np.ndarray:
+        rx1, ry1, rx2, ry2 = preferred_region
+        x1 = boxes[:, 0]
+        y1 = boxes[:, 1]
+        x2 = boxes[:, 2]
+        y2 = boxes[:, 3]
+
+        inter_w = np.maximum(0.0, np.minimum(x2, rx2) - np.maximum(x1, rx1))
+        inter_h = np.maximum(0.0, np.minimum(y2, ry2) - np.maximum(y1, ry1))
+        inter_area = inter_w * inter_h
+        candidate_area = np.maximum(1.0, (x2 - x1) * (y2 - y1))
+        return inter_area / candidate_area
+
 
 class YoloLabelCropper(UltralyticsCropper):
     """Label cropper backed by an Ultralytics PT model."""
+
+    preferred_region_weight = 0.25
 
 
 class YoloBottleCropper(UltralyticsCropper):
     """Bottle cropper backed by an Ultralytics detection PT model."""
 
     class_id = 39
+    confidence_weight = 0.30
+    center_weight = 0.45
+    size_weight = 0.25

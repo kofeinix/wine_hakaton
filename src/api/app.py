@@ -13,8 +13,8 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
         summary="Wine label recognition and catalog search API.",
         description=(
             "API for matching uploaded wine bottle images against the wine catalog. "
-            "The image search pipeline crops the label with YOLO, extracts label fields "
-            "with NuExtract, embeds the original image with SigLIP2, searches Qdrant by "
+            "The image search pipeline crops bottle and label views with YOLO, extracts OCR text "
+            "with a local vision model, embeds image views with SigLIP2, searches Qdrant by "
             "vector similarity, and enriches results from Postgres."
         ),
         docs_url="/docs",

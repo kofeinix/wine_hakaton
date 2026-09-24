@@ -3,7 +3,7 @@
 Оценка качества поиска вин по изображению.
 
 Для каждой папки в data/eval (имя папки = uuid вина из БД) берутся все
-изображения внутри, для каждого выполняется POST /api/v1/search/image,
+изображения внутри, для каждого выполняется POST /api/v1/search/image/extended,
 и полученный top-1 wine_id сравнивается с ожидаемым uuid папки.
 
 Вывод:
@@ -13,7 +13,7 @@
   - итоговые метрики качества (Accuracy@1, MRR, средние score).
 
 Использование:
-  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global,patches,llm]
+  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global,patches]
 """
 
 from __future__ import annotations
@@ -27,7 +27,8 @@ from pathlib import Path
 import httpx
 
 EVAL_DIR = Path(__file__).resolve().parent.parent / "data" / "eval"
-SEARCH_ENDPOINT = "/api/v1/search/image"
+SEARCH_ENDPOINT = "/api/v1/search/image/extended"
+COMPACT_SEARCH_ENDPOINT = "/api/v1/search/image"
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 # Расширение -> MIME-тип (сервер требует content_type, начинающийся с "image/")
@@ -76,8 +77,9 @@ async def search_image(
         params["main_photos_only"] = True
     with image_path.open("rb") as f:
         files = {"image": (image_path.name, f, mime)}
+        endpoint = COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT
         resp = await client.post(
-            f"{api_url}{SEARCH_ENDPOINT}",
+            f"{api_url}{endpoint}",
             files=files,
             params=params,
             timeout=120.0,
@@ -111,8 +113,8 @@ async def run(
         images = images[:limit]
 
     print(f"Всего изображений для оценки: {len(images)}")
-    print(f"API: {api_url}{SEARCH_ENDPOINT}")
-    print(f"Views: {views or 'all (original + label_crop)'}")
+    print(f"API: {api_url}{COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT}")
+    print(f"Views: {views or 'runtime active views'}")
     print(f"Stages: {stages or ['global', 'patches']}")
     print(f"Main photos only: {main_photos_only}")
     print(f"Top-K: {topk}\n")
@@ -143,7 +145,10 @@ async def run(
                 )
                 continue
 
-            result = data.get("result", [])
+            result = data.get("result") or data.get("results") or []
+            diagnostics = data.get("diagnostics") or {}
+            global_diag = diagnostics.get("global") or {}
+            ocr_diag = diagnostics.get("ocr_rerank") or {}
             top1 = result[0] if result else None
             top2 = result[1] if len(result) > 1 else None
             rank = rank_of_expected(result, expected_id)
@@ -156,6 +161,10 @@ async def run(
                     "image": img_path.name,
                     "stages": stages or ["global", "patches"],
                     "main_photos_only": main_photos_only,
+                    "active_views": global_diag.get("active_views"),
+                    "ocr_source_view": ocr_diag.get("source_view"),
+                    "ocr_applied": ocr_diag.get("applied"),
+                    "ocr_rerank_applied": ocr_diag.get("rerank_applied"),
                     "top1_id": top1.get("wine_id") if top1 else None,
                     "top1_score": top1.get("score") if top1 else None,
                     "top1_cos": top1.get("cosine_score") if top1 else None,
@@ -174,7 +183,9 @@ async def run(
                 f"expected={expected_id[:8]} top1={top1.get('wine_id', 'N/A')[:8] if top1 else 'N/A'} "
                 f"fused={top1.get('score', 0.0) if top1 else 0.0:.4f} "
                 f"raw_cos={top1.get('cosine_score', 0.0) if top1 else 0.0:.4f} "
-                f"fused_gap={gap:.4f} rank={rank}"
+                f"fused_gap={gap:.4f} rank={rank} "
+                f"views={','.join(global_diag.get('active_views') or []) or 'n/a'} "
+                f"ocr={ocr_diag.get('source_view') or 'n/a'}"
             )
 
     print("\n" + "=" * 100)
@@ -182,7 +193,8 @@ async def run(
     print("=" * 100)
     header = (
         f"{'Ожидаемый uuid':<38} {'Картинка':<14} {'Top-1 uuid':<38} "
-        f"{'Fused':<8} {'RawCos':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} Конкуренты (uuid:fused)"
+        f"{'Fused':<8} {'RawCos':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} "
+        "Views OCR Конкуренты (uuid:fused)"
     )
     print(header)
     print("-" * 100)
@@ -199,7 +211,9 @@ async def run(
             f"{str(row['top1_id']):<38} {row['top1_score'] or 0.0:<8.4f} "
             f"{row['top1_cos'] or 0.0:<8.4f} "
             f"{row['top2_score'] or 0.0:<8.4f} {row['gap'] or 0.0:<8.4f} "
-            f"{str(row['rank']):<5} {'OK' if row['correct'] else 'MISS':<6} {competitors}"
+            f"{str(row['rank']):<5} {'OK' if row['correct'] else 'MISS':<6} "
+            f"{','.join(row.get('active_views') or []) or '-'} "
+            f"{row.get('ocr_source_view') or '-'} {competitors}"
         )
 
     # Сводка по винам (папкам)
@@ -284,14 +298,15 @@ def main() -> None:
         choices=["original", "bottle_crop", "label_crop"],
         help=(
             "Ограничить агрегацию одним сигналом. Можно указать несколько раз. "
-            "По умолчанию используются original и label_crop."
+            "При использовании --view скрипт дергает compact endpoint без diagnostics. "
+            "По умолчанию используется полный runtime pipeline через extended endpoint."
         ),
     )
     parser.add_argument(
         "--topk",
         type=int,
-        default=10,
-        help="Максимальное число результатов, запрашиваемых у API (для Recall@k). По умолчанию 10.",
+        default=50,
+        help="Максимальное число результатов, запрашиваемых у API (для Recall@k). По умолчанию 50.",
     )
     parser.add_argument(
         "--stages",

@@ -30,7 +30,7 @@ class WineRepository:
                 options=[
                     selectinload(Wine.producer),
                     selectinload(Wine.region),
-                    selectinload(Wine.grape_links).selectinload(WineGrape.grape),
+                    selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
                     selectinload(Wine.images),
                 ],
             )
@@ -107,6 +107,6 @@ class WineRepository:
         return statement.options(
             selectinload(Wine.producer),
             selectinload(Wine.region),
-            selectinload(Wine.grape_links).selectinload(WineGrape.grape),
+            selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
             selectinload(Wine.images),
         )

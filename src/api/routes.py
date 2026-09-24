@@ -28,7 +28,7 @@ WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
     summary="Search wine by image",
     description=(
         "Accepts a wine bottle or label image and returns compact matches as "
-        "`result: [{wine_id, score}]`. Use `/search/image/extended` for crop, extraction, "
+        "`result: [{wine_id, score}]`. Use `/search/image/extended` for crop, OCR, "
         "source, and full wine details."
     ),
     responses={
@@ -109,7 +109,7 @@ async def search_by_image_catboost(
     summary="Search wine by image with diagnostics",
     description=(
         "Runs the same image search pipeline as `/search/image`, but returns YOLO crop metadata, "
-        "NuExtract fields from the full image and crop, full wine records, and source scores."
+        "OCR rerank diagnostics, full wine records, and source scores."
     ),
     responses={
         400: {"description": "Uploaded image is empty"},

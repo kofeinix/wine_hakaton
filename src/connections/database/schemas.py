@@ -32,6 +32,11 @@ class GrapeCreate(BaseModel):
     name: str = Field(min_length=1)
 
 
+class GrapeAliasCreate(BaseModel):
+    grape_id: UUID
+    alias: str = Field(min_length=1)
+
+
 class WineCreate(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=False)
 

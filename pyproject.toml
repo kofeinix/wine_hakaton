@@ -13,7 +13,6 @@ dependencies = [
     "langchain-openai>=1.6.1",
     "miniopy-async>=1.23.5",
     "numpy>=2.4.0",
-    "numind>=0.4.0",
     "pillow>=12.3.0",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
@@ -30,6 +29,7 @@ dependencies = [
     "torchvision>=0.29.0",
     "ultralytics>=8.4.153",
     "rapidfuzz>=3.14.6",
+    "pydevd-pycharm~=253.31033.139",
 ]
 
 [[tool.uv.index]]
@@ -41,3 +41,8 @@ explicit = true
 torch = { index = "pytorch-cpu" }
 torchvision = { index = "pytorch-cpu" }
 torchaudio = { index = "pytorch-cpu" }
+
+[dependency-groups]
+dev = [
+    "pydevd-pycharm~=253.31033.139",
+]

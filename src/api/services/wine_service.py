@@ -5,6 +5,7 @@ import logging
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from pathlib import PurePosixPath
 from statistics import mean, pstdev
@@ -14,6 +15,7 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageOps
 from qdrant_client import models as qdrant_models
+from rapidfuzz import fuzz
 
 from src.api.repositories.wine_repository import WineRepository
 from src.api.schemas import (
@@ -25,9 +27,10 @@ from src.api.schemas import (
     WineResponse,
 )
 from src.api.services.photo_service import WinePhotoService
-from src.connections.database.models import Wine
+from src.connections.database.models import Grape, Wine
 from src.ml.catboost_reranker import CatBoostWineReranker, build_candidate_feature_rows
 from src.ml.patch_scoring import patch_similarity_score
+from src.ml.text_normalization import normalize_match_text
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -39,9 +42,9 @@ PATCH_VIEW_COLLECTIONS = {
 }
 
 VIEW_WEIGHTS = {
-    "original": 0.40,
-    "bottle_crop": 0.20,
-    "label_crop": 0.40,
+    "original": 0.30,
+    "bottle_crop": 0.15,
+    "label_crop": 0.55,
 }
 
 PATCH_VIEW_WEIGHTS = {
@@ -50,15 +53,31 @@ PATCH_VIEW_WEIGHTS = {
 }
 
 GLOBAL_CANDIDATE_LIMIT = 50
+PER_VIEW_TOP_K = 150
 PATCH_RERANK_TOP2_GAP = 0.005
 PATCH_SCORE_STRATEGY = "sym20"
 PATCH_TOKEN_CACHE_MAX_ITEMS = 512
 PATCH_POINT_NAMESPACE = uuid.UUID("92670dbe-559b-55c3-ae90-ac7c7b9e50bd")
-LABEL_PHOTO_AREA_THRESHOLD = 0.50
+LABEL_PHOTO_AREA_THRESHOLD = 0.60
+LABEL_PHOTO_CONFIDENCE_THRESHOLD = 0.50
+VIEW_SCORE_TOP_K_PHOTOS = 3
+VIEW_SCORE_BEST_WEIGHT = 0.75
+VIEW_SCORE_MEAN_WEIGHT = 0.25
+OCR_VISUAL_WEIGHT = 0.75
+OCR_TEXT_WEIGHT = 0.25
+OCR_RERANK_LIMIT = 50
+OCR_FUZZY_WRATIO_WEIGHT = 0.25
+OCR_FUZZY_TOKEN_SET_WEIGHT = 0.75
+OCR_DOMAIN_WEIGHT = 0.65
+OCR_FUZZY_WEIGHT = 0.35
+OCR_GRAPE_WEIGHT = 0.60
+OCR_PRODUCER_WEIGHT = 0.25
+OCR_NAME_WEIGHT = 0.15
+OCR_GRAPE_EXTRA_MATCH_THRESHOLD = 0.55
+OCR_GRAPE_EXTRA_MATCH_BONUS = 0.08
 DEFAULT_SEARCH_STAGES = ("global", "patches")
 VALID_SEARCH_STAGES = {"global", "patches", "llm"}
 CATBOOST_RERANKER_MODEL_PATH = PROJECT_ROOT / "models" / "catboost" / "wine_reranker.cbm"
-
 
 @dataclass(frozen=True)
 class ViewMatch:
@@ -245,11 +264,12 @@ class WineService:
         query_views = self.photo_service.build_query_views(image_bytes)
         allowed = set(views) if views else set(VIEW_WEIGHTS)
         label_area_ratio = self._label_crop_area_ratio(query_views.crops)
-        label_photo_mode = label_area_ratio > LABEL_PHOTO_AREA_THRESHOLD
+        label_confidence = self._label_crop_confidence(query_views.crops)
+        label_photo_mode = (
+            label_area_ratio > LABEL_PHOTO_AREA_THRESHOLD
+            and label_confidence > LABEL_PHOTO_CONFIDENCE_THRESHOLD
+        )
         # Активны только views, чей кроп реально построился (available=True).
-        # Если YOLO не нашёл этикетку, photo_service подставляет original в
-        # images[view], но crops[view].available=False — такой view исключаем,
-        # чтобы не искать оригинал в коллекции кропов (это даёт шум).
         active_views = [
             view
             for view in VIEW_WEIGHTS
@@ -258,13 +278,14 @@ class WineService:
             and query_views.crops.get(view) is not None
             and query_views.crops[view].available
         ]
-        if label_photo_mode and "label_crop" in active_views and "original" in active_views:
-            active_views = [view for view in active_views if view != "original"]
+        if label_photo_mode and "label_crop" in active_views:
+            active_views = [view for view in active_views if view == "label_crop"]
             logger.info(
-                "Detected label-photo input: label_area_ratio=%.3f > %.2f; disabling original view.",
+                "Detected label-photo input: label_area_ratio=%.3f confidence=%.3f; using label_crop only.",
                 label_area_ratio,
-                LABEL_PHOTO_AREA_THRESHOLD,
+                label_confidence,
             )
+        ocr = await self._extract_ocr_text(query_views)
 
         embeddings = self._embed_global_images([query_views.images[view] for view in active_views])
         vectors = dict(zip(active_views, embeddings, strict=True))
@@ -273,7 +294,7 @@ class WineService:
             self.connection_manager.qdrant.search_collection(
                 collection_name=self._view_collection(view),
                 vector=vectors[view],
-                limit=100,
+                limit=PER_VIEW_TOP_K,
                 with_payload=True,
                 query_filter=query_filter,
             )
@@ -345,6 +366,11 @@ class WineService:
         else:
             logger.info("Global top1 is confident; skipping patch rerank.")
 
+        candidates, ocr_diagnostics = await self._rerank_with_ocr(
+            candidates=candidates[:OCR_RERANK_LIMIT],
+            ocr_text=ocr["normalized_text"],
+        )
+
         if "llm" in search_stages:
             candidates, llm_selection = await self._rerank_with_llm_choice(
                 image_bytes=image_bytes,
@@ -361,13 +387,15 @@ class WineService:
                 "encoder": self.global_encoder,
                 "collection_encoder": self.collection_encoder,
                 "collections": {view: self._view_collection(view) for view in active_views},
-                "per_view_top_k": 100,
+                "per_view_top_k": PER_VIEW_TOP_K,
                 "per_view_counts": per_view_counts,
                 "label_area_ratio": label_area_ratio,
+                "label_confidence": label_confidence,
                 "label_photo_mode": label_photo_mode,
                 "label_photo_area_threshold": LABEL_PHOTO_AREA_THRESHOLD,
+                "label_photo_confidence_threshold": LABEL_PHOTO_CONFIDENCE_THRESHOLD,
                 "fusion": "weighted_cosine",
-                "aggregation": "max_mean",
+                "aggregation": "view_best75_top3mean25_then_weighted_max_sum",
                 "candidate_limit": global_limit,
                 "stages": search_stages,
                 "main_photos_only": main_photos_only,
@@ -385,6 +413,12 @@ class WineService:
                 "reason": llm_reason,
                 "selection": llm_selection,
             },
+            "ocr_rerank": {
+                **ocr,
+                **ocr_diagnostics,
+                "visual_weight": OCR_VISUAL_WEIGHT,
+                "text_weight": OCR_TEXT_WEIGHT,
+            },
         }
         return candidates, diagnostics, query_views.crops
 
@@ -398,7 +432,11 @@ class WineService:
         query_views = self.photo_service.build_query_views(image_bytes)
         allowed = set(views) if views else set(VIEW_WEIGHTS)
         label_area_ratio = self._label_crop_area_ratio(query_views.crops)
-        label_photo_mode = label_area_ratio > LABEL_PHOTO_AREA_THRESHOLD
+        label_confidence = self._label_crop_confidence(query_views.crops)
+        label_photo_mode = (
+            label_area_ratio > LABEL_PHOTO_AREA_THRESHOLD
+            and label_confidence > LABEL_PHOTO_CONFIDENCE_THRESHOLD
+        )
         active_views = [
             view
             for view in VIEW_WEIGHTS
@@ -407,8 +445,8 @@ class WineService:
             and query_views.crops.get(view) is not None
             and query_views.crops[view].available
         ]
-        if label_photo_mode and "label_crop" in active_views and "original" in active_views:
-            active_views = [view for view in active_views if view != "original"]
+        if label_photo_mode and "label_crop" in active_views:
+            active_views = [view for view in active_views if view == "label_crop"]
 
         embeddings = self._embed_global_images([query_views.images[view] for view in active_views])
         vectors = dict(zip(active_views, embeddings, strict=True))
@@ -418,7 +456,7 @@ class WineService:
                 self.connection_manager.qdrant.search_collection(
                     collection_name=self._view_collection(view),
                     vector=vectors[view],
-                    limit=100,
+                    limit=PER_VIEW_TOP_K,
                     with_payload=True,
                     query_filter=query_filter,
                 )
@@ -489,9 +527,10 @@ class WineService:
                 "encoder": self.global_encoder,
                 "collection_encoder": self.collection_encoder,
                 "collections": {view: self._view_collection(view) for view in active_views},
-                "per_view_top_k": 100,
+                "per_view_top_k": PER_VIEW_TOP_K,
                 "per_view_counts": per_view_counts,
                 "label_area_ratio": label_area_ratio,
+                "label_confidence": label_confidence,
                 "label_photo_mode": label_photo_mode,
                 "fusion": fusion,
                 "main_photos_only": main_photos_only,
@@ -534,6 +573,8 @@ class WineService:
         original = crops.get("original")
         if label is None or original is None or not getattr(label, "available", False):
             return 0.0
+        if getattr(label, "source_view", "original") not in {"original", "original_fallback"}:
+            return 0.0
         label_box = getattr(label, "box", None)
         original_width = getattr(original, "width", None)
         original_height = getattr(original, "height", None)
@@ -543,6 +584,82 @@ class WineService:
         label_area = max(0, x2 - x1) * max(0, y2 - y1)
         original_area = max(1, int(original_width) * int(original_height))
         return label_area / original_area
+
+    @staticmethod
+    def _label_crop_confidence(crops: dict[str, Any]) -> float:
+        label = crops.get("label_crop")
+        if label is None or not getattr(label, "available", False):
+            return 0.0
+        if getattr(label, "source_view", "original") not in {"original", "original_fallback"}:
+            return 0.0
+        try:
+            return float(getattr(label, "confidence", None) or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    async def _extract_ocr_text(self, query_views) -> dict[str, Any]:
+        llm = getattr(self.connection_manager, "llm", None)
+        if llm is None:
+            return {
+                "applied": False,
+                "reason": "llm_unavailable",
+                "source_view": None,
+                "text": "",
+                "normalized_text": "",
+            }
+
+        source_view = self._ocr_source_view(query_views)
+        image = query_views.images.get(source_view)
+        if image is None:
+            return {
+                "applied": False,
+                "reason": "no_source_image",
+                "source_view": source_view,
+                "text": "",
+                "normalized_text": "",
+            }
+
+        try:
+            text = await llm.ocr_image_text(self._image_to_jpeg_bytes(image))
+        except Exception:
+            logger.exception("OCR extraction failed for source view %s", source_view)
+            return {
+                "applied": False,
+                "reason": "ocr_failed",
+                "source_view": source_view,
+                "text": "",
+                "normalized_text": "",
+            }
+
+        normalized = normalize_match_text(text)
+        logger.info(
+            "OCR source=%s applied=%s raw_text=%r normalized_text=%r",
+            source_view,
+            bool(normalized),
+            text,
+            normalized,
+        )
+        return {
+            "applied": bool(normalized),
+            "reason": "ok" if normalized else "empty_ocr_text",
+            "source_view": source_view,
+            "text": text,
+            "normalized_text": normalized,
+        }
+
+    @staticmethod
+    def _ocr_source_view(query_views) -> str:
+        for view in ("label_crop", "bottle_crop"):
+            crop = query_views.crops.get(view)
+            if crop is not None and getattr(crop, "available", False) and view in query_views.images:
+                return view
+        return "original"
+
+    @staticmethod
+    def _image_to_jpeg_bytes(image: Image.Image) -> bytes:
+        buffer = BytesIO()
+        image.convert("RGB").save(buffer, format="JPEG", quality=92, optimize=True)
+        return buffer.getvalue()
 
     @staticmethod
     def _main_photo_filter() -> qdrant_models.Filter:
@@ -611,23 +728,31 @@ class WineService:
         wine_candidates: list[WineCandidate] = []
         for wine_id, views in wine_view_matches.items():
             # Для каждого view берём лучший cosine score по фото вина, затем
-            # применяем view weight. Это совпадает с лучшей eval-стратегией:
-            # COS + max_mean на original/label_crop.
+            # применяем view weight.
             view_scores: list[float] = []
             raw_cosine_scores: list[float] = []
             view_photo_ids: dict[str, str] = {}
             for view, matches in views.items():
-                best_match = max(matches, key=lambda item: item.score)
+                sorted_matches = sorted(matches, key=lambda item: item.score, reverse=True)
+                best_match = sorted_matches[0]
                 best_cosine = best_match.score
+                top_scores = [item.score for item in sorted_matches[:VIEW_SCORE_TOP_K_PHOTOS]]
+                mean_top_score = mean(top_scores)
+                view_score = (
+                    VIEW_SCORE_BEST_WEIGHT * best_cosine
+                    + VIEW_SCORE_MEAN_WEIGHT * mean_top_score
+                )
                 raw_cosine_scores.append(best_cosine)
-                view_scores.append(weights.get(view, 0.0) * best_cosine)
+                view_scores.append(weights.get(view, 0.0) * view_score)
                 view_photo_ids[view] = best_match.photo_id
             if not view_scores:
                 continue
             max_score = max(view_scores)
             mean_score = mean(view_scores)
-            # score = 0.7*max + 0.3*mean — учитывает и лучший сигнал, и согласованность.
-            score = 0.7 * max_score + 0.3 * mean_score
+            sum_score = sum(view_scores)
+            # Дополнительный view не должен снижать итоговый score:
+            # лучший сигнал остаётся главным, остальные дают ограниченный бонус.
+            score = 0.7 * max_score + 0.3 * sum_score
             # Исходный косинусный score: максимальный по всем фото/views вина.
             cosine_score = max(raw_cosine_scores) if raw_cosine_scores else 0.0
             wine_candidates.append(
@@ -727,7 +852,8 @@ class WineService:
                 continue
             max_score = max(view_scores)
             mean_score = mean(view_scores)
-            score = 0.7 * max_score + 0.3 * mean_score
+            sum_score = sum(view_scores)
+            score = 0.7 * max_score + 0.3 * sum_score
             reranked.append(
                 WineCandidate(
                     wine_id=candidate.wine_id,
@@ -933,6 +1059,233 @@ class WineService:
         self._patch_token_cache.move_to_end(cache_key)
         while len(self._patch_token_cache) > PATCH_TOKEN_CACHE_MAX_ITEMS:
             self._patch_token_cache.popitem(last=False)
+
+    async def _rerank_with_ocr(
+        self,
+        candidates: list[WineCandidate],
+        ocr_text: str,
+    ) -> tuple[list[WineCandidate], dict[str, Any]]:
+        if not candidates:
+            return candidates, {
+                "rerank_applied": False,
+                "reason": "no_candidates",
+                "candidate_scores": [],
+            }
+        if not ocr_text:
+            return candidates, {
+                "rerank_applied": False,
+                "reason": "empty_ocr_text",
+                "candidate_scores": [],
+            }
+
+        wines = await self.repository.load_wines_by_ids([candidate.wine_id for candidate in candidates])
+        wine_by_id = {str(wine.id): wine for wine in wines}
+        reranked: list[WineCandidate] = []
+        diagnostics: list[dict[str, Any]] = []
+        for candidate in candidates:
+            wine = wine_by_id.get(candidate.wine_id)
+            candidate_text = self._wine_to_ocr_candidate_text(wine)
+            normalized_candidate = normalize_match_text(candidate_text)
+            wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
+            token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
+            fuzzy_score = (
+                OCR_FUZZY_WRATIO_WEIGHT * wratio
+                + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
+            ) / 100.0
+            structured_score = self._structured_ocr_score(ocr_text, wine)
+            ocr_score = OCR_DOMAIN_WEIGHT * structured_score["domain_score"] + OCR_FUZZY_WEIGHT * fuzzy_score
+            final_score = OCR_VISUAL_WEIGHT * candidate.score + OCR_TEXT_WEIGHT * ocr_score
+            reranked.append(
+                WineCandidate(
+                    wine_id=candidate.wine_id,
+                    slug=candidate.slug,
+                    score=final_score,
+                    max_score=candidate.max_score,
+                    mean_score=candidate.mean_score,
+                    n_photos=candidate.n_photos,
+                    score_std=candidate.score_std,
+                    cosine_score=candidate.cosine_score,
+                    view_photo_ids=candidate.view_photo_ids,
+                    patch_score=candidate.patch_score,
+                )
+            )
+            diagnostics.append(
+                {
+                    "wine_id": candidate.wine_id,
+                    "visual_score": candidate.score,
+                    "ocr_score": ocr_score,
+                    "domain_score": structured_score["domain_score"],
+                    "fuzzy_score": fuzzy_score,
+                    "grape_score": structured_score["grape_score"],
+                    "producer_score": structured_score["producer_score"],
+                    "name_score": structured_score["name_score"],
+                    "candidate_grapes": structured_score["candidate_grapes"],
+                    "wratio": wratio,
+                    "token_set_ratio": token_set,
+                    "final_score": final_score,
+                    "candidate_text": normalized_candidate,
+                }
+            )
+
+        reranked.sort(key=lambda item: item.score, reverse=True)
+        diagnostics.sort(key=lambda item: item["final_score"], reverse=True)
+        logger.info(
+            "OCR rerank applied for %s candidates. Top candidate text scores: %s",
+            len(candidates),
+            [
+                {
+                    "wine_id": item["wine_id"],
+                    "visual_score": round(float(item["visual_score"]), 4),
+                    "ocr_score": round(float(item["ocr_score"]), 4),
+                    "domain_score": round(float(item["domain_score"]), 4),
+                    "fuzzy_score": round(float(item["fuzzy_score"]), 4),
+                    "grape_score": round(float(item["grape_score"]), 4),
+                    "producer_score": round(float(item["producer_score"]), 4),
+                    "name_score": round(float(item["name_score"]), 4),
+                    "candidate_grapes": item["candidate_grapes"],
+                    "wratio": round(float(item["wratio"]), 2),
+                    "token_set_ratio": round(float(item["token_set_ratio"]), 2),
+                    "final_score": round(float(item["final_score"]), 4),
+                    "candidate_text": item["candidate_text"],
+                }
+                for item in diagnostics[:10]
+            ],
+        )
+        return reranked, {
+            "rerank_applied": True,
+            "reason": "ok",
+            "candidate_scores": diagnostics[:10],
+        }
+
+    @classmethod
+    def _structured_ocr_score(
+        cls,
+        ocr_text: str,
+        wine: Wine | None,
+    ) -> dict[str, Any]:
+        if wine is None:
+            return {
+                "domain_score": 0.0,
+                "grape_score": 0.0,
+                "producer_score": 0.0,
+                "name_score": 0.0,
+                "candidate_grapes": [],
+            }
+
+        grape_groups = cls._wine_grape_groups(wine)
+        grape_score = cls._grape_field_score(ocr_text, grape_groups)
+        producer_score = cls._field_score(
+            ocr_text,
+            [wine.producer.name] if wine.producer is not None else [],
+        )
+        name_score = cls._field_score(ocr_text, [wine.name])
+        domain_score = (
+            OCR_GRAPE_WEIGHT * grape_score
+            + OCR_PRODUCER_WEIGHT * producer_score
+            + OCR_NAME_WEIGHT * name_score
+        )
+        return {
+            "domain_score": domain_score,
+            "grape_score": grape_score,
+            "producer_score": producer_score,
+            "name_score": name_score,
+            "candidate_grapes": [
+                normalize_match_text(variant)
+                for group in grape_groups
+                for variant in group
+            ],
+        }
+
+    @classmethod
+    def _wine_grape_groups(
+        cls,
+        wine: Wine,
+    ) -> list[list[str]]:
+        groups: list[list[str]] = []
+        seen: set[str] = set()
+        for link in wine.grape_links:
+            grape = link.grape
+            if grape is None:
+                continue
+            normalized = normalize_match_text(grape.name)
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            groups.append(cls._grape_variants(grape))
+
+        return groups
+
+    @classmethod
+    def _grape_variants(cls, grape: Any) -> list[str]:
+        variants = [getattr(grape, "name", "")]
+        variants.extend(alias.alias for alias in getattr(grape, "aliases", []) if alias.alias)
+        return cls._dedupe_text_variants(variants)
+
+    @classmethod
+    def _grape_field_score(cls, ocr_text: str, grape_groups: list[list[str]]) -> float:
+        if not grape_groups:
+            return 0.5
+        group_scores = sorted(
+            (cls._field_score(ocr_text, group) for group in grape_groups),
+            reverse=True,
+        )
+        best_score = group_scores[0]
+        extra_matches = sum(
+            1
+            for score in group_scores[1:]
+            if score >= OCR_GRAPE_EXTRA_MATCH_THRESHOLD
+        )
+        return min(1.0, best_score + OCR_GRAPE_EXTRA_MATCH_BONUS * extra_matches)
+
+    @staticmethod
+    def _field_score(ocr_text: str, variants: list[str]) -> float:
+        normalized_variants = [normalize_match_text(variant) for variant in variants if variant]
+        if not normalized_variants:
+            return 0.5
+
+        scores: list[float] = []
+        for variant in normalized_variants:
+            scores.append(WineService._single_field_score(ocr_text, variant))
+        return max(scores, default=0.0)
+
+    @staticmethod
+    def _single_field_score(ocr_text: str, normalized_variant: str) -> float:
+        return max(
+            fuzz.partial_ratio(ocr_text, normalized_variant),
+            fuzz.partial_token_sort_ratio(ocr_text, normalized_variant),
+            fuzz.WRatio(ocr_text, normalized_variant),
+        ) / 100.0
+
+    @staticmethod
+    def _dedupe_text_variants(variants: list[str]) -> list[str]:
+        result: list[str] = []
+        seen: set[str] = set()
+        for variant in variants:
+            normalized = normalize_match_text(variant)
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            result.append(variant)
+        return result
+
+    @staticmethod
+    def _wine_to_ocr_candidate_text(wine: Wine | None) -> str:
+        if wine is None:
+            return ""
+        grape_names = [
+            link.grape.name
+            for link in wine.grape_links
+            if link.grape is not None
+        ]
+        parts = [
+            wine.producer.name if wine.producer else None,
+            wine.name,
+            wine.year,
+            " ".join(grape_names),
+            wine.color,
+            wine.sugar,
+        ]
+        return " ".join(str(part) for part in parts if part)
 
     async def _rerank_with_llm_choice(
         self,

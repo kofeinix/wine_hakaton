@@ -48,6 +48,25 @@ class Grape(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
 
     wine_links: Mapped[list[WineGrape]] = relationship(back_populates="grape")
+    aliases: Mapped[list[GrapeAlias]] = relationship(
+        back_populates="grape",
+        cascade="all, delete-orphan",
+    )
+
+
+class GrapeAlias(Base):
+    __tablename__ = "grape_aliases"
+
+    grape_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("grapes.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+        index=True,
+    )
+    alias: Mapped[str] = mapped_column(String(255), nullable=False, primary_key=True, index=True)
+
+    grape: Mapped[Grape] = relationship(back_populates="aliases")
 
 
 class Wine(Base):

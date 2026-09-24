@@ -16600,5 +16600,1451 @@
   "wine_id": "4c172218-3ac4-4047-94fc-c8c4bf90b0b5",
   "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
   "percentage": null
+ },
+ {
+  "id": "0f1da00f-dccd-5729-b342-b6961c73b51c",
+  "wine_id": "3bf3abd7-ec65-5a17-969d-606733622893",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "ab1fefa0-61a1-571d-a50e-a4fbd2d2d369",
+  "wine_id": "0d515235-609e-5b86-b1a1-6f1b799fed95",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "5d970b00-f28e-5c4c-8278-12a735083e8f",
+  "wine_id": "0d515235-609e-5b86-b1a1-6f1b799fed95",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "804c86ea-b1ad-5d87-af09-ac99059a05c9",
+  "wine_id": "5f5e67cf-e848-569d-b7f8-4175675a3306",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "8ed59ff4-74f9-5a09-818b-e77e51f94a2a",
+  "wine_id": "01e696e4-e0c6-5037-b8d1-06e291540371",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "f58ba145-4065-555a-bef3-54bbadc09249",
+  "wine_id": "4a87f26a-0f0c-517e-93e8-ba02114c53c0",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "b7395d2b-07bc-57bf-bfbc-fab868c6ffd1",
+  "wine_id": "5d60c8b4-6f86-55f5-b9ba-957f6f81290e",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "c8959a48-9aef-5a60-999e-9a88f9baea7b",
+  "wine_id": "639be69a-dbe3-567f-ad1a-f2ea684da868",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "d4897384-e61d-54bf-9875-70dca3cf343a",
+  "wine_id": "3aa05d2a-2cfe-5ec5-bb52-d95a77d5037a",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "fc8bbc3e-f1fc-5dbf-b36d-6531e1e2855f",
+  "wine_id": "128c775e-f201-5c5c-ac3a-144c9ad7743d",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "1669df03-66ee-54ff-9ff5-5e15d8ad2420",
+  "wine_id": "5c8a6d72-d379-5ef6-acf9-7ad4b775f842",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "4bf94954-369c-532a-b10f-c8828a4a819e",
+  "wine_id": "6b6f5bab-8558-5b21-83d6-a78a8d13c386",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "486768e5-a44b-5494-a4c0-fd0a83bb6044",
+  "wine_id": "18138c8a-0d02-558c-8682-bd898a412057",
+  "grape_id": "284c2893-153e-5d23-a0f4-af89235dfc68",
+  "percentage": null
+ },
+ {
+  "id": "828dd62e-83d2-5d2e-84bd-24ca60a07811",
+  "wine_id": "1231d31e-a40f-5c0e-a43e-9b89abe50573",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "475f7713-25b5-547d-8ca4-2b3a8aedf52f",
+  "wine_id": "3eeef6a8-509d-5f49-9ec9-ac3a63bdcb89",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "385436d0-1cef-5e08-957c-2fdd37af1dc8",
+  "wine_id": "1c92d2e2-deb5-58f1-bfd7-dc5640e956e1",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "1e241629-b0e1-5a00-8dce-ee1cdd11237a",
+  "wine_id": "0793753e-a369-5dd7-b9ef-35651c55407a",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "31fa130e-0e4a-503a-ad99-4ee68b2b93f2",
+  "wine_id": "46420a73-9dc0-5e7d-b876-95875f6937a2",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "27c3d7ac-b30c-5638-a15c-f8ef88384673",
+  "wine_id": "0310b951-05b8-5010-a903-7f89596d9cfe",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "e8306e29-e45d-504e-8bb5-0b6e8b7fe3a5",
+  "wine_id": "776e16eb-4f3d-5a73-b91a-049fb1ef0414",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "7344ab38-1f79-51ee-ab21-83a09a3a79da",
+  "wine_id": "bd38b60c-54da-5f34-a868-4bcbd2ed2cc7",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "1f84b52a-7e86-5d80-98c2-959cdeb01e90",
+  "wine_id": "a2df155f-aaad-5ffa-919d-939f1e3d67ca",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "02111b73-8aaf-57d0-8ea6-10621d593727",
+  "wine_id": "cd323b4c-fc5c-5b20-92c5-ce9e56218eae",
+  "grape_id": "15cf5a32-fd66-50ae-8d23-a31048b9d2c9",
+  "percentage": null
+ },
+ {
+  "id": "88341bb5-26f9-52d1-9460-e805ad5acd54",
+  "wine_id": "e641dc63-f1e1-5577-952a-314ff65251c1",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "0a8eb0b4-d041-5801-b03b-cc606a256279",
+  "wine_id": "fb7179d2-8214-59a3-9237-f024be2b20ae",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "44d3bf81-5ad8-5f12-a168-78d564293908",
+  "wine_id": "560f98d8-ffb0-58e4-a084-f09b65203e5a",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "17a78a6d-4ece-5d4f-b15d-85b1fcd63b0a",
+  "wine_id": "7fabfea8-5dad-5871-81b3-c9649900a888",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "a67b2d78-644f-55e4-b26b-8be0ee81eae1",
+  "wine_id": "54ac7318-9638-55ef-9e69-0d23731f7b9e",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "9fbec63e-e58a-5aee-ab64-a1900eae7396",
+  "wine_id": "2b5ee4f4-8c8f-5ae7-b0a1-acc3d28604ac",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "e2dc7dc5-dcd9-578b-9495-fafbed9235dc",
+  "wine_id": "50c82bdf-3de9-5574-8696-0693394c162d",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "360434a6-3130-5837-8bc6-db7a62938574",
+  "wine_id": "606adc51-e292-565b-b059-af41e31bd78f",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "f4ae5212-6b1f-5733-a003-bba9824dc5bd",
+  "wine_id": "3e4c5d17-422a-5fe2-839e-554f07315c36",
+  "grape_id": "6be7230b-a67f-5b5b-895f-aef67e5a8fc0",
+  "percentage": null
+ },
+ {
+  "id": "f3798af0-5858-503a-95e6-1f854b05e192",
+  "wine_id": "8c9cfd99-24db-5387-9363-0d13dcd88190",
+  "grape_id": "755809bc-1d74-5e4f-9da6-555bc4a11272",
+  "percentage": null
+ },
+ {
+  "id": "fda3b769-bd18-5e1b-a28d-1181a33708a2",
+  "wine_id": "7a92852f-851a-5806-8474-1690981dea59",
+  "grape_id": "755809bc-1d74-5e4f-9da6-555bc4a11272",
+  "percentage": null
+ },
+ {
+  "id": "cdd79f67-5afe-546a-832e-2d828a2d3dfd",
+  "wine_id": "1ccf322a-334e-5201-af1c-9214b9e947e5",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "0352aad3-d63c-581f-8e4e-f49c1f25674f",
+  "wine_id": "650ea10e-dbc5-5741-8623-a5105d562313",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "34d3a4e8-31f0-5bff-a95c-cd939c6de358",
+  "wine_id": "b8ea49a8-0c1c-5b60-bac6-695d2d098ab4",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "154084d0-c0a0-5c58-8105-f5a4ca18fbbf",
+  "wine_id": "8ac25801-e3a7-597c-8342-34dd7831b5a7",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "14435205-6026-55b2-b8b6-4ef97ae501a4",
+  "wine_id": "5bca3a90-e493-52d4-a110-06d0a7b66f72",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "d8d29847-cc9d-5904-ad09-da618f5fe6cb",
+  "wine_id": "9ee81d65-56f9-5988-a668-e5aefb3b6244",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "674efdc8-c03a-5e3c-90ae-c6379adac5df",
+  "wine_id": "0df95e5b-9347-533e-b59d-331742bd4b20",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "49d535e6-4b34-5044-9bdc-f1d920f3dff5",
+  "wine_id": "32b79214-8270-5851-9540-a5ddbbab5a79",
+  "grape_id": "831df166-aa64-57a5-b86f-83416d61ead7",
+  "percentage": null
+ },
+ {
+  "id": "0d1f3e00-45e6-5edc-bbf4-00ffdd836383",
+  "wine_id": "2800f088-d926-5688-aa4b-ba5b868d0f87",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "96133163-44c7-5989-885d-ee085f3e0d65",
+  "wine_id": "980c70d6-6c49-5479-bfb6-fea8a254c791",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "ec8075df-da70-5f81-9c1d-011cecfc8c6e",
+  "wine_id": "af808ad0-00c0-5ad1-807a-6737ab1e8afc",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "6889c5a8-66c1-5ac5-abb8-44249ce573b7",
+  "wine_id": "317be534-a4eb-5a41-a2e7-5c58771722ac",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "774238e3-c767-57a2-990c-46cc3184ed81",
+  "wine_id": "3e7d158c-bb88-5c40-baf4-86159af82413",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "9bab88e1-7d2a-5fa9-9627-ac9ae411d54d",
+  "wine_id": "c10de167-2d09-506b-828e-9092ccd78827",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "5c654790-bcfb-527d-9cc7-68fd0dc10001",
+  "wine_id": "094397ce-a45e-5262-974f-139b3120c220",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "c0f492dc-330e-5017-9957-795243145002",
+  "wine_id": "2eefb2bf-cc69-5a6e-b8ef-64684a3e2e6f",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "30dc596e-27d7-59fd-b77a-a01cc567900b",
+  "wine_id": "8f1ddd28-9142-5c34-a569-9e8044e6c319",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "7f59a6b3-fd0d-5e80-995e-063de3f553f3",
+  "wine_id": "aec6f75a-a72d-5a8f-ba82-c4e68feb9db0",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "df214a28-c70e-567e-81fe-c15f3299a197",
+  "wine_id": "53d23d92-ddb9-5803-b949-c406933e8dc7",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "26953d31-affa-50e1-af32-a61d8acbb43e",
+  "wine_id": "e3ba203e-5dec-5748-a03c-f96a8cafb807",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "f2fb7a74-67a3-52b2-abd4-8fc3159aa3a1",
+  "wine_id": "39e21158-6f35-510a-93ae-150c70ac9730",
+  "grape_id": "94b968aa-04b3-5bdd-8199-ae19fce5c604",
+  "percentage": null
+ },
+ {
+  "id": "5eab241e-e52e-55fd-9e91-e5bd60c99f2a",
+  "wine_id": "5fa95ae2-edd8-5d6e-b605-c297b2cf4720",
+  "grape_id": "1961e769-a7c6-507b-847c-2e8fa759b7eb",
+  "percentage": null
+ },
+ {
+  "id": "52973fe6-4ec5-5cab-8846-cf534890c60c",
+  "wine_id": "6c23f647-da02-51e0-8bbf-d6b76e83f5c0",
+  "grape_id": "831df166-aa64-57a5-b86f-83416d61ead7",
+  "percentage": null
+ },
+ {
+  "id": "3464fb5b-da82-52c1-a959-baebd5751647",
+  "wine_id": "aac6005a-e6cb-59d1-9bb5-9e0234cbf2b3",
+  "grape_id": "94b968aa-04b3-5bdd-8199-ae19fce5c604",
+  "percentage": null
+ },
+ {
+  "id": "a9ab6caa-4491-53d1-ad8d-63b8d0dd8106",
+  "wine_id": "588cfd9b-3802-5a16-8268-2639be8fca18",
+  "grape_id": "94b968aa-04b3-5bdd-8199-ae19fce5c604",
+  "percentage": null
+ },
+ {
+  "id": "99ea14c8-c613-5db8-b1cf-c1f6703bc67a",
+  "wine_id": "ddc587ed-2c56-5cbf-b873-eb0efe9eaf2d",
+  "grape_id": "c2053f16-a940-553b-aefc-bef4bab043de",
+  "percentage": null
+ },
+ {
+  "id": "251fdb0d-8038-57b4-8678-a7718b555540",
+  "wine_id": "888af67a-171d-5aae-97af-bb665784bdb3",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "ee4f9579-4eb4-5869-8112-bdad37c4e99b",
+  "wine_id": "143dc243-54f1-5959-967e-3d7ea4e417c4",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "07f694a6-cf5d-5f6a-a681-e4620f33093f",
+  "wine_id": "641e2ee8-1950-5e53-a7c8-aa7fa8a1a8ae",
+  "grape_id": "15cf5a32-fd66-50ae-8d23-a31048b9d2c9",
+  "percentage": null
+ },
+ {
+  "id": "ddc17d02-039f-531b-8cb9-39250732d7ad",
+  "wine_id": "6c9b754d-a963-5a41-a41d-874c30a70d47",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "9f639e2d-7d88-5c77-a2c1-642be03c43de",
+  "wine_id": "46b35417-82ee-5812-89fb-b96cea3c8d7f",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "6da0d58d-346a-514b-86ce-e14a9304cff1",
+  "wine_id": "1a46ee89-f26e-5c42-8734-4dd1d8790bb3",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "eb48668b-e0c3-518a-8997-d90da017a23b",
+  "wine_id": "2c83f34e-25f0-5cfd-911e-558a18fac065",
+  "grape_id": "c33f4235-cb54-5b1c-962c-bd9787201cce",
+  "percentage": null
+ },
+ {
+  "id": "3b7b11f5-7ddd-5c7a-98f4-d8e008178bfb",
+  "wine_id": "bb2e6545-30e5-5d74-abdd-50c7590182b4",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "81458e0a-f9be-5e86-872f-9c0956f15c19",
+  "wine_id": "e558ad93-e07e-5495-9724-c73e2cf79ec3",
+  "grape_id": "c33f4235-cb54-5b1c-962c-bd9787201cce",
+  "percentage": null
+ },
+ {
+  "id": "ec180c99-87b7-5a85-bffa-9facd69b4739",
+  "wine_id": "28c5b328-75d5-50a7-8164-88165c2fbf61",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "4ce4bae2-0067-5001-b87a-c2b11c5dee81",
+  "wine_id": "681bce51-7f84-5fd3-a8ef-60d0e3a7447f",
+  "grape_id": "1c4ae24a-d3d1-5aa0-937a-14f906e6a508",
+  "percentage": null
+ },
+ {
+  "id": "4d65cec4-5826-5d4d-ad84-b7a33d636331",
+  "wine_id": "0319fc37-dfb7-52c3-96f0-f5b82503293e",
+  "grape_id": "bb094f26-903c-56d8-bc37-6eb1eeb0868c",
+  "percentage": null
+ },
+ {
+  "id": "818e1343-6ffd-5183-8c84-48d44644742d",
+  "wine_id": "65eda6ee-939c-5153-9b47-e21368045261",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "413df15c-601c-51b7-97cc-42d8b937e89c",
+  "wine_id": "3f3baf83-378b-5313-85d1-0225cb2c1b58",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "4cafcf4d-021c-5d66-b5d8-83e3c8b42ac6",
+  "wine_id": "e0740944-1ace-5627-97a6-577bc4bf4c31",
+  "grape_id": "284c2893-153e-5d23-a0f4-af89235dfc68",
+  "percentage": null
+ },
+ {
+  "id": "0a23a03d-f24f-576c-97c4-13930a4ab0c3",
+  "wine_id": "a3ad5881-034f-5a15-8cc9-edc1e834e98a",
+  "grape_id": "284c2893-153e-5d23-a0f4-af89235dfc68",
+  "percentage": null
+ },
+ {
+  "id": "684e0991-d943-534d-91c7-a29c5e743165",
+  "wine_id": "69f8f68a-2f49-5b1e-8f16-de84d9e6a530",
+  "grape_id": "9b61e2af-e9b7-59b0-ad9d-1185d11d54da",
+  "percentage": null
+ },
+ {
+  "id": "d27f172c-b188-5867-889a-f712d7380730",
+  "wine_id": "69f8f68a-2f49-5b1e-8f16-de84d9e6a530",
+  "grape_id": "4a6f4552-41cb-56ea-ab81-7624bd28b4dc",
+  "percentage": null
+ },
+ {
+  "id": "cfc9b6f7-8486-532b-b54d-c6217ca76165",
+  "wine_id": "cb924678-7437-51c8-9e75-ca70e26d6a48",
+  "grape_id": "88ac4737-1c2f-5d9b-ab3f-cad43f53844b",
+  "percentage": null
+ },
+ {
+  "id": "5b374b0c-fffd-5a74-a0c6-2269004bd238",
+  "wine_id": "7f679e5f-cf60-5316-bdad-374c6453bc04",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "ce04d012-2abf-5774-b537-3dc9f7797fd0",
+  "wine_id": "7f679e5f-cf60-5316-bdad-374c6453bc04",
+  "grape_id": "9bd61fef-79f9-5dd5-8363-19a0e8144ae3",
+  "percentage": null
+ },
+ {
+  "id": "4b8379ff-5256-582b-8445-153e908a9e24",
+  "wine_id": "9271dac4-1f02-5cfe-9300-ab7d55be1f68",
+  "grape_id": "88ac4737-1c2f-5d9b-ab3f-cad43f53844b",
+  "percentage": null
+ },
+ {
+  "id": "d6aba1bf-af4f-55bb-b9ff-9cdee9be2fd5",
+  "wine_id": "63c4736d-5dcb-5262-b78d-457b946ecdf9",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "2a60840c-4293-5ba0-bc94-5eb18790d6b3",
+  "wine_id": "cd8b1a12-d4bd-5c9e-83cd-21a4614e6e30",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "f141e578-7518-58ab-84df-3d9aa6e660db",
+  "wine_id": "5e63b374-5436-55b1-90be-a48e459a2987",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "cb2ccd7f-21a8-5f1b-8d54-a9fe29703c66",
+  "wine_id": "99891c2e-d4e9-59c1-a456-6b8752a5de9e",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "8668cf79-e29b-57e0-94a9-b29c9bb4b978",
+  "wine_id": "9ed9b551-a200-5057-8f3a-b3c982479e3d",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "e3b8b61b-d4f9-556f-9d52-b75207681800",
+  "wine_id": "70137219-5a7c-5b5b-a935-ad3e08134a47",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "79433b6a-1263-55d9-90d3-93ca0bb9d6fe",
+  "wine_id": "37100e29-75c9-580f-abd0-9821605611cc",
+  "grape_id": "284c2893-153e-5d23-a0f4-af89235dfc68",
+  "percentage": null
+ },
+ {
+  "id": "0753fdd6-9006-59d2-a587-f8c74eaa121b",
+  "wine_id": "ac7033e6-edb0-526b-92f2-5be77cc78231",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "771e7228-06ec-5bbc-b3fb-9e206ce1b530",
+  "wine_id": "da12791d-6d2c-523f-bf29-fd267a4b60a5",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "40e7ccaa-081c-5e99-ac35-2d1966e8c9e9",
+  "wine_id": "1b605ba0-48a0-527e-b850-15a9d27954e5",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "c9fc4041-dd3c-526d-a4af-081f840a03a1",
+  "wine_id": "016726f5-c472-5321-8176-58209c3f8cb8",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "c947f246-d11b-51cb-a342-8933354cc54f",
+  "wine_id": "5edb99ce-bf55-5d85-8807-470a14c5d473",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "009ba3e8-8ab4-55b2-84de-ef4fab4e0faa",
+  "wine_id": "8ebad8ce-3d00-5703-b1c9-4e70fb28f90b",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "62f620e8-07fa-5c71-8ea4-26c94b70bd3c",
+  "wine_id": "13d892db-23bc-536a-93e3-33debe56d17d",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "8c32d9d6-10fc-5ff7-809a-cacd6c9ceb74",
+  "wine_id": "03fac984-5559-5bb6-b8c9-e0ecd0e55d1a",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "86f06d57-7165-5a11-a211-8c9c8e322d12",
+  "wine_id": "513ba613-d84f-5b86-bf58-b8819aca250a",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "43eeb703-785c-5d8e-8b0d-a6dafcea37c9",
+  "wine_id": "ba238c61-0712-5a74-b681-0516c8573dab",
+  "grape_id": "0b37e5be-cc89-5501-b237-cb75fb4b854b",
+  "percentage": null
+ },
+ {
+  "id": "d72fd6db-ba20-5aeb-805f-9f6df13590b4",
+  "wine_id": "012c80a4-2bdb-568e-87e2-66efff0b6e38",
+  "grape_id": "79aba74c-2c09-5819-a6c3-b01cd5d3dd3b",
+  "percentage": null
+ },
+ {
+  "id": "5b62d3ea-79d0-5193-aa4d-27d39b890616",
+  "wine_id": "5b6d6f91-785f-5572-a33b-118659e0477c",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "29fc8f9a-0f14-57a8-a1ce-048d016eea13",
+  "wine_id": "5b6d6f91-785f-5572-a33b-118659e0477c",
+  "grape_id": "9b61e2af-e9b7-59b0-ad9d-1185d11d54da",
+  "percentage": null
+ },
+ {
+  "id": "3e93f66c-ba48-5af9-bda6-e8dad023338d",
+  "wine_id": "87c2385b-2d09-5527-88ef-3bb9cd920cd7",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "b2601d69-e181-5835-a462-fcb58bc3282a",
+  "wine_id": "a5bb7996-455b-57bf-8904-2c04c67102ec",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "c183836d-c588-5b16-8c80-68ae8f0cf3e5",
+  "wine_id": "d87ba4ee-8bda-59fb-abd2-62bbc6b5c4a2",
+  "grape_id": "831df166-aa64-57a5-b86f-83416d61ead7",
+  "percentage": null
+ },
+ {
+  "id": "f5d11e28-00d9-51a6-b822-9a71ca00c03a",
+  "wine_id": "fa5f636e-398e-58f2-8cd2-ed48dec84389",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "7b807387-0189-5108-a852-8b258c9e42b9",
+  "wine_id": "53fbbf97-4b5d-5e68-b6fe-bcbd979491f9",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "2ff38cb0-a735-5f15-9055-47dce53d60fa",
+  "wine_id": "e95786e8-dd14-5d30-b94f-be33270abbea",
+  "grape_id": "398544a9-a2d4-5b78-955d-2e818decba29",
+  "percentage": null
+ },
+ {
+  "id": "d10a705e-9a42-5821-ab29-a30606769ea2",
+  "wine_id": "d3d7800a-2281-573f-a710-5a7e285a800b",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "87826646-bc91-51f5-9117-4c2d5e411857",
+  "wine_id": "7e9bb64a-5740-5a1d-9107-b2405824ea9c",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "128bc000-2db7-53bf-9879-5df344fdd447",
+  "wine_id": "7e9bb64a-5740-5a1d-9107-b2405824ea9c",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "1f727467-2aee-5664-9a20-273c1f03e233",
+  "wine_id": "81f2eb70-2934-556b-a2c4-0ad9815350da",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "d580506f-eeb9-5f9a-b1cb-c9d9018df466",
+  "wine_id": "ec69b3c6-0a06-5244-8b64-0b5335da03fa",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "dc8bbded-31dd-548d-a20a-a55121e3d0ff",
+  "wine_id": "a8e6f6bb-6f09-5420-aec2-5516d7a7baaa",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "e8bf9a63-8f40-5d14-9288-184a2825514f",
+  "wine_id": "c3fe07eb-fb7c-54c3-b2d1-31daaf22a499",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "8a7cb3d4-0d8c-588c-9472-a820ac26ddc3",
+  "wine_id": "c69b34ad-fd0d-5898-b0a3-18ee9f424080",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "db66e72c-4d80-58b3-900c-97626fb85a23",
+  "wine_id": "3c9fa9e3-2389-51b6-977a-98f172ae1cb8",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "bc3b4fb0-b63c-5569-8b1b-c6d00681400a",
+  "wine_id": "68535b57-1652-542d-b356-68e483a0ff12",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "8d59ce83-71b6-57f8-86ba-2a8003f225d4",
+  "wine_id": "38d6bc56-739f-5138-8c30-328643605e9c",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "8acd34ef-ee55-5472-81ef-73a6f4bbc507",
+  "wine_id": "a4e347d2-26d8-57ff-a374-cedb82df7d6d",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "8307f3f0-0176-5c9e-9314-bf694d2c2350",
+  "wine_id": "123af7cb-69df-5dbd-b0c4-a67e1554b10a",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "dcf0c926-40b8-5a62-9228-187cef9a2df2",
+  "wine_id": "123af7cb-69df-5dbd-b0c4-a67e1554b10a",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "5d2e71a0-fad2-5cb2-b930-960b32e18d60",
+  "wine_id": "14aeffff-fc59-538b-8015-7d168c50a265",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "6cf6fd54-19b5-57a3-9f85-625e4ba7851c",
+  "wine_id": "846608a1-2241-5880-94fa-cf82d0d8726f",
+  "grape_id": "10f629b5-ec0f-576f-9526-3dc78d4f7eca",
+  "percentage": null
+ },
+ {
+  "id": "b8013d80-5ab4-553b-bc9b-9194183bb1dd",
+  "wine_id": "103b63f1-0eb2-53e8-9101-9f411ce9d8bb",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "fc352649-2f9e-5b46-bcf3-1b2151c1c266",
+  "wine_id": "624b51da-c193-5b2c-bd71-98dfff0ed86b",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "75fde2a0-7383-5b68-8e24-10d9abdc8eb7",
+  "wine_id": "f5808208-759d-52d6-a4b5-aef7c9c4a6e9",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "37cba6b0-88f6-5b89-b718-851b1ec104ac",
+  "wine_id": "1ec9d4c5-ae61-583d-8b1c-357df6a3f77c",
+  "grape_id": "74d5521c-922a-5783-a5ab-d0e9cb1d22cf",
+  "percentage": null
+ },
+ {
+  "id": "36620d74-7fc1-510a-b8f9-10233d278a9b",
+  "wine_id": "a23c7228-6c84-5537-93c1-c35cc2f86a33",
+  "grape_id": "74d5521c-922a-5783-a5ab-d0e9cb1d22cf",
+  "percentage": null
+ },
+ {
+  "id": "2aa10ec2-da15-59ae-8d56-0749209f4180",
+  "wine_id": "19f7127b-093c-5567-92df-d96a45d41273",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "081eafcb-ba96-5337-a0f2-fff4e844a8b1",
+  "wine_id": "16a666a0-60bc-5fc9-9cc7-95b5560cac0a",
+  "grape_id": "9b61e2af-e9b7-59b0-ad9d-1185d11d54da",
+  "percentage": null
+ },
+ {
+  "id": "adaa4620-d65d-5867-9055-318dbf890c40",
+  "wine_id": "8b001580-b3c2-5a9f-a781-e0215f737437",
+  "grape_id": "d9046cd0-c50e-56d0-84d5-89dd9a41ff35",
+  "percentage": null
+ },
+ {
+  "id": "75eecab4-6d9e-5b1e-8484-d6de01cb7f54",
+  "wine_id": "58fd565d-03fb-5378-a221-7e98e5e4581f",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "0b4e0331-f50b-5da2-9ca1-0b7f0f7980dd",
+  "wine_id": "fd0aa06e-888c-522c-be33-bb9779ee8208",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "bcea81c8-53e1-5586-babd-a957aaac9fd9",
+  "wine_id": "fd0aa06e-888c-522c-be33-bb9779ee8208",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "f0338c25-5a1c-5693-aca7-1ce8864d8c03",
+  "wine_id": "616ee30d-0a40-5ef8-b735-875eeb3a2c26",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "0661d6ae-7039-56bb-854f-7222a55fcc47",
+  "wine_id": "2ba16221-44e2-5e25-8485-a48aaf49d0f9",
+  "grape_id": "ae4d186b-ee26-58bb-bfe5-7638bda426c1",
+  "percentage": null
+ },
+ {
+  "id": "0e38024a-1389-5cb4-8ba7-143e53d8500a",
+  "wine_id": "3ccd515b-1201-508b-88a0-913f5fd29f77",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "ce6a20a6-ac2e-5f0e-92af-e40eed216768",
+  "wine_id": "05995988-fdac-59ce-a28f-df733e3c92df",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "4f5cb191-1637-5aaa-acd4-6a72847649b3",
+  "wine_id": "05995988-fdac-59ce-a28f-df733e3c92df",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "fcc8cb89-b537-5439-b2cd-8e395445f762",
+  "wine_id": "4ea670af-754b-5949-b9a9-aae3fd4f81ca",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "3957d2d6-d797-5bb3-82f2-0687fec7d8b1",
+  "wine_id": "4ea670af-754b-5949-b9a9-aae3fd4f81ca",
+  "grape_id": "c599259f-ff07-5986-abdb-09f098493a30",
+  "percentage": null
+ },
+ {
+  "id": "b608b1aa-412a-53c6-a1ae-8cfcef639246",
+  "wine_id": "ec167c74-a4fa-5a6b-b822-a853b1a186e7",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "c0f733c0-a2c6-5cc7-ab33-e1b882c146b7",
+  "wine_id": "c9b6e7fb-92b6-5b30-906b-cf8cd48ed7c5",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "6774ef50-1ad5-5450-8be1-599557493f56",
+  "wine_id": "d5e651c4-4c5e-5d16-a31d-70f1527bacea",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "1bbeb7c9-bd1c-55fc-8ca9-f227bc494ae0",
+  "wine_id": "0ffa0ca0-1276-57a7-96b4-61c7d1bb9d7f",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "48d38ddf-ce13-575a-b11c-e2c7dec8a18e",
+  "wine_id": "41c118ad-6326-5535-85fd-0d44d50cbfe9",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "278b3e5b-1b89-5527-adc5-42ca06afd91b",
+  "wine_id": "4ae70ba6-1be5-5e70-9f29-27fb55c8a711",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "48e03130-ab36-5c50-8816-0f4ffa1e34bd",
+  "wine_id": "4dd7de59-7419-50d5-bcdf-ec9eced8ecd5",
+  "grape_id": "c599259f-ff07-5986-abdb-09f098493a30",
+  "percentage": null
+ },
+ {
+  "id": "06714859-9326-5230-a1ab-971e793f4ccf",
+  "wine_id": "328f4cd4-c30e-5b37-830b-6e1e1497aae6",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "c054e752-2f73-536f-913c-ddd0c7f3c562",
+  "wine_id": "c21954aa-7976-5558-a260-12c2df5e1c9d",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "8a7907f1-f015-5a07-852c-c386581c57a7",
+  "wine_id": "c21954aa-7976-5558-a260-12c2df5e1c9d",
+  "grape_id": "10f629b5-ec0f-576f-9526-3dc78d4f7eca",
+  "percentage": null
+ },
+ {
+  "id": "57920de0-0409-525e-9ede-2a5e0bc0f0b8",
+  "wine_id": "c21954aa-7976-5558-a260-12c2df5e1c9d",
+  "grape_id": "c599259f-ff07-5986-abdb-09f098493a30",
+  "percentage": null
+ },
+ {
+  "id": "0076c17b-b791-51ce-9cd0-69cbdb6b80dd",
+  "wine_id": "3175d5f6-2d82-54e0-aa17-c7faff2ab0e2",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "80759484-bd1a-52bf-9bbf-9560fba1c3ab",
+  "wine_id": "11a260c5-1a39-5d13-b6d3-42dc3ad07d40",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "16f364ac-1e05-5d6f-bec7-931df681eb89",
+  "wine_id": "e27816f1-ae6e-5177-bdec-910e7f90988c",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "6f14f1de-c8be-5d6d-bde3-570df3c7c0fc",
+  "wine_id": "68b80e5c-548f-5076-9301-35e9d3e0ad20",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "01d1b74f-acb1-57d7-b39b-cf7f0e285c72",
+  "wine_id": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451",
+  "grape_id": "c599259f-ff07-5986-abdb-09f098493a30",
+  "percentage": null
+ },
+ {
+  "id": "53b7fdf2-797a-5d07-a1c2-07e7799c3c6a",
+  "wine_id": "7f938d91-c486-5d81-8aeb-90e9eee485d3",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "0f95052a-dafe-529b-8e4b-24b871fc626c",
+  "wine_id": "25465e37-6964-5af9-8713-e85e760f345f",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "d41586b8-c0a9-5f5b-ba2a-7a82b0454d85",
+  "wine_id": "a208c304-15f4-59c8-8b97-0fe03684f6f1",
+  "grape_id": "15cf5a32-fd66-50ae-8d23-a31048b9d2c9",
+  "percentage": null
+ },
+ {
+  "id": "ce75a8ee-8271-545b-8716-f0733951ca7b",
+  "wine_id": "fae93773-b97d-58e4-8864-9830fb139a17",
+  "grape_id": "05c4a4e2-2ffa-5142-8ca0-10450dc984fe",
+  "percentage": null
+ },
+ {
+  "id": "0380bda3-9792-5922-823b-c455ab3129af",
+  "wine_id": "f015082f-e528-5778-ade5-949fbe61cad1",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "79f2ca9f-4b9e-5ff1-b854-0e977898c02b",
+  "wine_id": "f5dced46-32e0-58e6-b3fb-52b18a7803f7",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "c18127e4-7df4-5a7b-8f03-e13e5afe1b57",
+  "wine_id": "01e5ab95-3cf1-5c8d-8a8c-601ca286a662",
+  "grape_id": "94b968aa-04b3-5bdd-8199-ae19fce5c604",
+  "percentage": null
+ },
+ {
+  "id": "9daf8077-4c8b-538c-8a11-45db1abdc954",
+  "wine_id": "5d01d7b5-f8ba-5b44-b48b-0f93c424ad6f",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "8db26b8b-bbed-58b3-9846-9371f2e9fd5f",
+  "wine_id": "7d48860a-0eba-5252-baed-bdb536c4dc22",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "3f8154f3-929c-5de5-969a-75ce7ae5d95b",
+  "wine_id": "d3a28319-8033-54f6-88f8-71645f9b8952",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "197a2151-325b-5040-9e6e-9286526d061a",
+  "wine_id": "b24d5890-d113-57db-9822-c25320cb7bde",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "0e493bad-db28-5a66-afaa-13d0b7d16eec",
+  "wine_id": "95d1f72b-1639-5c77-9574-34c8a6adeae6",
+  "grape_id": "831df166-aa64-57a5-b86f-83416d61ead7",
+  "percentage": null
+ },
+ {
+  "id": "4f68ece3-4d20-50df-ac74-5fe8618dcf95",
+  "wine_id": "56c71596-f3c3-54f7-90ba-5fe64b040ff4",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "05249d37-585b-506b-b33b-341e64f37695",
+  "wine_id": "fa3b413c-9b20-513d-bbd6-fcd335cf2dae",
+  "grape_id": "9b61e2af-e9b7-59b0-ad9d-1185d11d54da",
+  "percentage": null
+ },
+ {
+  "id": "a118800d-26b3-51c6-ac16-1f5518f53bdd",
+  "wine_id": "1ea90ea2-36f9-5bcc-970e-5db464368267",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "6f958d1e-401a-5a7f-8960-6af3a5228d07",
+  "wine_id": "089b7528-fbbb-5514-98af-b2325844192b",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "22138bf0-6b3f-5137-b5a4-fec6eb8176a1",
+  "wine_id": "33335b91-8ff1-53f2-9b7d-1d552b0c3ce9",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "510e1dd6-effa-5d15-bdb8-955c26ce5f77",
+  "wine_id": "43f56004-ad65-5245-b003-37bd2528fa3e",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "4460705d-7886-597f-9382-933b558955ec",
+  "wine_id": "fd21c026-1b56-53ff-8cfd-cccace960dd2",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "15b6c1d1-c735-578e-9b3e-c36609215a9d",
+  "wine_id": "fc48dde2-9f9e-56fc-b255-672f8ac5b0b2",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "681adbfb-1499-5272-b6a5-473d91f94427",
+  "wine_id": "f01900ad-ad11-5381-acd3-d1a9ac56ec40",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "79b15e19-5ce7-53eb-8fbb-d27119c0da1e",
+  "wine_id": "bed74a61-e307-581c-99a6-8f4e4fc918f0",
+  "grape_id": "ae99d56f-f27b-55fc-8b7d-198816926900",
+  "percentage": null
+ },
+ {
+  "id": "0986a7af-89ad-5e67-95bf-cbdee357fb4f",
+  "wine_id": "9ffd8e6d-4f54-5f59-b29d-7ba17ea15442",
+  "grape_id": "9bec8894-9162-5315-bab1-2ba1ced85360",
+  "percentage": null
+ },
+ {
+  "id": "65b966af-52b0-590f-8e01-03abe4f6ada7",
+  "wine_id": "3ddfcbc4-7564-5417-a202-beecb1331924",
+  "grape_id": "4bf7ee26-81bc-5949-b174-5edd5fca1471",
+  "percentage": null
+ },
+ {
+  "id": "a3d81990-eca3-5547-827e-17c858804af2",
+  "wine_id": "2ba6177c-63c2-53a4-b506-9d4be5f17199",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "4c20ce82-b64a-5583-bae2-c3bfa38073eb",
+  "wine_id": "bf6b9cf0-9e06-5b81-b791-e2c2a1bbd44a",
+  "grape_id": "94b968aa-04b3-5bdd-8199-ae19fce5c604",
+  "percentage": null
+ },
+ {
+  "id": "949dc125-3e06-57b7-952d-cb7d82e45ccf",
+  "wine_id": "3737a85d-70f1-545e-81b5-539c6d75bcd0",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "ef6d4237-6bd8-57b8-821f-0dc500082cf1",
+  "wine_id": "133e842f-fcd5-54df-8db0-7af7f681d6fb",
+  "grape_id": "88ac4737-1c2f-5d9b-ab3f-cad43f53844b",
+  "percentage": null
+ },
+ {
+  "id": "381a1920-0a2f-5202-a20f-064db52a509f",
+  "wine_id": "78b36fa7-95e7-5c01-ae4e-44d181158a8c",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "9b45e054-3220-56fb-9a22-06bdaa62f716",
+  "wine_id": "02c41521-6b17-54d3-a922-a064bbb9fa89",
+  "grape_id": "20e2a2e0-35d2-5ab6-b926-e4be3031a0fa",
+  "percentage": null
+ },
+ {
+  "id": "e0760dfe-77ba-56af-864f-6b90972619b4",
+  "wine_id": "eb728cce-1eec-560f-9e1c-40788b73d515",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "42f025b4-0254-50d9-bee7-26794489d6b1",
+  "wine_id": "1ed32c0f-8d01-5b67-bfba-612e1c56be0d",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "54e2bdad-2c8c-5cf7-87db-ed590a89df23",
+  "wine_id": "9791cd2f-8501-5da7-aef3-04ea8a865243",
+  "grape_id": "15cf5a32-fd66-50ae-8d23-a31048b9d2c9",
+  "percentage": null
+ },
+ {
+  "id": "d28747cc-cd18-52f9-9acf-f6e0200cff33",
+  "wine_id": "2307ec15-9957-5bc0-ad0c-fd92de241718",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "fae627c7-0716-5c1b-8ea7-60c2a2c7aedc",
+  "wine_id": "d9e36543-6335-5a10-84e8-6bd40455982c",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "b394711d-74d3-5a00-9e39-2c03bd7a74af",
+  "wine_id": "169b9d85-95c5-5e27-aac6-1fc54dff98f9",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "a334cc69-6b41-5639-b7f0-9c12cf812e7a",
+  "wine_id": "4b906490-bb35-595e-adef-59738f2690f8",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "13a9022c-d4a9-5921-a15f-d7b7bcfa4192",
+  "wine_id": "4b906490-bb35-595e-adef-59738f2690f8",
+  "grape_id": "9bd61fef-79f9-5dd5-8363-19a0e8144ae3",
+  "percentage": null
+ },
+ {
+  "id": "702b1bcb-4090-5faa-8877-54630eabc01a",
+  "wine_id": "625f91bb-7c9e-5d18-9722-60f0bc1dda7b",
+  "grape_id": "88ac4737-1c2f-5d9b-ab3f-cad43f53844b",
+  "percentage": null
+ },
+ {
+  "id": "57ecf005-c3b0-5414-9d4a-e354f64939d3",
+  "wine_id": "64aab18d-9b91-51ee-bfc1-15c89ae08e84",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
+  "id": "8d76ae4e-e9c8-5fe1-a80c-4a5afae04379",
+  "wine_id": "7368d510-5fee-5c1a-9cba-d0e4f0f24a31",
+  "grape_id": "9b61e2af-e9b7-59b0-ad9d-1185d11d54da",
+  "percentage": null
+ },
+ {
+  "id": "43196aba-af51-5bac-9ba4-b43904299480",
+  "wine_id": "ff2c5d12-b87f-5f67-a552-4c503d0ce51c",
+  "grape_id": "9b61e2af-e9b7-59b0-ad9d-1185d11d54da",
+  "percentage": null
+ },
+ {
+  "id": "86039fa0-b8e7-5902-8efb-ea878ad96f66",
+  "wine_id": "ff2c5d12-b87f-5f67-a552-4c503d0ce51c",
+  "grape_id": "4a6f4552-41cb-56ea-ab81-7624bd28b4dc",
+  "percentage": null
+ },
+ {
+  "id": "096de246-d857-5943-b271-da2fd90efd16",
+  "wine_id": "a807b8f1-bb95-57d5-ba98-29a8ec01b219",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "be249aff-3407-5c93-a177-dbe8b2577a3c",
+  "wine_id": "060de5f5-ba2b-598e-9fed-2844445aae8b",
+  "grape_id": "316cee51-7fae-52a3-83d4-e42ae7611639",
+  "percentage": null
+ },
+ {
+  "id": "f5c655a3-d9b1-59dd-a2eb-148aed1da594",
+  "wine_id": "1ce023d0-68f4-546a-974a-230430dcf58a",
+  "grape_id": "79aba74c-2c09-5819-a6c3-b01cd5d3dd3b",
+  "percentage": null
+ },
+ {
+  "id": "2452f14c-bafa-5c44-97b2-b2ca0482dc51",
+  "wine_id": "fb919185-9024-503a-b7fe-aea8ac404f81",
+  "grape_id": "ae99d56f-f27b-55fc-8b7d-198816926900",
+  "percentage": null
+ },
+ {
+  "id": "721e0693-b6d0-51ce-a8b4-076b24c4fa37",
+  "wine_id": "ca807183-c1b3-5905-bec5-4d89bace01e9",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "f8da0e66-8d79-5058-a4a3-18bb4ec5d24e",
+  "wine_id": "507179aa-c29c-58c9-aadd-c4ebe91de0f4",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "cf14971b-91a9-575b-a752-efe2b056025b",
+  "wine_id": "0a8d56dc-d067-5c07-81af-e735c9f9bd1d",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "bd76ead1-2436-5550-a13f-a61b1928f63a",
+  "wine_id": "e7a23b64-95f1-58c1-ad00-47df58fdef07",
+  "grape_id": "10f629b5-ec0f-576f-9526-3dc78d4f7eca",
+  "percentage": null
+ },
+ {
+  "id": "c789dd20-a29b-5b90-971d-8d93d18dd8af",
+  "wine_id": "df0603fd-5941-51ab-a3c6-fa0f6ed85d32",
+  "grape_id": "0b37e5be-cc89-5501-b237-cb75fb4b854b",
+  "percentage": null
+ },
+ {
+  "id": "235d6150-c4f0-52ae-8e19-c0db7bb3ebdf",
+  "wine_id": "23e48823-b306-5379-8ec2-644aafc1d0c6",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "99f9cc27-dea1-506e-bb36-e785e44b38b7",
+  "wine_id": "4c50311e-846d-5baa-8489-0fd29a6670b5",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "b874f4b1-24b4-5eb9-91c0-46ed8f97c69d",
+  "wine_id": "2e88c57c-90a5-532d-a3de-c75766c556cb",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "cb4e53fb-b1c9-5afe-8aef-4bfcb3a7e513",
+  "wine_id": "68537a8a-e953-5d27-af57-70b309faf5e4",
+  "grape_id": "768294ae-c13c-5bc3-9198-599a53e16c3b",
+  "percentage": null
+ },
+ {
+  "id": "8e50934d-39b6-58a6-8291-63f2b3c2f390",
+  "wine_id": "40b70eed-d679-5a02-917a-694ef74f4a15",
+  "grape_id": "74d5521c-922a-5783-a5ab-d0e9cb1d22cf",
+  "percentage": null
+ },
+ {
+  "id": "6c77f351-2b5e-5665-9316-f37823493744",
+  "wine_id": "3a6a6504-a1da-587a-8dfd-a13bbd7712db",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "8f0781d0-3d21-58f8-9a5a-4cee9fa69658",
+  "wine_id": "184708b6-bae5-553d-9292-be831c164fbe",
+  "grape_id": "94b968aa-04b3-5bdd-8199-ae19fce5c604",
+  "percentage": null
+ },
+ {
+  "id": "5a9c12f1-b688-5d64-b107-1afec144874a",
+  "wine_id": "3332c691-8d6a-530b-b359-cd8212389cac",
+  "grape_id": "32cd9287-c9a6-59d5-abe3-3547d4899de0",
+  "percentage": null
+ },
+ {
+  "id": "1e964970-3e5c-53b2-9049-78ca3c744b42",
+  "wine_id": "20b4961d-8655-5ed9-8694-bb9754aba0b3",
+  "grape_id": "f1a669bc-443f-581e-9fe0-c1da5acabc68",
+  "percentage": null
+ },
+ {
+  "id": "e8359948-79ee-5a6c-9ca1-0b9eeb2282fb",
+  "wine_id": "019daa1d-9276-506f-b182-1a4036b5f106",
+  "grape_id": "f1a669bc-443f-581e-9fe0-c1da5acabc68",
+  "percentage": null
+ },
+ {
+  "id": "e121a725-03d7-565d-8048-7ad8349b3992",
+  "wine_id": "df7e9ff0-ee96-592f-8aae-322cbcf1b792",
+  "grape_id": "8e8ec2b2-61ca-5ae1-be86-6910d42eb275",
+  "percentage": null
+ },
+ {
+  "id": "cf6038c2-2be4-558b-bef8-f49b1c5508ba",
+  "wine_id": "df7e9ff0-ee96-592f-8aae-322cbcf1b792",
+  "grape_id": "316cee51-7fae-52a3-83d4-e42ae7611639",
+  "percentage": null
+ },
+ {
+  "id": "0a22e48e-96f4-56db-b428-6a14f79326ef",
+  "wine_id": "2aafcbfb-7c0a-5d2e-b3d5-5e19b93b4840",
+  "grape_id": "ad3e7ebe-bfb7-567d-95b0-33ad12a813c0",
+  "percentage": null
+ },
+ {
+  "id": "f1169004-0de8-5bc4-919f-1972b65bc05d",
+  "wine_id": "2ec4ddbc-e2e4-5009-86d2-cf7cce17de50",
+  "grape_id": "5c9ebb95-ca19-59ab-b0b4-eda858a5e7cc",
+  "percentage": null
+ },
+ {
+  "id": "84319a77-cebe-57b1-a795-b584c9904ead",
+  "wine_id": "8d3c56b8-2494-5198-a601-254116573429",
+  "grape_id": "f3b314c2-f5a5-5763-8fcb-033179b713c6",
+  "percentage": null
+ },
+ {
+  "id": "b2313949-a6ec-5d39-ae46-d134086be4a6",
+  "wine_id": "c5bcc678-8e6e-5f89-b5c6-c5877e51c11f",
+  "grape_id": "0bea0eb6-4fc7-5001-91b6-f89c6c93dd2c",
+  "percentage": null
+ },
+ {
+  "id": "0bf1344a-62da-52f5-9f24-70c0e9e2770b",
+  "wine_id": "cd38363c-b0ff-5e4a-97eb-dd6d0d2fdfa7",
+  "grape_id": "4b4f9988-30a4-535d-8bfc-a2d21f90dc1a",
+  "percentage": null
+ },
+ {
+  "id": "26dff4ce-6778-52ef-af45-ae5617ccae16",
+  "wine_id": "bc917b0b-c28c-5cb5-9aa9-6e5809ed52ee",
+  "grape_id": "88ac4737-1c2f-5d9b-ab3f-cad43f53844b",
+  "percentage": null
+ },
+ {
+  "id": "f42a7dcc-3c76-5ea2-801a-b64b73cd1252",
+  "wine_id": "39b1899b-97c3-5c77-8610-331c1be5eaf7",
+  "grape_id": "88ac4737-1c2f-5d9b-ab3f-cad43f53844b",
+  "percentage": null
+ },
+ {
+  "id": "5dfeda40-67ac-5039-911a-4fe2f4834234",
+  "wine_id": "4dffa075-3326-58e8-ab62-e29ae59510db",
+  "grape_id": "a9cc2969-7820-545e-b72e-2543144b7da9",
+  "percentage": null
+ },
+ {
+  "id": "d8770dd8-bd42-574f-9c4c-f3db8a333d79",
+  "wine_id": "53345ce4-83cd-5d76-a814-791519446997",
+  "grape_id": "f1a669bc-443f-581e-9fe0-c1da5acabc68",
+  "percentage": null
+ },
+ {
+  "id": "939f4c6d-2558-56e5-ad1d-c6ceefb35829",
+  "wine_id": "ce729a11-fafd-546c-bb0d-0f547666e3ae",
+  "grape_id": "30d9448d-3309-5a4a-b035-3ca1dfaa594f",
+  "percentage": null
+ },
+ {
+  "id": "f70fc4bb-0d8b-55e0-9a4d-8b0c52de38fd",
+  "wine_id": "edc475e9-5b3c-55af-acaa-2bcba2736f0f",
+  "grape_id": "82927d90-e318-5592-b3b0-faebd400d88c",
+  "percentage": null
+ },
+ {
+  "id": "5ec72b92-7665-5c1d-a580-049ef90e8630",
+  "wine_id": "3df00acd-b70b-5002-a6ce-57b6520c74a9",
+  "grape_id": "e0b0bc58-39e5-5dde-b5e4-232962b4f211",
+  "percentage": null
+ },
+ {
+  "id": "5c6f3b8c-a8cb-520e-999f-dd4eaac758ae",
+  "wine_id": "36184307-3697-500a-bdaa-d264da7077c5",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "b406fede-0be7-58ff-a3d9-c2760d07c5d6",
+  "wine_id": "36184307-3697-500a-bdaa-d264da7077c5",
+  "grape_id": "c599259f-ff07-5986-abdb-09f098493a30",
+  "percentage": null
+ },
+ {
+  "id": "1145e58a-bd66-5bb9-b91b-3ceae3a325ee",
+  "wine_id": "8d0b9f37-1555-540f-a33d-643ef53512b3",
+  "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
+  "percentage": null
+ },
+ {
+  "id": "d4096e6f-ffdf-5dfc-88ca-3227053d505a",
+  "wine_id": "8d0b9f37-1555-540f-a33d-643ef53512b3",
+  "grape_id": "10f629b5-ec0f-576f-9526-3dc78d4f7eca",
+  "percentage": null
+ },
+ {
+  "id": "6e64c223-c8f2-5f1c-8e93-7350a80c0116",
+  "wine_id": "8d0b9f37-1555-540f-a33d-643ef53512b3",
+  "grape_id": "c599259f-ff07-5986-abdb-09f098493a30",
+  "percentage": null
+ },
+ {
+  "id": "95274b88-2308-52d5-85a3-2e6f106cf1bf",
+  "wine_id": "63fd5c0a-7c1e-5244-aa52-1ecc4dadc28d",
+  "grape_id": "250d5eb0-a5ee-587b-8688-29e678d3ee29",
+  "percentage": null
+ },
+ {
+  "id": "4818c250-1e49-5076-a050-25d1a2413dfe",
+  "wine_id": "63fd5c0a-7c1e-5244-aa52-1ecc4dadc28d",
+  "grape_id": "0b25c04e-b745-5c2a-b127-69db1ded481a",
+  "percentage": null
  }
 ]

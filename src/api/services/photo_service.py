@@ -38,22 +38,50 @@ class WinePhotoService:
                 confidence=1.0,
                 width=original.width,
                 height=original.height,
+                source_view="original",
             )
         }
 
         bottle_crop = self._try_crop("bottle_crop", self.bottle_cropper, original)
         if bottle_crop is not None:
             images["bottle_crop"] = bottle_crop.image
-            crops["bottle_crop"] = self._crop_response(bottle_crop)
+            crops["bottle_crop"] = self._crop_response(bottle_crop, source_view="original")
         else:
             crops["bottle_crop"] = CropResponse(available=False)
 
-        label_crop = self._try_crop("label_crop", self.label_cropper, original)
+        preferred_region = bottle_crop.box if bottle_crop is not None else None
+        label_crop = self._try_crop(
+            "label_crop",
+            self.label_cropper,
+            original,
+            preferred_region=preferred_region,
+        )
         if label_crop is not None:
             images["label_crop"] = label_crop.image
-            crops["label_crop"] = self._crop_response(label_crop)
+            crops["label_crop"] = self._crop_response(label_crop, source_view="original")
+        elif bottle_crop is not None:
+            label_crop = self._try_crop("label_crop", self.label_cropper, bottle_crop.image)
+            if label_crop is not None:
+                images["label_crop"] = label_crop.image
+                crops["label_crop"] = self._crop_response(label_crop, source_view="bottle_crop")
+            else:
+                crops["label_crop"] = CropResponse(
+                    available=True,
+                    box=(0, 0, original.width, original.height),
+                    confidence=1.0,
+                    width=original.width,
+                    height=original.height,
+                    source_view="original_fallback",
+                )
         else:
-            crops["label_crop"] = CropResponse(available=False)
+            crops["label_crop"] = CropResponse(
+                available=True,
+                box=(0, 0, original.width, original.height),
+                confidence=1.0,
+                width=original.width,
+                height=original.height,
+                source_view="original_fallback",
+            )
 
         if label_crop is None:
             images["label_crop"] = original
@@ -65,21 +93,23 @@ class WinePhotoService:
         view: str,
         cropper: YoloLabelCropper | YoloBottleCropper | None,
         image: Image.Image,
+        preferred_region: tuple[int, int, int, int] | None = None,
     ) -> LabelCrop | None:
         if cropper is None:
             return None
         try:
-            return cropper.crop(image)
+            return cropper.crop(image, preferred_region=preferred_region)
         except Exception:
             logger.exception("Failed to build %s with YOLO", view)
             return None
 
     @staticmethod
-    def _crop_response(crop: LabelCrop) -> CropResponse:
+    def _crop_response(crop: LabelCrop, source_view: str) -> CropResponse:
         return CropResponse(
             available=True,
             box=crop.box,
             confidence=crop.confidence,
             width=crop.image.width,
             height=crop.image.height,
+            source_view=source_view,
         )

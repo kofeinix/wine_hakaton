@@ -74,6 +74,7 @@ class CropResponse(BaseModel):
     confidence: float | None = None
     width: int | None = None
     height: int | None = None
+    source_view: str | None = None
 
 
 class SearchResponse(BaseModel):
