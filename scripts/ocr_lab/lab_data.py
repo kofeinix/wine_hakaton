@@ -25,6 +25,8 @@ DEFAULT_RESPONSES = PROJECT_ROOT / "data" / "ocr_visual_grid_responses.json"
 CACHE_DIR = PROJECT_ROOT / "data" / "ocr_lab_cache"
 # Эксперименты (lab_*.py) берут датасет отсюда: OCR_LAB_RESPONSES=data/eval_responses_eval.json
 RESPONSES = Path(os.environ.get("OCR_LAB_RESPONSES", DEFAULT_RESPONSES))
+if not RESPONSES.is_absolute():  # относительные пути — от корня проекта
+    RESPONSES = PROJECT_ROOT / RESPONSES
 
 
 def load_catalog() -> dict:
