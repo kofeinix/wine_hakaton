@@ -313,7 +313,60 @@ SEARCH__COLLECTION_ENCODER=siglip2
 
 ## OCR / LLM
 
-Приложение работает с OpenAI-compatible Chat Completions API. В базовом flow vision-модель используется для OCR по приоритету `label_crop -> bottle_crop -> original`, затем OCR-текст участвует в fuzzy rerank top-50 кандидатов. Отдельный stage `llm` сохранен как опциональный rerank-кандидат, но по умолчанию frontend и API используют только `global,patches`.
+Приложение работает с OpenAI-compatible Chat Completions API. В базовом flow vision-модель используется для OCR по приоритету `label_crop -> bottle_crop -> original`, затем OCR-текст участвует в rerank top-50 кандидатов. Отдельный stage `llm` сохранен как опциональный rerank-кандидат, но по умолчанию frontend и API используют только `global,patches`.
+
+### Entity-based OCR matching
+
+OCR-скор кандидата считается как гибрид двух сигналов:
+
+```text
+ocr_score = 0.5 * baseline_score + 0.5 * entity_score
+final     = 0.8 * visual_score + 0.2 * ocr_score
+```
+
+- `baseline_score` — прежняя формула `0.65 * domain_score + 0.35 * fuzzy_score`
+  (`fuzzy = 0.25 * WRatio + 0.75 * token_set_ratio`).
+- `entity_score` — сопоставление сущностей вина с OCR-текстом
+  ([`src/ml/ocr_entity_matching.py`](src/ml/ocr_entity_matching.py)).
+
+Entity-подход сравнивает не весь OCR с `candidate_text`, а каждую сущность отдельно
+(`producer`, `name`, `grapes`, `color`, `sugar`). Для сущности строится несколько
+представлений: нормализованный оригинал, RU→LAT и LAT→RU транслитерация исходной
+строки (библиотека `transliterate`), вариант без пробелов. Поиск внутри OCR: exact
+substring → fuzzy по скользящим окнам токенов (для однословной сущности — по одиночным
+токенам).
+
+Правила:
+- отсутствие сущности в OCR **не штрафуется**: скор не опускается ниже нейтрального `0.5`
+  (`producer`/`name`/`grape` — `max(fuzzy, 0.5)`, пока совпадение ниже порога `0.80`;
+  `color`/`sugar` — ровно `0.5`); сырой fuzzy-скор виден в диагностике как `raw_score`;
+- кандидат без карточки вина в БД получает `entity_score = 0` (как и `domain_score`);
+- явное противоречие (candidate `Красное`, OCR `white`) штрафуется на `0.25`;
+- веса сущностей: `grape 0.35`, `producer 0.20`, `name 0.20`, `color 0.10`, `sugar 0.15`.
+
+Диагностика в `/search/image/extended` (`diagnostics.ocr_rerank`) содержит:
+`baseline_score`, `entity_score`, `baseline_weight`, `entity_weight`,
+`entity_weights`, `entity_match_threshold`, `entity_contradiction_penalty`,
+`entity_neutral_score`, а в `candidate_scores[*].entities` — по каждой сущности
+`score`, `raw_score`, `matched`, `contradiction`, `best_variant`, `best_window`, `variants`.
+
+Одна и та же формула (`WineService._score_ocr_candidate`) используется и в OCR rerank, и в
+признаках CatBoost. Офлайн-оценка по сохранённым ответам API (578 изображений,
+`stages=global`, лучшие веса visual/ocr для каждого варианта):
+
+| OCR-скор | Acc@1 | MRR |
+|---|---|---|
+| baseline (domain + fuzzy) | 85.81% | 0.9186 |
+| hybrid (baseline + entity) | **86.51%** | **0.9238** |
+
+```bash
+uv run python scripts/verify_entity_ocr_integration.py  # нужен data/ocr_visual_grid_responses.json
+```
+
+> CatBoost-модель (`models/catboost/wine_reranker.cbm`) обучена на старом наборе признаков
+> (с `ocr_tfidf_score`, без `ocr_entity_*`). Отсутствующие признаки подаются как `0.0`,
+> новые игнорируются — после изменения формулы модель нужно переобучить
+> (`scripts/train_catboost_reranker.py`).
 
 Если YOLO не нашел `label_crop` ни на исходном изображении, ни внутри `bottle_crop`, API считает, что пользователь мог прислать близкое фото этикетки: `label_crop` становится равен `original`, и поиск идет по label collection.
 

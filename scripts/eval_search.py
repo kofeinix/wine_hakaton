@@ -43,8 +43,16 @@ MIME_BY_EXT = {
 }
 
 
-def collect_images(eval_dir: Path) -> list[tuple[str, Path]]:
-    """Возвращает список (ожидаемый_uuid, путь_к_картинке)."""
+def collect_images(eval_dir: Path, image_name: str | None = None) -> list[tuple[str, Path]]:
+    """Возвращает список (ожидаемый_uuid, путь_к_картинке).
+
+    Поддерживает две структуры:
+      - <wine_id>/<image>.jpg            (data/eval)
+      - <wine_id>/main/<image>.jpg       (data/images_extended)
+
+    image_name: если задан, берутся только файлы с таким именем
+    (например "original.jpg" для структуры <wine_id>/main/original.jpg).
+    """
     items: list[tuple[str, Path]] = []
     if not eval_dir.is_dir():
         print(f"Ошибка: директория {eval_dir} не найдена", file=sys.stderr)
@@ -53,9 +61,19 @@ def collect_images(eval_dir: Path) -> list[tuple[str, Path]]:
         if not folder.is_dir():
             continue
         wine_id = folder.name
+        # Структура <wine_id>/main/<image>.jpg
+        main_dir = folder / "main"
+        if main_dir.is_dir():
+            for img in sorted(main_dir.iterdir()):
+                if img.is_file() and img.suffix.lower() in IMAGE_EXTS:
+                    if image_name is None or img.name == image_name:
+                        items.append((wine_id, img))
+            continue
+        # Плоская структура <wine_id>/<image>.jpg
         for img in sorted(folder.iterdir()):
             if img.is_file() and img.suffix.lower() in IMAGE_EXTS:
-                items.append((wine_id, img))
+                if image_name is None or img.name == image_name:
+                    items.append((wine_id, img))
     return items
 
 
@@ -112,6 +130,8 @@ async def run(
     stages: list[str] | None = None,
     main_photos_only: bool = False,
     catboost: bool = False,
+    eval_dir: Path | None = None,
+    image_name: str | None = None,
 ) -> None:
     if image_path is not None:
         image_path = image_path.expanduser().resolve()
@@ -123,7 +143,7 @@ async def run(
             sys.exit(1)
         images = [(expected_id or image_path.parent.name, image_path)]
     else:
-        images = collect_images(EVAL_DIR)
+        images = collect_images(eval_dir or EVAL_DIR, image_name=image_name)
     if not images:
         print("Нет изображений для оценки.", file=sys.stderr)
         sys.exit(1)
@@ -170,6 +190,15 @@ async def run(
             diagnostics = data.get("diagnostics") or {}
             global_diag = diagnostics.get("global") or {}
             ocr_diag = diagnostics.get("ocr_rerank") or {}
+            catboost_diag = diagnostics.get("catboost") or {}
+            fusion = global_diag.get("fusion")
+            if catboost:
+                # catboost endpoint кладёт fusion в global, а OCR-статус в catboost.ocr_applied
+                ocr_applied = catboost_diag.get("ocr_applied", ocr_diag.get("applied"))
+                ocr_source_view = catboost_diag.get("ocr_source_view", ocr_diag.get("source_view"))
+            else:
+                ocr_applied = ocr_diag.get("applied")
+                ocr_source_view = ocr_diag.get("source_view")
             top1 = result[0] if result else None
             top2 = result[1] if len(result) > 1 else None
             rank = rank_of_expected(result, expected_id)
@@ -183,9 +212,11 @@ async def run(
                     "stages": ["catboost"] if catboost else stages or ["global", "patches"],
                     "main_photos_only": main_photos_only,
                     "active_views": global_diag.get("active_views"),
-                    "ocr_source_view": ocr_diag.get("source_view"),
-                    "ocr_applied": ocr_diag.get("applied"),
+                    "fusion": fusion,
+                    "ocr_source_view": ocr_source_view,
+                    "ocr_applied": ocr_applied,
                     "ocr_rerank_applied": ocr_diag.get("rerank_applied"),
+                    "catboost_loaded": catboost_diag.get("loaded"),
                     "top1_id": top1.get("wine_id") if top1 else None,
                     "top1_score": top1.get("score") if top1 else None,
                     "top1_cos": top1.get("cosine_score") if top1 else None,
@@ -199,6 +230,8 @@ async def run(
                 }
             )
             status = "OK " if correct else "MISS"
+            fusion_label = fusion or "n/a"
+            ocr_label = f"{ocr_source_view or 'n/a'}{'*' if ocr_applied else ''}"
             print(
                 f"[{idx}/{len(images)}] {status} {img_path.name} "
                 f"expected={expected_id[:8]} top1={top1.get('wine_id', 'N/A')[:8] if top1 else 'N/A'} "
@@ -206,7 +239,7 @@ async def run(
                 f"raw_cos={top1.get('cosine_score', 0.0) if top1 else 0.0:.4f} "
                 f"fused_gap={gap:.4f} rank={rank} "
                 f"views={','.join(global_diag.get('active_views') or []) or 'n/a'} "
-                f"ocr={ocr_diag.get('source_view') or 'n/a'}"
+                f"fusion={fusion_label} ocr={ocr_label}"
             )
 
     print("\n" + "=" * 100)
@@ -215,7 +248,7 @@ async def run(
     header = (
         f"{'Ожидаемый uuid':<38} {'Картинка':<14} {'Top-1 uuid':<38} "
         f"{'Fused':<8} {'RawCos':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} "
-        "Views OCR Конкуренты (uuid:fused)"
+        "Views Fusion OCR Конкуренты (uuid:fused)"
     )
     print(header)
     print("-" * 100)
@@ -227,6 +260,7 @@ async def run(
             f"{m.get('wine_id', '?')[:8]}:{m.get('score', 0.0):.3f}"
             for m in row["result"][1:5]
         )
+        ocr_label = f"{row.get('ocr_source_view') or '-'}{'*' if row.get('ocr_applied') else ''}"
         print(
             f"{row['expected']:<38} {row['image']:<14} "
             f"{str(row['top1_id']):<38} {row['top1_score'] or 0.0:<8.4f} "
@@ -234,7 +268,7 @@ async def run(
             f"{row['top2_score'] or 0.0:<8.4f} {row['gap'] or 0.0:<8.4f} "
             f"{str(row['rank']):<5} {'OK' if row['correct'] else 'MISS':<6} "
             f"{','.join(row.get('active_views') or []) or '-'} "
-            f"{row.get('ocr_source_view') or '-'} {competitors}"
+            f"{row.get('fusion') or '-'} {ocr_label} {competitors}"
         )
 
     # Сводка по винам (папкам)
@@ -308,6 +342,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Оценка качества поиска вин по изображению")
     parser.add_argument("--api-url", default="http://localhost:8000", help="Базовый URL API")
     parser.add_argument(
+        "--eval-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Путь к папке с тестовыми изображениями. Поддерживает структуры "
+            "<wine_id>/<image>.jpg и <wine_id>/main/<image>.jpg. "
+            "По умолчанию data/eval."
+        ),
+    )
+    parser.add_argument(
+        "--image-name",
+        default=None,
+        help=(
+            "Брать только файлы с таким именем (например original.jpg для "
+            "структуры <wine_id>/main/original.jpg). По умолчанию все изображения."
+        ),
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=None,
@@ -376,6 +428,8 @@ def main() -> None:
             stages=stages,
             main_photos_only=args.main_photos_only,
             catboost=args.catboost,
+            eval_dir=args.eval_dir,
+            image_name=args.image_name,
         )
     )
 

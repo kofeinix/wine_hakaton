@@ -27,11 +27,18 @@ from src.api.schemas import (
     WineResponse,
 )
 from src.api.services.photo_service import WinePhotoService
-from src.connections.database.models import Grape, Wine
+from src.connections.database.models import Wine
 from src.ml.catboost_reranker import CatBoostWineReranker, build_candidate_feature_rows
+from src.ml.ocr_entity_matching import (
+    CONTRADICTION_PENALTY as ENTITY_CONTRADICTION_PENALTY,
+    ENTITY_WEIGHTS,
+    MATCH_THRESHOLD as ENTITY_MATCH_THRESHOLD,
+    NEUTRAL_SCORE as ENTITY_NEUTRAL_SCORE,
+    OcrEntityScore,
+    score_ocr_entities,
+)
 from src.ml.patch_scoring import patch_similarity_score
 from src.ml.text_normalization import normalize_match_text
-from src.ml.tfidf import tfidf_cosine_similarity
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -64,16 +71,15 @@ LABEL_PHOTO_CONFIDENCE_THRESHOLD = 0.50
 VIEW_SCORE_TOP_K_PHOTOS = 3
 VIEW_SCORE_BEST_WEIGHT = 0.75
 VIEW_SCORE_MEAN_WEIGHT = 0.25
-OCR_VISUAL_WEIGHT = 0.75
-OCR_TEXT_WEIGHT = 0.25
+# Оптимум по grid search (scripts/verify_entity_ocr_integration.py, 578 изображений)
+# с гибридным OCR-скором; 0.7/0.3 отстаёт на 2 изображения по Acc@1.
+OCR_VISUAL_WEIGHT = 0.80
+OCR_TEXT_WEIGHT = 0.20
 OCR_RERANK_LIMIT = 50
 OCR_FUZZY_WRATIO_WEIGHT = 0.25
 OCR_FUZZY_TOKEN_SET_WEIGHT = 0.75
 OCR_DOMAIN_WEIGHT = 0.65
 OCR_FUZZY_WEIGHT = 0.35
-OCR_TFIDF_WEIGHT = 0.20
-OCR_TFIDF_MIN_QUERY_TOKENS = 2
-OCR_TFIDF_MIN_CANDIDATE_TOKENS = 2
 OCR_GRAPE_WEIGHT = 0.45
 OCR_PRODUCER_WEIGHT = 0.18
 OCR_NAME_WEIGHT = 0.14
@@ -86,6 +92,9 @@ OCR_SUGAR_STRONG_MATCH_THRESHOLD = 0.82
 OCR_SUGAR_MISMATCH_PENALTY = 0.20
 OCR_COLOR_STRONG_MATCH_THRESHOLD = 0.82
 OCR_COLOR_MISMATCH_PENALTY = 0.20
+# Гибридный OCR-скор: baseline (domain + fuzzy) + entity-based matching.
+OCR_BASELINE_WEIGHT = 0.5
+OCR_ENTITY_WEIGHT = 0.5
 DEFAULT_SEARCH_STAGES = ("global", "patches")
 VALID_SEARCH_STAGES = {"global", "patches", "llm"}
 CATBOOST_RERANKER_MODEL_PATH = PROJECT_ROOT / "models" / "catboost" / "wine_reranker.cbm"
@@ -158,7 +167,19 @@ class WineCandidate:
     view_photo_ids: dict[str, str] | None = None
     view_match_counts: dict[str, int] | None = None
     patch_score: float | None = None
-    tfidf_score: float | None = None
+
+
+@dataclass(frozen=True)
+class OcrCandidateScore:
+    """Все OCR-сигналы одного кандидата: baseline (domain + fuzzy) и entity."""
+
+    wratio: float
+    token_set: float
+    fuzzy_score: float
+    structured: dict[str, Any]
+    baseline_score: float
+    entity: OcrEntityScore
+    ocr_score: float
 
 
 @dataclass(frozen=True)
@@ -213,7 +234,6 @@ class WineService:
                     cosine_score=candidate.cosine_score,
                     view_photo_ids=candidate.view_photo_ids,
                     view_match_counts=candidate.view_match_counts,
-                    tfidf_score=candidate.tfidf_score,
                 )
                 for candidate in candidates
             ]
@@ -249,7 +269,6 @@ class WineService:
                 cosine_score=candidate.cosine_score,
                 view_photo_ids=candidate.view_photo_ids,
                 view_match_counts=candidate.view_match_counts,
-                tfidf_score=candidate.tfidf_score,
                 wine=wine_by_id.get(candidate.wine_id),
             )
             for candidate in candidates
@@ -301,7 +320,6 @@ class WineService:
                     cosine_score=candidate.cosine_score,
                     view_photo_ids=candidate.view_photo_ids,
                     view_match_counts=candidate.view_match_counts,
-                    tfidf_score=candidate.tfidf_score,
                 )
                 for candidate in candidates
             ]
@@ -489,6 +507,12 @@ class WineService:
                 **ocr_diagnostics,
                 "visual_weight": OCR_VISUAL_WEIGHT,
                 "text_weight": OCR_TEXT_WEIGHT,
+                "baseline_weight": OCR_BASELINE_WEIGHT,
+                "entity_weight": OCR_ENTITY_WEIGHT,
+                "entity_weights": ENTITY_WEIGHTS,
+                "entity_match_threshold": ENTITY_MATCH_THRESHOLD,
+                "entity_contradiction_penalty": ENTITY_CONTRADICTION_PENALTY,
+                "entity_neutral_score": ENTITY_NEUTRAL_SCORE,
             },
         }
         return candidates, diagnostics, query_views.crops
@@ -653,30 +677,32 @@ class WineService:
             normalize_match_text(self._wine_to_ocr_candidate_text(wine_by_id.get(wine_id)))
             for wine_id in wine_ids
         ]
-        tfidf_scores = tfidf_cosine_similarity(ocr_text, candidate_texts)
         result: dict[str, dict[str, float]] = {}
-        for wine_id, normalized_candidate, tfidf_score in zip(
-            wine_ids, candidate_texts, tfidf_scores, strict=True
-        ):
-            wine = wine_by_id.get(wine_id)
-            wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
-            token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
-            fuzzy_score = (
-                OCR_FUZZY_WRATIO_WEIGHT * wratio
-                + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
-            ) / 100.0
-            structured_score = self._structured_ocr_score(ocr_text, wine, color_aliases_by_color)
-            ocr_score = (
-                OCR_DOMAIN_WEIGHT * structured_score["domain_score"]
-                + OCR_FUZZY_WEIGHT * fuzzy_score
-                + OCR_TFIDF_WEIGHT * tfidf_score
+        for wine_id, normalized_candidate in zip(wine_ids, candidate_texts, strict=True):
+            scores = self._score_ocr_candidate(
+                ocr_text,
+                normalized_candidate,
+                wine_by_id.get(wine_id),
+                color_aliases_by_color,
             )
+            structured_score = scores.structured
+            entities = scores.entity.entities
+            wratio = scores.wratio
+            token_set = scores.token_set
             result[wine_id] = {
                 "ocr_applied": 1.0,
-                "ocr_score": float(ocr_score),
+                "ocr_score": float(scores.ocr_score),
+                "ocr_baseline_score": float(scores.baseline_score),
+                "ocr_entity_score": float(scores.entity.domain_score),
+                "ocr_entity_grape_score": float(entities["grape"].score),
+                "ocr_entity_producer_score": float(entities["producer"].score),
+                "ocr_entity_name_score": float(entities["name"].score),
+                "ocr_entity_color_score": float(entities["color"].score),
+                "ocr_entity_sugar_score": float(entities["sugar"].score),
+                "ocr_entity_color_contradiction": float(entities["color"].contradiction),
+                "ocr_entity_sugar_contradiction": float(entities["sugar"].contradiction),
                 "ocr_domain_score": float(structured_score["domain_score"]),
-                "ocr_fuzzy_score": float(fuzzy_score),
-                "ocr_tfidf_score": float(tfidf_score),
+                "ocr_fuzzy_score": float(scores.fuzzy_score),
                 "ocr_grape_score": float(structured_score["grape_score"]),
                 "ocr_grape_match_count": float(structured_score["grape_match_count"]),
                 "ocr_grape_total_count": float(structured_score["grape_total_count"]),
@@ -1263,25 +1289,17 @@ class WineService:
             normalize_match_text(self._wine_to_ocr_candidate_text(wine_by_id.get(candidate.wine_id)))
             for candidate in candidates
         ]
-        tfidf_scores = tfidf_cosine_similarity(ocr_text, candidate_texts)
         reranked: list[WineCandidate] = []
         diagnostics: list[dict[str, Any]] = []
-        for candidate, normalized_candidate, tfidf_score in zip(
-            candidates, candidate_texts, tfidf_scores, strict=True
-        ):
-            wine = wine_by_id.get(candidate.wine_id)
-            wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
-            token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
-            fuzzy_score = (
-                OCR_FUZZY_WRATIO_WEIGHT * wratio
-                + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
-            ) / 100.0
-            structured_score = self._structured_ocr_score(ocr_text, wine, color_aliases_by_color)
-            ocr_score = (
-                OCR_DOMAIN_WEIGHT * structured_score["domain_score"]
-                + OCR_FUZZY_WEIGHT * fuzzy_score
-                + OCR_TFIDF_WEIGHT * tfidf_score
+        for candidate, normalized_candidate in zip(candidates, candidate_texts, strict=True):
+            scores = self._score_ocr_candidate(
+                ocr_text,
+                normalized_candidate,
+                wine_by_id.get(candidate.wine_id),
+                color_aliases_by_color,
             )
+            structured_score = scores.structured
+            ocr_score = scores.ocr_score
             final_score = OCR_VISUAL_WEIGHT * candidate.score + OCR_TEXT_WEIGHT * ocr_score
             reranked.append(
                 WineCandidate(
@@ -1296,7 +1314,6 @@ class WineService:
                     view_photo_ids=candidate.view_photo_ids,
                     view_match_counts=candidate.view_match_counts,
                     patch_score=candidate.patch_score,
-                    tfidf_score=tfidf_score,
                 )
             )
             diagnostics.append(
@@ -1304,9 +1321,10 @@ class WineService:
                     "wine_id": candidate.wine_id,
                     "visual_score": candidate.score,
                     "ocr_score": ocr_score,
+                    "baseline_score": scores.baseline_score,
+                    "entity_score": scores.entity.domain_score,
                     "domain_score": structured_score["domain_score"],
-                    "fuzzy_score": fuzzy_score,
-                    "tfidf_score": tfidf_score,
+                    "fuzzy_score": scores.fuzzy_score,
                     "grape_score": structured_score["grape_score"],
                     "producer_score": structured_score["producer_score"],
                     "name_score": structured_score["name_score"],
@@ -1315,10 +1333,14 @@ class WineService:
                     "candidate_grapes": structured_score["candidate_grapes"],
                     "candidate_color": structured_score["candidate_color"],
                     "candidate_sugar": structured_score["candidate_sugar"],
-                    "wratio": wratio,
-                    "token_set_ratio": token_set,
+                    "wratio": scores.wratio,
+                    "token_set_ratio": scores.token_set,
                     "final_score": final_score,
                     "candidate_text": normalized_candidate,
+                    "entities": {
+                        name: match.to_dict()
+                        for name, match in scores.entity.entities.items()
+                    },
                 }
             )
 
@@ -1332,9 +1354,10 @@ class WineService:
                     "wine_id": item["wine_id"],
                     "visual_score": round(float(item["visual_score"]), 4),
                     "ocr_score": round(float(item["ocr_score"]), 4),
+                    "baseline_score": round(float(item["baseline_score"]), 4),
+                    "entity_score": round(float(item["entity_score"]), 4),
                     "domain_score": round(float(item["domain_score"]), 4),
                     "fuzzy_score": round(float(item["fuzzy_score"]), 4),
-                    "tfidf_score": round(float(item["tfidf_score"]), 4),
                     "grape_score": round(float(item["grape_score"]), 4),
                     "producer_score": round(float(item["producer_score"]), 4),
                     "name_score": round(float(item["name_score"]), 4),
@@ -1356,6 +1379,58 @@ class WineService:
             "reason": "ok",
             "candidate_scores": diagnostics[:10],
         }
+
+    @classmethod
+    def _score_ocr_candidate(
+        cls,
+        ocr_text: str,
+        normalized_candidate: str,
+        wine: Wine | None,
+        color_aliases_by_color: dict[str, list[str]] | None = None,
+    ) -> OcrCandidateScore:
+        """Единая формула OCR-скора для rerank и для признаков CatBoost."""
+        wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
+        token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
+        fuzzy_score = (
+            OCR_FUZZY_WRATIO_WEIGHT * wratio
+            + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
+        ) / 100.0
+        structured = cls._structured_ocr_score(ocr_text, wine, color_aliases_by_color)
+        baseline_score = OCR_DOMAIN_WEIGHT * structured["domain_score"] + OCR_FUZZY_WEIGHT * fuzzy_score
+        entity = cls._entity_ocr_score(ocr_text, wine, color_aliases_by_color)
+        ocr_score = OCR_BASELINE_WEIGHT * baseline_score + OCR_ENTITY_WEIGHT * entity.domain_score
+        return OcrCandidateScore(
+            wratio=float(wratio),
+            token_set=float(token_set),
+            fuzzy_score=float(fuzzy_score),
+            structured=structured,
+            baseline_score=float(baseline_score),
+            entity=entity,
+            ocr_score=float(ocr_score),
+        )
+
+    @classmethod
+    def _entity_ocr_score(
+        cls,
+        ocr_text: str,
+        wine: Wine | None,
+        color_aliases_by_color: dict[str, list[str]] | None = None,
+    ) -> OcrEntityScore:
+        """Entity-based OCR-скор: сопоставление сущностей вина с OCR-текстом."""
+        if wine is None or not ocr_text:
+            # Как и в _structured_ocr_score: без карточки вина скор нулевой,
+            # иначе нейтральные 0.5 по всем сущностям поднимали бы такого кандидата.
+            return OcrEntityScore.zero()
+        return score_ocr_entities(
+            ocr_text,
+            name=wine.name,
+            producer=wine.producer.name if wine.producer is not None else None,
+            grape_groups=cls._wine_grape_groups(wine),
+            color=wine.color,
+            color_aliases=color_aliases_by_color or {},
+            sugar=wine.sugar,
+            sugar_variants=SUGAR_VARIANTS,
+        )
 
     @classmethod
     def _structured_ocr_score(

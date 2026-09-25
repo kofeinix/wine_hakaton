@@ -52,7 +52,6 @@ class SearchMatchResponse(BaseModel):
     cosine_score: float = 0.0
     view_photo_ids: dict[str, str] | None = None
     view_match_counts: dict[str, int] | None = None
-    tfidf_score: float | None = None
     wine: WineResponse | None = None
 
 
@@ -67,7 +66,6 @@ class CompactSearchMatch(BaseModel):
     cosine_score: float = 0.0
     view_photo_ids: dict[str, str] | None = None
     view_match_counts: dict[str, int] | None = None
-    tfidf_score: float | None = None
 
 
 class CompactSearchResponse(BaseModel):
