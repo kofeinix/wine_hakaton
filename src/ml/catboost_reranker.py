@@ -7,6 +7,8 @@ from pathlib import Path
 from statistics import mean, pstdev
 from typing import Any
 
+from src.ml.ocr_matching import OCR_FEATURE_NAMES
+
 VIEWS = ("original", "bottle_crop", "label_crop")
 RRF_K = 60
 VIEW_SCORE_TOP_K_PHOTOS = 3
@@ -32,8 +34,13 @@ class CandidateFeatureRow:
     view_photo_ids: dict[str, str]
 
 
+def stage1_score(features: dict[str, float]) -> float:
+    """Скор этапа 1: визуальный baseline + OCR-бонус формулы (src/ml/ocr_matching.py)."""
+    return float(features.get("baseline_score", 0.0)) + float(features.get("ocr_score", 0.0))
+
+
 class CatBoostWineReranker:
-    def __init__(self, model_path: Path, feature_names: list[str]) -> None:
+    def __init__(self, model_path: Path, feature_names: list[str], stage1_baseline_scale: float = 0.0) -> None:
         try:
             from catboost import CatBoost
         except ImportError as exc:  # pragma: no cover - depends on optional package.
@@ -43,6 +50,8 @@ class CatBoostWineReranker:
 
         self.model_path = model_path
         self.feature_names = feature_names
+        # >0: модель обучена поверх формулы этапа 1 (baseline) и предсказывает поправку к ней
+        self.stage1_baseline_scale = stage1_baseline_scale
         self.model = CatBoost()
         self.model.load_model(str(model_path))
 
@@ -51,11 +60,18 @@ class CatBoostWineReranker:
         model = Path(model_path)
         metadata = Path(metadata_path) if metadata_path else model.with_suffix(".json")
         payload = json.loads(metadata.read_text(encoding="utf-8"))
-        return cls(model, list(payload["feature_names"]))
+        return cls(
+            model,
+            list(payload["feature_names"]),
+            float(payload.get("stage1_baseline_scale", 0.0)),
+        )
 
     def predict_rows(self, rows: list[CandidateFeatureRow]) -> list[float]:
         matrix = [[row.features.get(name, 0.0) for name in self.feature_names] for row in rows]
-        return [float(score) for score in self.model.predict(matrix)]
+        return [
+            float(score) + self.stage1_baseline_scale * stage1_score(row.features)
+            for score, row in zip(self.model.predict(matrix), rows, strict=True)
+        ]
 
 
 def rrf_score(rank: int | None, k: int = RRF_K) -> float:
@@ -249,43 +265,7 @@ def feature_names_from_rows(rows: list[CandidateFeatureRow]) -> list[str]:
 
 
 def _numeric_ocr_features(values: dict[str, Any]) -> dict[str, float]:
-    names = {
-        "ocr_applied",
-        "ocr_score",
-        "ocr_baseline_score",
-        "ocr_entity_score",
-        "ocr_entity_grape_score",
-        "ocr_entity_producer_score",
-        "ocr_entity_name_score",
-        "ocr_entity_color_score",
-        "ocr_entity_sugar_score",
-        "ocr_entity_color_contradiction",
-        "ocr_entity_sugar_contradiction",
-        "ocr_domain_score",
-        "ocr_fuzzy_score",
-        "ocr_grape_score",
-        "ocr_grape_match_count",
-        "ocr_grape_total_count",
-        "ocr_grape_missing_count",
-        "ocr_grape_coverage",
-        "ocr_producer_score",
-        "ocr_name_score",
-        "ocr_color_score",
-        "ocr_color_detected_count",
-        "ocr_color_detected_match",
-        "ocr_color_detected_mismatch",
-        "ocr_sugar_score",
-        "ocr_sugar_detected_count",
-        "ocr_sugar_detected_match",
-        "ocr_sugar_detected_mismatch",
-        "ocr_wratio",
-        "ocr_token_set_ratio",
-        "ocr_wratio_score",
-        "ocr_token_set_score",
-        "ocr_text_length",
-        "ocr_candidate_text_length",
-    }
-    return {name: _finite(float(values.get(name, 0.0) or 0.0)) for name in names}
+    return {name: _finite(float(values.get(name, 0.0) or 0.0)) for name in OCR_FEATURE_NAMES}
 
 
 def _as_crop_dict(crop: Any) -> dict[str, Any]:

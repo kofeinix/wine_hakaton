@@ -116,6 +116,18 @@ class WineRepository:
             aliases.setdefault(color, []).append(alias)
         return aliases
 
+    async def load_ocr_vocabulary(self) -> tuple[list[str], list[str], dict[str, list[str]]]:
+        """Названия вин, производители и сорта (id -> название + синонимы) для OCR-матчинга."""
+        async with self.database.session() as session:
+            wine_names = list((await session.scalars(select(Wine.name))).all())
+            producer_names = list((await session.scalars(select(Producer.name))).all())
+            grapes = (await session.scalars(select(Grape).options(selectinload(Grape.aliases)))).all()
+        return (
+            wine_names,
+            producer_names,
+            {str(grape.id): [grape.name, *(alias.alias for alias in grape.aliases)] for grape in grapes},
+        )
+
     @staticmethod
     def _with_wine_options(statement):
         return statement.options(

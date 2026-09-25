@@ -4,7 +4,7 @@ import asyncio
 import logging
 import uuid
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from io import BytesIO
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -15,7 +15,6 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageOps
 from qdrant_client import models as qdrant_models
-from rapidfuzz import fuzz
 
 from src.api.repositories.wine_repository import WineRepository
 from src.api.schemas import (
@@ -26,17 +25,10 @@ from src.api.schemas import (
     WinePhotoResponse,
     WineResponse,
 )
+from src.api.services.ocr_match_service import OcrMatchService
 from src.api.services.photo_service import WinePhotoService
 from src.connections.database.models import Wine
 from src.ml.catboost_reranker import CatBoostWineReranker, build_candidate_feature_rows
-from src.ml.ocr_entity_matching import (
-    CONTRADICTION_PENALTY as ENTITY_CONTRADICTION_PENALTY,
-    ENTITY_WEIGHTS,
-    MATCH_THRESHOLD as ENTITY_MATCH_THRESHOLD,
-    NEUTRAL_SCORE as ENTITY_NEUTRAL_SCORE,
-    OcrEntityScore,
-    score_ocr_entities,
-)
 from src.ml.patch_scoring import patch_similarity_score
 from src.ml.text_normalization import normalize_match_text
 
@@ -71,30 +63,7 @@ LABEL_PHOTO_CONFIDENCE_THRESHOLD = 0.50
 VIEW_SCORE_TOP_K_PHOTOS = 3
 VIEW_SCORE_BEST_WEIGHT = 0.75
 VIEW_SCORE_MEAN_WEIGHT = 0.25
-# Оптимум по grid search (scripts/verify_entity_ocr_integration.py, 578 изображений)
-# с гибридным OCR-скором; 0.7/0.3 отстаёт на 2 изображения по Acc@1.
-OCR_VISUAL_WEIGHT = 0.80
-OCR_TEXT_WEIGHT = 0.20
 OCR_RERANK_LIMIT = 50
-OCR_FUZZY_WRATIO_WEIGHT = 0.25
-OCR_FUZZY_TOKEN_SET_WEIGHT = 0.75
-OCR_DOMAIN_WEIGHT = 0.65
-OCR_FUZZY_WEIGHT = 0.35
-OCR_GRAPE_WEIGHT = 0.45
-OCR_PRODUCER_WEIGHT = 0.18
-OCR_NAME_WEIGHT = 0.14
-OCR_COLOR_WEIGHT = 0.10
-OCR_SUGAR_WEIGHT = 0.18
-OCR_GRAPE_EXTRA_MATCH_THRESHOLD = 0.55
-OCR_GRAPE_EXTRA_MATCH_BONUS = 0.08
-OCR_GRAPE_AVERAGE_WEIGHT = 0.35
-OCR_SUGAR_STRONG_MATCH_THRESHOLD = 0.82
-OCR_SUGAR_MISMATCH_PENALTY = 0.20
-OCR_COLOR_STRONG_MATCH_THRESHOLD = 0.82
-OCR_COLOR_MISMATCH_PENALTY = 0.20
-# Гибридный OCR-скор: baseline (domain + fuzzy) + entity-based matching.
-OCR_BASELINE_WEIGHT = 0.5
-OCR_ENTITY_WEIGHT = 0.5
 DEFAULT_SEARCH_STAGES = ("global", "patches")
 VALID_SEARCH_STAGES = {"global", "patches", "llm"}
 CATBOOST_RERANKER_MODEL_PATH = PROJECT_ROOT / "models" / "catboost" / "wine_reranker.cbm"
@@ -170,19 +139,6 @@ class WineCandidate:
 
 
 @dataclass(frozen=True)
-class OcrCandidateScore:
-    """Все OCR-сигналы одного кандидата: baseline (domain + fuzzy) и entity."""
-
-    wratio: float
-    token_set: float
-    fuzzy_score: float
-    structured: dict[str, Any]
-    baseline_score: float
-    entity: OcrEntityScore
-    ocr_score: float
-
-
-@dataclass(frozen=True)
 class PatchTokenCacheEntry:
     mtime_ns: int
     size: int
@@ -204,7 +160,7 @@ class WineService:
         self._patch_token_cache: OrderedDict[str, PatchTokenCacheEntry] = OrderedDict()
         self._catboost_reranker: CatBoostWineReranker | None = None
         self._catboost_load_failed = False
-        self._color_aliases_by_color: dict[str, list[str]] | None = None
+        self.ocr_matcher = OcrMatchService(self.repository, SUGAR_VARIANTS)
 
     async def search_by_image(
         self,
@@ -457,7 +413,7 @@ class WineService:
 
         candidates, ocr_diagnostics = await self._rerank_with_ocr(
             candidates=candidates[:OCR_RERANK_LIMIT],
-            ocr_text=ocr["normalized_text"],
+            ocr_text=ocr["text"],
         )
 
         if "llm" in search_stages:
@@ -505,14 +461,7 @@ class WineService:
             "ocr_rerank": {
                 **ocr,
                 **ocr_diagnostics,
-                "visual_weight": OCR_VISUAL_WEIGHT,
-                "text_weight": OCR_TEXT_WEIGHT,
-                "baseline_weight": OCR_BASELINE_WEIGHT,
-                "entity_weight": OCR_ENTITY_WEIGHT,
-                "entity_weights": ENTITY_WEIGHTS,
-                "entity_match_threshold": ENTITY_MATCH_THRESHOLD,
-                "entity_contradiction_penalty": ENTITY_CONTRADICTION_PENALTY,
-                "entity_neutral_score": ENTITY_NEUTRAL_SCORE,
+                "formula": "final = visual_score + ocr_bonus (src/ml/ocr_matching.py)",
             },
         }
         return candidates, diagnostics, query_views.crops
@@ -594,7 +543,7 @@ class WineService:
         feature_candidate_ids = {row.wine_id for row in base_feature_rows}
         ocr = await self._extract_ocr_text(query_views)
         ocr_features = await self._catboost_ocr_feature_map(
-            ocr_text=ocr["normalized_text"],
+            ocr_text=ocr["text"],
             wine_ids=list(feature_candidate_ids),
         )
         feature_rows = [
@@ -667,80 +616,8 @@ class WineService:
         ocr_text: str,
         wine_ids: list[str],
     ) -> dict[str, dict[str, float]]:
-        if not ocr_text or not wine_ids:
-            return {}
-
-        wines = await self.repository.load_wines_by_ids(wine_ids)
-        color_aliases_by_color = await self._load_color_aliases_by_color()
-        wine_by_id = {str(wine.id): wine for wine in wines}
-        candidate_texts = [
-            normalize_match_text(self._wine_to_ocr_candidate_text(wine_by_id.get(wine_id)))
-            for wine_id in wine_ids
-        ]
-        result: dict[str, dict[str, float]] = {}
-        for wine_id, normalized_candidate in zip(wine_ids, candidate_texts, strict=True):
-            scores = self._score_ocr_candidate(
-                ocr_text,
-                normalized_candidate,
-                wine_by_id.get(wine_id),
-                color_aliases_by_color,
-            )
-            structured_score = scores.structured
-            entities = scores.entity.entities
-            wratio = scores.wratio
-            token_set = scores.token_set
-            result[wine_id] = {
-                "ocr_applied": 1.0,
-                "ocr_score": float(scores.ocr_score),
-                "ocr_baseline_score": float(scores.baseline_score),
-                "ocr_entity_score": float(scores.entity.domain_score),
-                "ocr_entity_grape_score": float(entities["grape"].score),
-                "ocr_entity_producer_score": float(entities["producer"].score),
-                "ocr_entity_name_score": float(entities["name"].score),
-                "ocr_entity_color_score": float(entities["color"].score),
-                "ocr_entity_sugar_score": float(entities["sugar"].score),
-                "ocr_entity_color_contradiction": float(entities["color"].contradiction),
-                "ocr_entity_sugar_contradiction": float(entities["sugar"].contradiction),
-                "ocr_domain_score": float(structured_score["domain_score"]),
-                "ocr_fuzzy_score": float(scores.fuzzy_score),
-                "ocr_grape_score": float(structured_score["grape_score"]),
-                "ocr_grape_match_count": float(structured_score["grape_match_count"]),
-                "ocr_grape_total_count": float(structured_score["grape_total_count"]),
-                "ocr_grape_missing_count": float(structured_score["grape_missing_count"]),
-                "ocr_grape_coverage": float(structured_score["grape_coverage"]),
-                "ocr_producer_score": float(structured_score["producer_score"]),
-                "ocr_name_score": float(structured_score["name_score"]),
-                "ocr_color_score": float(structured_score["color_score"]),
-                "ocr_color_detected_count": float(structured_score["color_detected_count"]),
-                "ocr_color_detected_match": float(structured_score["color_detected_match"]),
-                "ocr_color_detected_mismatch": float(structured_score["color_detected_mismatch"]),
-                "ocr_sugar_score": float(structured_score["sugar_score"]),
-                "ocr_sugar_detected_count": float(structured_score["sugar_detected_count"]),
-                "ocr_sugar_detected_match": float(structured_score["sugar_detected_match"]),
-                "ocr_sugar_detected_mismatch": float(structured_score["sugar_detected_mismatch"]),
-                "ocr_wratio": float(wratio),
-                "ocr_token_set_ratio": float(token_set),
-                "ocr_wratio_score": float(wratio / 100.0),
-                "ocr_token_set_score": float(token_set / 100.0),
-                "ocr_text_length": float(len(ocr_text)),
-                "ocr_candidate_text_length": float(len(normalized_candidate)),
-            }
-        return result
-
-    async def _load_color_aliases_by_color(self) -> dict[str, list[str]]:
-        if self._color_aliases_by_color is not None:
-            return self._color_aliases_by_color
-
-        raw_aliases = await self.repository.load_color_aliases()
-        aliases_by_color: dict[str, list[str]] = {}
-        for color, aliases in raw_aliases.items():
-            normalized_color = normalize_match_text(color)
-            if not normalized_color:
-                continue
-            variants = [color, *aliases]
-            aliases_by_color[normalized_color] = self._dedupe_text_variants(variants)
-        self._color_aliases_by_color = aliases_by_color
-        return aliases_by_color
+        scores = await self.ocr_matcher.score(ocr_text, wine_ids)
+        return {wine_id: score.features for wine_id, score in scores.items()}
 
     def _embed_global_images(self, images: list[Image.Image]) -> list[list[float]]:
         if self.global_encoder == "dinov3":
@@ -1269,441 +1146,49 @@ class WineService:
         candidates: list[WineCandidate],
         ocr_text: str,
     ) -> tuple[list[WineCandidate], dict[str, Any]]:
+        """final = visual_score + ocr_bonus; формула и веса — в src/ml/ocr_matching.py."""
         if not candidates:
-            return candidates, {
-                "rerank_applied": False,
-                "reason": "no_candidates",
-                "candidate_scores": [],
-            }
-        if not ocr_text:
-            return candidates, {
-                "rerank_applied": False,
-                "reason": "empty_ocr_text",
-                "candidate_scores": [],
-            }
+            return candidates, {"rerank_applied": False, "reason": "no_candidates", "candidate_scores": []}
+        scores = await self.ocr_matcher.score(ocr_text, [candidate.wine_id for candidate in candidates])
+        if not scores:
+            return candidates, {"rerank_applied": False, "reason": "empty_ocr_text", "candidate_scores": []}
 
-        wines = await self.repository.load_wines_by_ids([candidate.wine_id for candidate in candidates])
-        color_aliases_by_color = await self._load_color_aliases_by_color()
-        wine_by_id = {str(wine.id): wine for wine in wines}
-        candidate_texts = [
-            normalize_match_text(self._wine_to_ocr_candidate_text(wine_by_id.get(candidate.wine_id)))
+        reranked = [
+            replace(candidate, score=candidate.score + scores[candidate.wine_id].bonus)
             for candidate in candidates
         ]
-        reranked: list[WineCandidate] = []
-        diagnostics: list[dict[str, Any]] = []
-        for candidate, normalized_candidate in zip(candidates, candidate_texts, strict=True):
-            scores = self._score_ocr_candidate(
-                ocr_text,
-                normalized_candidate,
-                wine_by_id.get(candidate.wine_id),
-                color_aliases_by_color,
-            )
-            structured_score = scores.structured
-            ocr_score = scores.ocr_score
-            final_score = OCR_VISUAL_WEIGHT * candidate.score + OCR_TEXT_WEIGHT * ocr_score
-            reranked.append(
-                WineCandidate(
-                    wine_id=candidate.wine_id,
-                    slug=candidate.slug,
-                    score=final_score,
-                    max_score=candidate.max_score,
-                    mean_score=candidate.mean_score,
-                    n_photos=candidate.n_photos,
-                    score_std=candidate.score_std,
-                    cosine_score=candidate.cosine_score,
-                    view_photo_ids=candidate.view_photo_ids,
-                    view_match_counts=candidate.view_match_counts,
-                    patch_score=candidate.patch_score,
-                )
-            )
-            diagnostics.append(
-                {
-                    "wine_id": candidate.wine_id,
-                    "visual_score": candidate.score,
-                    "ocr_score": ocr_score,
-                    "baseline_score": scores.baseline_score,
-                    "entity_score": scores.entity.domain_score,
-                    "domain_score": structured_score["domain_score"],
-                    "fuzzy_score": scores.fuzzy_score,
-                    "grape_score": structured_score["grape_score"],
-                    "producer_score": structured_score["producer_score"],
-                    "name_score": structured_score["name_score"],
-                    "color_score": structured_score["color_score"],
-                    "sugar_score": structured_score["sugar_score"],
-                    "candidate_grapes": structured_score["candidate_grapes"],
-                    "candidate_color": structured_score["candidate_color"],
-                    "candidate_sugar": structured_score["candidate_sugar"],
-                    "wratio": scores.wratio,
-                    "token_set_ratio": scores.token_set,
-                    "final_score": final_score,
-                    "candidate_text": normalized_candidate,
-                    "entities": {
-                        name: match.to_dict()
-                        for name, match in scores.entity.entities.items()
-                    },
-                }
-            )
-
+        visual_by_id = {candidate.wine_id: candidate.score for candidate in candidates}
         reranked.sort(key=lambda item: item.score, reverse=True)
-        diagnostics.sort(key=lambda item: item["final_score"], reverse=True)
+        candidate_scores = [
+            {
+                **scores[candidate.wine_id].diagnostics(),
+                "visual_score": round(visual_by_id[candidate.wine_id], 4),
+                "final_score": round(candidate.score, 4),
+            }
+            for candidate in reranked[:10]
+        ]
         logger.info(
-            "OCR rerank applied for %s candidates. Top candidate text scores: %s",
+            "OCR rerank applied for %s candidates. Top: %s",
             len(candidates),
             [
-                {
-                    "wine_id": item["wine_id"],
-                    "visual_score": round(float(item["visual_score"]), 4),
-                    "ocr_score": round(float(item["ocr_score"]), 4),
-                    "baseline_score": round(float(item["baseline_score"]), 4),
-                    "entity_score": round(float(item["entity_score"]), 4),
-                    "domain_score": round(float(item["domain_score"]), 4),
-                    "fuzzy_score": round(float(item["fuzzy_score"]), 4),
-                    "grape_score": round(float(item["grape_score"]), 4),
-                    "producer_score": round(float(item["producer_score"]), 4),
-                    "name_score": round(float(item["name_score"]), 4),
-                    "color_score": round(float(item["color_score"]), 4),
-                    "sugar_score": round(float(item["sugar_score"]), 4),
-                    "candidate_grapes": item["candidate_grapes"],
-                    "candidate_color": item["candidate_color"],
-                    "candidate_sugar": item["candidate_sugar"],
-                    "wratio": round(float(item["wratio"]), 2),
-                    "token_set_ratio": round(float(item["token_set_ratio"]), 2),
-                    "final_score": round(float(item["final_score"]), 4),
-                    "candidate_text": item["candidate_text"],
-                }
-                for item in diagnostics[:10]
+                (item["wine_id"][:8], item["visual_score"], item["ocr_bonus"], item["final_score"])
+                for item in candidate_scores[:5]
             ],
         )
         return reranked, {
             "rerank_applied": True,
             "reason": "ok",
-            "candidate_scores": diagnostics[:10],
-        }
-
-    @classmethod
-    def _score_ocr_candidate(
-        cls,
-        ocr_text: str,
-        normalized_candidate: str,
-        wine: Wine | None,
-        color_aliases_by_color: dict[str, list[str]] | None = None,
-    ) -> OcrCandidateScore:
-        """Единая формула OCR-скора для rerank и для признаков CatBoost."""
-        wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
-        token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
-        fuzzy_score = (
-            OCR_FUZZY_WRATIO_WEIGHT * wratio
-            + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
-        ) / 100.0
-        structured = cls._structured_ocr_score(ocr_text, wine, color_aliases_by_color)
-        baseline_score = OCR_DOMAIN_WEIGHT * structured["domain_score"] + OCR_FUZZY_WEIGHT * fuzzy_score
-        entity = cls._entity_ocr_score(ocr_text, wine, color_aliases_by_color)
-        ocr_score = OCR_BASELINE_WEIGHT * baseline_score + OCR_ENTITY_WEIGHT * entity.domain_score
-        return OcrCandidateScore(
-            wratio=float(wratio),
-            token_set=float(token_set),
-            fuzzy_score=float(fuzzy_score),
-            structured=structured,
-            baseline_score=float(baseline_score),
-            entity=entity,
-            ocr_score=float(ocr_score),
-        )
-
-    @classmethod
-    def _entity_ocr_score(
-        cls,
-        ocr_text: str,
-        wine: Wine | None,
-        color_aliases_by_color: dict[str, list[str]] | None = None,
-    ) -> OcrEntityScore:
-        """Entity-based OCR-скор: сопоставление сущностей вина с OCR-текстом."""
-        if wine is None or not ocr_text:
-            # Как и в _structured_ocr_score: без карточки вина скор нулевой,
-            # иначе нейтральные 0.5 по всем сущностям поднимали бы такого кандидата.
-            return OcrEntityScore.zero()
-        return score_ocr_entities(
-            ocr_text,
-            name=wine.name,
-            producer=wine.producer.name if wine.producer is not None else None,
-            grape_groups=cls._wine_grape_groups(wine),
-            color=wine.color,
-            color_aliases=color_aliases_by_color or {},
-            sugar=wine.sugar,
-            sugar_variants=SUGAR_VARIANTS,
-        )
-
-    @classmethod
-    def _structured_ocr_score(
-        cls,
-        ocr_text: str,
-        wine: Wine | None,
-        color_aliases_by_color: dict[str, list[str]] | None = None,
-    ) -> dict[str, Any]:
-        if wine is None:
-            return {
-                "domain_score": 0.0,
-                "grape_score": 0.0,
-                "grape_match_count": 0.0,
-                "grape_total_count": 0.0,
-                "grape_missing_count": 0.0,
-                "grape_coverage": 0.0,
-                "producer_score": 0.0,
-                "name_score": 0.0,
-                "color_score": 0.0,
-                "color_detected_count": 0.0,
-                "color_detected_match": 0.0,
-                "color_detected_mismatch": 0.0,
-                "sugar_score": 0.0,
-                "sugar_detected_count": 0.0,
-                "sugar_detected_match": 0.0,
-                "sugar_detected_mismatch": 0.0,
-                "candidate_grapes": [],
-                "candidate_color": None,
-                "candidate_sugar": None,
-            }
-
-        grape_groups = cls._wine_grape_groups(wine)
-        grape_details = cls._grape_field_details(ocr_text, grape_groups)
-        grape_score = grape_details["score"]
-        producer_score = cls._field_score(
-            ocr_text,
-            [wine.producer.name] if wine.producer is not None else [],
-        )
-        name_score = cls._field_score(ocr_text, [wine.name])
-        color_score = cls._color_field_score(ocr_text, wine.color, color_aliases_by_color or {})
-        sugar_score = cls._sugar_field_score(ocr_text, wine.sugar)
-        candidate_color = normalize_match_text(wine.color)
-        detected_colors = cls._detected_color_keys(ocr_text, color_aliases_by_color or {})
-        candidate_sugar = normalize_match_text(wine.sugar)
-        detected_sugars = cls._detected_sugar_keys(ocr_text)
-        domain_score = (
-            OCR_GRAPE_WEIGHT * grape_score
-            + OCR_PRODUCER_WEIGHT * producer_score
-            + OCR_NAME_WEIGHT * name_score
-            + OCR_COLOR_WEIGHT * color_score
-            + OCR_SUGAR_WEIGHT * sugar_score
-        )
-        return {
-            "domain_score": domain_score,
-            "grape_score": grape_score,
-            "grape_match_count": grape_details["match_count"],
-            "grape_total_count": grape_details["total_count"],
-            "grape_missing_count": grape_details["missing_count"],
-            "grape_coverage": grape_details["coverage"],
-            "producer_score": producer_score,
-            "name_score": name_score,
-            "color_score": color_score,
-            "color_detected_count": len(detected_colors),
-            "color_detected_match": 1.0 if candidate_color and candidate_color in detected_colors else 0.0,
-            "color_detected_mismatch": 1.0 if detected_colors and candidate_color not in detected_colors else 0.0,
-            "sugar_score": sugar_score,
-            "sugar_detected_count": len(detected_sugars),
-            "sugar_detected_match": 1.0 if candidate_sugar and candidate_sugar in detected_sugars else 0.0,
-            "sugar_detected_mismatch": 1.0 if detected_sugars and candidate_sugar not in detected_sugars else 0.0,
-            "candidate_grapes": [
-                normalize_match_text(variant)
-                for group in grape_groups
-                for variant in group
+            "candidate_scores": candidate_scores,
+            # весь пул до реранка — для офлайн-анализа формулы (scripts/ocr_lab)
+            "pool": [
+                {
+                    "wine_id": candidate.wine_id,
+                    "visual_score": round(candidate.score, 6),
+                    "ocr_bonus": round(scores[candidate.wine_id].bonus, 6),
+                }
+                for candidate in candidates
             ],
-            "candidate_color": candidate_color,
-            "candidate_sugar": candidate_sugar,
         }
-
-    @classmethod
-    def _wine_grape_groups(
-        cls,
-        wine: Wine,
-    ) -> list[list[str]]:
-        groups: list[list[str]] = []
-        seen: set[str] = set()
-        for link in wine.grape_links:
-            grape = link.grape
-            if grape is None:
-                continue
-            normalized = normalize_match_text(grape.name)
-            if not normalized or normalized in seen:
-                continue
-            seen.add(normalized)
-            groups.append(cls._grape_variants(grape))
-
-        return groups
-
-    @classmethod
-    def _grape_variants(cls, grape: Any) -> list[str]:
-        variants = [getattr(grape, "name", "")]
-        variants.extend(alias.alias for alias in getattr(grape, "aliases", []) if alias.alias)
-        return cls._dedupe_text_variants(variants)
-
-    @classmethod
-    def _grape_field_score(cls, ocr_text: str, grape_groups: list[list[str]]) -> float:
-        return cls._grape_field_details(ocr_text, grape_groups)["score"]
-
-    @classmethod
-    def _grape_field_details(cls, ocr_text: str, grape_groups: list[list[str]]) -> dict[str, float]:
-        if not grape_groups:
-            return {
-                "score": 0.5,
-                "match_count": 0.0,
-                "total_count": 0.0,
-                "missing_count": 0.0,
-                "coverage": 0.0,
-            }
-        group_scores = [
-            cls._field_score(ocr_text, group)
-            for group in grape_groups
-        ]
-        group_scores.sort(reverse=True)
-        best_score = group_scores[0]
-        average_score = mean(group_scores)
-        extra_matches = sum(
-            1
-            for score in group_scores[1:]
-            if score >= OCR_GRAPE_EXTRA_MATCH_THRESHOLD
-        )
-        match_count = sum(1 for score in group_scores if score >= OCR_GRAPE_EXTRA_MATCH_THRESHOLD)
-        total_count = len(group_scores)
-        matched_score = min(1.0, best_score + OCR_GRAPE_EXTRA_MATCH_BONUS * extra_matches)
-        score = (
-            (1.0 - OCR_GRAPE_AVERAGE_WEIGHT) * matched_score
-            + OCR_GRAPE_AVERAGE_WEIGHT * average_score
-        )
-        return {
-            "score": score,
-            "match_count": float(match_count),
-            "total_count": float(total_count),
-            "missing_count": float(total_count - match_count),
-            "coverage": float(match_count / total_count) if total_count else 0.0,
-        }
-
-    @classmethod
-    def _color_field_score(
-        cls,
-        ocr_text: str,
-        color: str | None,
-        color_aliases_by_color: dict[str, list[str]],
-    ) -> float:
-        candidate_color = normalize_match_text(color)
-        if not candidate_color:
-            return 0.5
-
-        detected_colors = cls._detected_color_keys(ocr_text, color_aliases_by_color)
-        if detected_colors:
-            return 1.0 if candidate_color in detected_colors else 0.0
-
-        candidate_variants = color_aliases_by_color.get(candidate_color, [color])
-        candidate_score = cls._field_score(ocr_text, candidate_variants)
-        other_scores = [
-            cls._field_score(ocr_text, variants)
-            for key, variants in color_aliases_by_color.items()
-            if key != candidate_color
-        ]
-        best_other_score = max(other_scores, default=0.0)
-        if best_other_score >= OCR_COLOR_STRONG_MATCH_THRESHOLD and best_other_score > candidate_score:
-            return max(0.0, candidate_score - OCR_COLOR_MISMATCH_PENALTY)
-        return candidate_score
-
-    @classmethod
-    def _sugar_field_score(cls, ocr_text: str, sugar: str | None) -> float:
-        candidate_sugar = normalize_match_text(sugar)
-        if not candidate_sugar:
-            return 0.5
-
-        detected_sugars = cls._detected_sugar_keys(ocr_text)
-        if detected_sugars:
-            return 1.0 if candidate_sugar in detected_sugars else 0.0
-
-        candidate_variants = cls._sugar_variants(candidate_sugar)
-        candidate_score = cls._field_score(ocr_text, candidate_variants)
-        other_scores = [
-            cls._field_score(ocr_text, variants)
-            for key, variants in SUGAR_VARIANTS.items()
-            if key != candidate_sugar
-        ]
-        best_other_score = max(other_scores, default=0.0)
-        if best_other_score >= OCR_SUGAR_STRONG_MATCH_THRESHOLD and best_other_score > candidate_score:
-            return max(0.0, candidate_score - OCR_SUGAR_MISMATCH_PENALTY)
-        return candidate_score
-
-    @staticmethod
-    def _sugar_variants(sugar: str) -> list[str]:
-        return SUGAR_VARIANTS.get(sugar, [sugar])
-
-    @staticmethod
-    def _detected_color_keys(
-        ocr_text: str,
-        color_aliases_by_color: dict[str, list[str]],
-    ) -> set[str]:
-        padded_ocr = f" {ocr_text} "
-        detected: set[str] = set()
-        for key, variants in color_aliases_by_color.items():
-            for variant in variants:
-                normalized_variant = normalize_match_text(variant)
-                if normalized_variant and f" {normalized_variant} " in padded_ocr:
-                    detected.add(key)
-                    break
-        return detected
-
-    @staticmethod
-    def _detected_sugar_keys(ocr_text: str) -> set[str]:
-        padded_ocr = f" {ocr_text} "
-        detected: set[str] = set()
-        for key, variants in SUGAR_VARIANTS.items():
-            for variant in variants:
-                normalized_variant = normalize_match_text(variant)
-                if normalized_variant and f" {normalized_variant} " in padded_ocr:
-                    detected.add(key)
-                    break
-        return detected
-
-    @staticmethod
-    def _field_score(ocr_text: str, variants: list[str]) -> float:
-        normalized_variants = [normalize_match_text(variant) for variant in variants if variant]
-        if not normalized_variants:
-            return 0.5
-
-        scores: list[float] = []
-        for variant in normalized_variants:
-            scores.append(WineService._single_field_score(ocr_text, variant))
-        return max(scores, default=0.0)
-
-    @staticmethod
-    def _single_field_score(ocr_text: str, normalized_variant: str) -> float:
-        return max(
-            fuzz.partial_ratio(ocr_text, normalized_variant),
-            fuzz.partial_token_sort_ratio(ocr_text, normalized_variant),
-            fuzz.WRatio(ocr_text, normalized_variant),
-        ) / 100.0
-
-    @staticmethod
-    def _dedupe_text_variants(variants: list[str]) -> list[str]:
-        result: list[str] = []
-        seen: set[str] = set()
-        for variant in variants:
-            normalized = normalize_match_text(variant)
-            if not normalized or normalized in seen:
-                continue
-            seen.add(normalized)
-            result.append(variant)
-        return result
-
-    @staticmethod
-    def _wine_to_ocr_candidate_text(wine: Wine | None) -> str:
-        if wine is None:
-            return ""
-        grape_names = [
-            link.grape.name
-            for link in wine.grape_links
-            if link.grape is not None
-        ]
-        parts = [
-            wine.producer.name if wine.producer else None,
-            wine.name,
-            wine.year,
-            " ".join(grape_names),
-            wine.color,
-            wine.sugar,
-        ]
-        return " ".join(str(part) for part in parts if part)
 
     async def _rerank_with_llm_choice(
         self,

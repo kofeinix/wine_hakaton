@@ -132,6 +132,7 @@ async def run(
     catboost: bool = False,
     eval_dir: Path | None = None,
     image_name: str | None = None,
+    responses_output: Path | None = None,
 ) -> None:
     if image_path is not None:
         image_path = image_path.expanduser().resolve()
@@ -141,7 +142,9 @@ async def run(
         if image_path.suffix.lower() not in IMAGE_EXTS:
             print(f"Ошибка: неподдерживаемый формат изображения {image_path.suffix}", file=sys.stderr)
             sys.exit(1)
-        images = [(expected_id or image_path.parent.name, image_path)]
+        # <wine_id>/<image>.jpg или <wine_id>/main/<image>.jpg
+        wine_dir = image_path.parent.parent if image_path.parent.name == "main" else image_path.parent
+        images = [(expected_id or wine_dir.name, image_path)]
     else:
         images = collect_images(eval_dir or EVAL_DIR, image_name=image_name)
     if not images:
@@ -160,6 +163,14 @@ async def run(
     print(f"Top-K: {topk}\n")
 
     rows: list[dict] = []
+    # Полные ответы API (кандидаты, OCR-текст, пул до реранка) — датасет для scripts/ocr_lab.
+    responses: list[dict] = []
+
+    def save_responses() -> None:
+        if responses_output is not None and responses:
+            responses_output.parent.mkdir(parents=True, exist_ok=True)
+            responses_output.write_text(json.dumps(responses, ensure_ascii=False), encoding="utf-8")
+
     async with httpx.AsyncClient() as client:
         for idx, (expected_id, img_path) in enumerate(images, start=1):
             try:
@@ -185,6 +196,10 @@ async def run(
                     }
                 )
                 continue
+
+            responses.append({"expected": expected_id, "image": str(img_path), "response": data})
+            if len(responses) % 50 == 0:
+                save_responses()  # чекпоинт: длинный прогон не пропадёт при обрыве
 
             result = data.get("result") or data.get("results") or []
             diagnostics = data.get("diagnostics") or {}
@@ -336,6 +351,9 @@ async def run(
     out_path = Path(__file__).resolve().parent.parent / "data" / "eval_results.json"
     out_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nПолные результаты сохранены в {out_path}")
+    save_responses()
+    if responses_output is not None:
+        print(f"Ответы API (для scripts/ocr_lab) сохранены в {responses_output}")
 
 
 def main() -> None:
@@ -371,7 +389,8 @@ def main() -> None:
         default=None,
         help=(
             "Путь к одному изображению для точечной проверки. "
-            "Если --expected-id не указан, ожидаемый wine_id берется из имени родительской папки."
+            "Если --expected-id не указан, ожидаемый wine_id берется из имени родительской папки "
+            "(для <wine_id>/main/<image> — из папки над main)."
         ),
     )
     parser.add_argument(
@@ -415,8 +434,23 @@ def main() -> None:
         action="store_true",
         help="Оценивать экспериментальный CatBoost endpoint /search/image/catboost.",
     )
+    parser.add_argument(
+        "--responses-output",
+        type=Path,
+        default=None,
+        help=(
+            "Куда сохранить полные ответы API для офлайн-анализа OCR (scripts/ocr_lab). "
+            "По умолчанию data/eval_responses_<имя eval-папки>.json; --no-save-responses — не сохранять."
+        ),
+    )
+    parser.add_argument("--no-save-responses", action="store_true")
     args = parser.parse_args()
     stages = normalize_stages_arg(args.stages)
+    responses_output = None
+    if not args.no_save_responses:
+        responses_output = args.responses_output or (
+            EVAL_DIR.parent / f"eval_responses_{(args.eval_dir or EVAL_DIR).name}.json"
+        )
     asyncio.run(
         run(
             args.api_url,
@@ -430,6 +464,7 @@ def main() -> None:
             catboost=args.catboost,
             eval_dir=args.eval_dir,
             image_name=args.image_name,
+            responses_output=responses_output,
         )
     )
 

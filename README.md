@@ -315,58 +315,54 @@ SEARCH__COLLECTION_ENCODER=siglip2
 
 Приложение работает с OpenAI-compatible Chat Completions API. В базовом flow vision-модель используется для OCR по приоритету `label_crop -> bottle_crop -> original`, затем OCR-текст участвует в rerank top-50 кандидатов. Отдельный stage `llm` сохранен как опциональный rerank-кандидат, но по умолчанию frontend и API используют только `global,patches`.
 
-### Entity-based OCR matching
+### OCR rerank
 
-OCR-скор кандидата считается как гибрид двух сигналов:
+Код: [`src/ml/ocr_matching.py`](src/ml/ocr_matching.py) (алгоритм и веса),
+[`src/api/services/ocr_match_service.py`](src/api/services/ocr_match_service.py) (словарь каталога из БД).
+Одна и та же функция используется в API и при сборке датасета CatBoost.
 
 ```text
-ocr_score = 0.5 * baseline_score + 0.5 * entity_score
-final     = 0.8 * visual_score + 0.2 * ocr_score
+final = visual_score + ocr_bonus
+ocr_bonus = 0.1 * (0.5·B(name) + 0.85·B(producer) + 0.25·B(grapes))
+          + 0.005 * unique_evidence
+          - 0.02·color_contra - 0.02·sugar_contra + 0.01·sugar_match
+          - 0.03·grape_contra - 0.05·producer_contra
+          + 0.02·(alcohol_match - alcohol_mismatch)
 ```
 
-- `baseline_score` — прежняя формула `0.65 * domain_score + 0.35 * fuzzy_score`
-  (`fuzzy = 0.25 * WRatio + 0.75 * token_set_ratio`).
-- `entity_score` — сопоставление сущностей вина с OCR-текстом
-  ([`src/ml/ocr_entity_matching.py`](src/ml/ocr_entity_matching.py)).
+- **B(x)** — бонус за сходство сущности выше порога `0.55`. Сходство — IDF-coverage: какая доля
+  слов сущности (вес = IDF слова по каталогу × длина) нашлась в OCR; порядок слов не важен.
+- **unique_evidence** — сумма редкостей (IDF по пулу из 50 кандидатов) слов названия и
+  производителя, найденных в OCR. Слово, общее для всей линейки («Ркацители»), весит 0, а
+  «десертное» или «Belmas» у одного кандидата — много. Главный сигнал, различающий вина одного
+  производителя.
+- **Противоречия** — на этикетке найден другой цвет / сахар / сорт / производитель каталога.
+- Отсутствие чего-либо в OCR **не штрафуется**: в формуле только бонусы и явные противоречия.
+- Все строки сравниваются как есть и в RU→LAT / LAT→RU транслитерации (и сущности, и OCR).
 
-Entity-подход сравнивает не весь OCR с `candidate_text`, а каждую сущность отдельно
-(`producer`, `name`, `grapes`, `color`, `sugar`). Для сущности строится несколько
-представлений: нормализованный оригинал, RU→LAT и LAT→RU транслитерация исходной
-строки (библиотека `transliterate`), вариант без пробелов. Поиск внутри OCR: exact
-substring → fuzzy по скользящим окнам токенов (для однословной сущности — по одиночным
-токенам).
+Диагностика `/search/image/extended` → `diagnostics.ocr_rerank`: `text` (сырой OCR),
+`candidate_scores` (top-10 со всеми компонентами) и `pool` (весь пул до реранка:
+`visual_score`, `ocr_bonus`) — для офлайн-анализа.
 
-Правила:
-- отсутствие сущности в OCR **не штрафуется**: скор не опускается ниже нейтрального `0.5`
-  (`producer`/`name`/`grape` — `max(fuzzy, 0.5)`, пока совпадение ниже порога `0.80`;
-  `color`/`sugar` — ровно `0.5`); сырой fuzzy-скор виден в диагностике как `raw_score`;
-- кандидат без карточки вина в БД получает `entity_score = 0` (как и `domain_score`);
-- явное противоречие (candidate `Красное`, OCR `white`) штрафуется на `0.25`;
-- веса сущностей: `grape 0.35`, `producer 0.20`, `name 0.20`, `color 0.10`, `sugar 0.15`.
+Эксперименты — [`scripts/ocr_lab`](scripts/ocr_lab/README.md). Кросс-валидация на 578 eval-фото
+(группировка по вину):
 
-Диагностика в `/search/image/extended` (`diagnostics.ocr_rerank`) содержит:
-`baseline_score`, `entity_score`, `baseline_weight`, `entity_weight`,
-`entity_weights`, `entity_match_threshold`, `entity_contradiction_penalty`,
-`entity_neutral_score`, а в `candidate_scores[*].entities` — по каждой сущности
-`score`, `raw_score`, `matched`, `contradiction`, `best_variant`, `best_window`, `variants`.
-
-Одна и та же формула (`WineService._score_ocr_candidate`) используется и в OCR rerank, и в
-признаках CatBoost. Офлайн-оценка по сохранённым ответам API (578 изображений,
-`stages=global`, лучшие веса visual/ocr для каждого варианта):
-
-| OCR-скор | Acc@1 | MRR |
+| Вариант | Acc@1 | MRR |
 |---|---|---|
-| baseline (domain + fuzzy) | 85.81% | 0.9186 |
-| hybrid (baseline + entity) | **86.51%** | **0.9238** |
+| только изображение | 79.4% | 0.876 |
+| прежняя формула (0.8·visual + 0.2·ocr) | 86.2% | 0.922 |
+| **текущая формула** | **87.4%** (88.2% на всём наборе) | **0.930** |
 
-```bash
-uv run python scripts/verify_entity_ocr_integration.py  # нужен data/ocr_visual_grid_responses.json
-```
+Из оставшихся ошибок почти все — вина того же производителя, где в OCR нет ни одного слова в
+пользу правильного (дубликаты и почти одинаковые карточки в БД).
 
-> CatBoost-модель (`models/catboost/wine_reranker.cbm`) обучена на старом наборе признаков
-> (с `ocr_tfidf_score`, без `ocr_entity_*`). Отсутствующие признаки подаются как `0.0`,
-> новые игнорируются — после изменения формулы модель нужно переобучить
-> (`scripts/train_catboost_reranker.py`).
+### CatBoost (этап 2)
+
+`scripts/train_catboost_reranker.py` обучает CatBoost **поверх формулы этапа 1**: скор формулы
+передаётся как `baseline` (`--stage1-baseline-scale`, по умолчанию 100), модель учит поправку.
+Масштаб пишется в метаданные модели и применяется при инференсе. С нуля CatBoost на ~500
+запросах переобучается и проигрывает формуле (81–82% CV). Датасет сохраняет сырой OCR-текст.
+Модель, обученную на прежних признаках, нужно переобучить.
 
 Если YOLO не нашел `label_crop` ни на исходном изображении, ни внутри `bottle_crop`, API считает, что пользователь мог прислать близкое фото этикетки: `label_crop` становится равен `original`, и поиск идет по label collection.
 

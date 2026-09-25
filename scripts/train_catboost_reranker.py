@@ -13,23 +13,20 @@ from time import perf_counter
 from typing import Any
 
 import numpy as np
-from rapidfuzz import fuzz
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.api.services.ocr_match_service import OcrMatchService
 from src.api.services.photo_service import WinePhotoService
 from src.api.repositories.wine_repository import WineRepository
 from src.api.services.wine_service import (
     GLOBAL_CANDIDATE_LIMIT,
     LABEL_PHOTO_AREA_THRESHOLD,
     LABEL_PHOTO_CONFIDENCE_THRESHOLD,
-    OCR_DOMAIN_WEIGHT,
-    OCR_FUZZY_TOKEN_SET_WEIGHT,
-    OCR_FUZZY_WEIGHT,
-    OCR_FUZZY_WRATIO_WEIGHT,
     PER_VIEW_TOP_K,
+    SUGAR_VARIANTS,
     VIEW_WEIGHTS,
     WineService,
 )
@@ -38,6 +35,7 @@ from src.connections.qdrant import QdrantClient
 from src.llm.langchain_openai import ChatOpenAIWrapper
 from src.ml.catboost_reranker import (
     build_candidate_feature_rows,
+    stage1_score,
 )
 from src.ml.siglip2 import SiglipImageEmbedder
 from src.ml.yolo import YoloBottleCropper, YoloLabelCropper
@@ -138,68 +136,13 @@ async def extract_ocr_text(llm: ChatOpenAIWrapper, query_views) -> tuple[str, st
 
 async def build_ocr_feature_map(
     *,
-    repository: WineRepository,
+    matcher: OcrMatchService,
     ocr_text: str,
     wine_ids: list[str],
 ) -> dict[str, dict[str, float]]:
-    if not ocr_text or not wine_ids:
-        return {}
-
-    from src.ml.text_normalization import normalize_match_text
-
-    normalized_ocr = normalize_match_text(ocr_text)
-    if not normalized_ocr:
-        return {}
-
-    wines = await repository.load_wines_by_ids(wine_ids)
-    raw_color_aliases = await repository.load_color_aliases()
-    color_aliases_by_color = {
-        normalize_match_text(color): WineService._dedupe_text_variants([color, *aliases])
-        for color, aliases in raw_color_aliases.items()
-        if normalize_match_text(color)
-    }
-    wine_by_id = {str(wine.id): wine for wine in wines}
-    result: dict[str, dict[str, float]] = {}
-    for wine_id in wine_ids:
-        wine = wine_by_id.get(wine_id)
-        candidate_text = WineService._wine_to_ocr_candidate_text(wine)
-        normalized_candidate = normalize_match_text(candidate_text)
-        wratio = fuzz.WRatio(normalized_ocr, normalized_candidate) if normalized_candidate else 0.0
-        token_set = fuzz.token_set_ratio(normalized_ocr, normalized_candidate) if normalized_candidate else 0.0
-        fuzzy_score = (
-            OCR_FUZZY_WRATIO_WEIGHT * wratio
-            + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
-        ) / 100.0
-        structured_score = WineService._structured_ocr_score(normalized_ocr, wine, color_aliases_by_color)
-        ocr_score = OCR_DOMAIN_WEIGHT * structured_score["domain_score"] + OCR_FUZZY_WEIGHT * fuzzy_score
-        result[wine_id] = {
-            "ocr_applied": 1.0,
-            "ocr_score": float(ocr_score),
-            "ocr_domain_score": float(structured_score["domain_score"]),
-            "ocr_fuzzy_score": float(fuzzy_score),
-            "ocr_grape_score": float(structured_score["grape_score"]),
-            "ocr_grape_match_count": float(structured_score["grape_match_count"]),
-            "ocr_grape_total_count": float(structured_score["grape_total_count"]),
-            "ocr_grape_missing_count": float(structured_score["grape_missing_count"]),
-            "ocr_grape_coverage": float(structured_score["grape_coverage"]),
-            "ocr_producer_score": float(structured_score["producer_score"]),
-            "ocr_name_score": float(structured_score["name_score"]),
-            "ocr_color_score": float(structured_score["color_score"]),
-            "ocr_color_detected_count": float(structured_score["color_detected_count"]),
-            "ocr_color_detected_match": float(structured_score["color_detected_match"]),
-            "ocr_color_detected_mismatch": float(structured_score["color_detected_mismatch"]),
-            "ocr_sugar_score": float(structured_score["sugar_score"]),
-            "ocr_sugar_detected_count": float(structured_score["sugar_detected_count"]),
-            "ocr_sugar_detected_match": float(structured_score["sugar_detected_match"]),
-            "ocr_sugar_detected_mismatch": float(structured_score["sugar_detected_mismatch"]),
-            "ocr_wratio": float(wratio),
-            "ocr_token_set_ratio": float(token_set),
-            "ocr_wratio_score": float(wratio / 100.0),
-            "ocr_token_set_score": float(token_set / 100.0),
-            "ocr_text_length": float(len(normalized_ocr)),
-            "ocr_candidate_text_length": float(len(normalized_candidate)),
-        }
-    return result
+    """Те же OCR-признаки, что и в API (src/ml/ocr_matching.py)."""
+    scores = await matcher.score(ocr_text, wine_ids)
+    return {wine_id: score.features for wine_id, score in scores.items()}
 
 
 async def collect_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
@@ -221,6 +164,7 @@ async def collect_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
     qdrant = QdrantClient(all_settings.qdrant)
     database = DatabaseClient(all_settings.database) if args.with_ocr else None
     repository = WineRepository(database) if database is not None else None
+    matcher = OcrMatchService(repository, SUGAR_VARIANTS) if repository is not None else None
     llm = ChatOpenAIWrapper(all_settings.llm) if args.with_ocr else None
 
     await label_cropper.start()
@@ -325,12 +269,13 @@ async def collect_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
             ocr_features = {}
             ocr_elapsed = 0.0
             ocr_source_view = None
-            if llm is not None and repository is not None:
+            ocr_text = ""
+            if llm is not None and matcher is not None:
                 ocr_started = perf_counter()
                 try:
                     ocr_text, ocr_source_view = await extract_ocr_text(llm, query_views)
                     ocr_features = await build_ocr_feature_map(
-                        repository=repository,
+                        matcher=matcher,
                         ocr_text=ocr_text,
                         wine_ids=list(feature_candidate_ids),
                     )
@@ -360,6 +305,8 @@ async def collect_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
                         "label": 1 if row.wine_id == item.expected else 0,
                         "baseline_score": row.baseline_score,
                         "features": row.features,
+                        # сырой OCR — чтобы пересчитать признаки без повторных запросов к LLM
+                        "ocr_text": ocr_text,
                     }
                 )
 
@@ -600,11 +547,17 @@ def train_model(records: list[dict[str, Any]], args: argparse.Namespace) -> None
     def matrix(rows: list[dict[str, Any]]) -> list[list[float]]:
         return [[float(row["features"].get(name, 0.0)) for name in feature_names] for row in rows]
 
+    scale = args.stage1_baseline_scale
+
+    def baseline(rows: list[dict[str, Any]]) -> list[float]:
+        return [scale * stage1_score(row["features"]) for row in rows]
+
     train_pool = Pool(
         data=matrix(train),
         label=[int(row["label"]) for row in train],
         group_id=[row["query_id"] for row in train],
         feature_names=feature_names,
+        baseline=baseline(train) if scale else None,
     )
     eval_set = None
     if valid:
@@ -613,6 +566,7 @@ def train_model(records: list[dict[str, Any]], args: argparse.Namespace) -> None
             label=[int(row["label"]) for row in valid],
             group_id=[row["query_id"] for row in valid],
             feature_names=feature_names,
+            baseline=baseline(valid) if scale else None,
         )
 
     model = CatBoostRanker(
@@ -641,6 +595,7 @@ def train_model(records: list[dict[str, Any]], args: argparse.Namespace) -> None
         "with_patches": False,
         "with_bottle_crop": True,
         "with_ocr": args.with_ocr,
+        "stage1_baseline_scale": scale,
     }
     args.model_output.with_suffix(".json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -649,8 +604,12 @@ def train_model(records: list[dict[str, Any]], args: argparse.Namespace) -> None
     report_records = valid or train
     report_matrix = matrix(report_records)
     baseline_scores = [float(row["baseline_score"]) for row in report_records]
-    model_scores = [float(score) for score in model.predict(report_matrix)]
+    model_scores = [
+        float(score) + base
+        for score, base in zip(model.predict(report_matrix), baseline(report_records), strict=True)
+    ]
     print_metrics("baseline", rank_metrics(report_records, baseline_scores))
+    print_metrics("stage1 formula", rank_metrics(report_records, [stage1_score(row["features"]) for row in report_records]))
     print_metrics("catboost", rank_metrics(report_records, model_scores))
 
     query_report = build_query_report(report_records, baseline_scores, model_scores)
@@ -685,9 +644,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--with-ocr", action="store_true")
     parser.add_argument("--use-existing-dataset", action="store_true")
     parser.add_argument("--valid-fraction", type=float, default=0.2)
-    parser.add_argument("--iterations", type=int, default=600)
-    parser.add_argument("--learning-rate", type=float, default=0.05)
-    parser.add_argument("--depth", type=int, default=6)
+    # Дефолты по экспериментам scripts/ocr_lab: ~500 запросов -> короткое обучение, неглубокие
+    # деревья; CatBoost с нуля переобучается, поверх формулы этапа 1 — нет.
+    parser.add_argument("--iterations", type=int, default=100)
+    parser.add_argument("--learning-rate", type=float, default=0.03)
+    parser.add_argument("--depth", type=int, default=4)
+    parser.add_argument(
+        "--stage1-baseline-scale",
+        type=float,
+        default=100.0,
+        help="Обучать поверх формулы этапа 1: baseline = scale * (visual + ocr_bonus). 0 — с нуля.",
+    )
     parser.add_argument("--verbose-eval", type=int, default=100)
     parser.add_argument("--top-features", type=int, default=25)
     return parser.parse_args()
