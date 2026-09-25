@@ -16,7 +16,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
 from src.connections.database.base import Base
@@ -69,6 +69,13 @@ class GrapeAlias(Base):
     grape: Mapped[Grape] = relationship(back_populates="aliases")
 
 
+class ColorAlias(Base):
+    __tablename__ = "color_aliases"
+
+    color: Mapped[str] = mapped_column(String(50), nullable=False, primary_key=True, index=True)
+    alias: Mapped[str] = mapped_column(String(255), nullable=False, primary_key=True, index=True)
+
+
 class Wine(Base):
     __tablename__ = "wines"
     __table_args__ = (
@@ -119,6 +126,10 @@ class Wine(Base):
         back_populates="wine",
         cascade="all, delete-orphan",
         order_by="desc(WineImage.is_main), WineImage.id",
+    )
+    color_aliases: Mapped[list[ColorAlias]] = relationship(
+        primaryjoin=lambda: Wine.color == foreign(ColorAlias.color),
+        viewonly=True,
     )
 
 

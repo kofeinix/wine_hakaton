@@ -11,9 +11,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.connections.database.models import Grape, GrapeAlias, Producer, Region, Wine, WineGrape, WineImage
+from src.connections.database.models import ColorAlias, Grape, GrapeAlias, Producer, Region, Wine, WineGrape, WineImage
 from src.connections.database.postgres import DatabaseClient
 from src.connections.database.schemas import (
+    ColorAliasCreate,
     GrapeAliasCreate,
     GrapeCreate,
     ProducerCreate,
@@ -92,6 +93,10 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool) -> N
             GrapeAliasCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "grape_aliases.json")
         ]
+        color_aliases = [
+            ColorAliasCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "color_aliases.json")
+        ]
         wines = [
             WineCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "wines.json")
@@ -110,6 +115,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool) -> N
             await upsert_rows(session, Region, regions)
             await upsert_rows(session, Grape, grapes)
             await upsert_rows(session, GrapeAlias, grape_aliases)
+            await upsert_rows(session, ColorAlias, color_aliases)
             await upsert_rows(session, Wine, wines)
             await upsert_rows(session, WineGrape, wine_grapes)
             await upsert_rows(session, WineImage, wine_images)
@@ -117,13 +123,14 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool) -> N
 
         logger.info(
             (
-                "Imported %s producers, %s regions, %s grapes, %s grape_aliases, "
+                "Imported %s producers, %s regions, %s grapes, %s grape_aliases, %s color_aliases, "
                 "%s wines, %s wine_grapes, %s wine_images."
             ),
             len(producers),
             len(regions),
             len(grapes),
             len(grape_aliases),
+            len(color_aliases),
             len(wines),
             len(wine_grapes),
             len(wine_images),

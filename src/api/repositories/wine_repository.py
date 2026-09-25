@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import or_, select
 from sqlalchemy.orm import selectinload
 
-from src.connections.database.models import Grape, Producer, Region, Wine, WineGrape, WineImage
+from src.connections.database.models import ColorAlias, Grape, Producer, Region, Wine, WineGrape, WineImage
 from src.connections.database.postgres import DatabaseClient
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ class WineRepository:
                     selectinload(Wine.producer),
                     selectinload(Wine.region),
                     selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
+                    selectinload(Wine.color_aliases),
                     selectinload(Wine.images),
                 ],
             )
@@ -102,11 +103,25 @@ class WineRepository:
                 ).all()
             )
 
+    async def load_color_aliases(self) -> dict[str, list[str]]:
+        async with self.database.session() as session:
+            rows = (
+                await session.execute(
+                    select(ColorAlias.color, ColorAlias.alias).order_by(ColorAlias.color, ColorAlias.alias)
+                )
+            ).all()
+
+        aliases: dict[str, list[str]] = {}
+        for color, alias in rows:
+            aliases.setdefault(color, []).append(alias)
+        return aliases
+
     @staticmethod
     def _with_wine_options(statement):
         return statement.options(
             selectinload(Wine.producer),
             selectinload(Wine.region),
             selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
+            selectinload(Wine.color_aliases),
             selectinload(Wine.images),
         )

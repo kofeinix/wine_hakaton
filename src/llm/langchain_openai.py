@@ -121,11 +121,14 @@ class ChatOpenAIWrapper:
             model=self.config.model_name,
             api_key=self.config.api_key,
             temperature=self.config.temperature,
-            max_tokens=min(self.config.max_tokens, 5000),
+            max_tokens=min(self.config.max_tokens, 1000),
             base_url=self.config.base_url,
             http_async_client=self._http_client,
             max_retries=0,  # логикой управляет http_async_client
             timeout=httpx.Timeout(self.config.timeout),
+            extra_body={
+                "repetition_penalty": 1.15
+            }
         )
         logger.info("ChatOpenAIWrapper created")
         # Test connection
@@ -176,11 +179,20 @@ class ChatOpenAIWrapper:
         return content
 
     async def ocr_image_text(self, image_bytes: bytes) -> str:
+        prompt = (
+            "Recognize all visible text on this wine bottle or wine label. "
+            "Pay special attention to producer, brand, wine name, grape variety, color, "
+            "sweetness/style words such as брют, сухое, полусухое, полусладкое, сладкое, "
+            "and Latin/Cyrillic lookalikes. Use only Russian Cyrillic letters, English ASCII letters, "
+            "digits, spaces, and basic punctuation. Do not use accented Latin letters or other "
+            "diacritics; transliterate them to plain English letters. Return only the recognized text, "
+            "preserving line breaks."
+        )
         message = HumanMessage(
             content=[
                 {
                     "type": "text",
-                    "text": "Text Recognition:",
+                    "text": prompt,
                 },
                 {"type": "image_url", "image_url": {"url": self._image_data_url(image_bytes)}},
             ]

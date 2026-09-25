@@ -50,6 +50,8 @@ class SearchMatchResponse(BaseModel):
     n_photos: int
     score_std: float
     cosine_score: float = 0.0
+    view_photo_ids: dict[str, str] | None = None
+    view_match_counts: dict[str, int] | None = None
     wine: WineResponse | None = None
 
 
@@ -62,6 +64,8 @@ class CompactSearchMatch(BaseModel):
     n_photos: int
     score_std: float
     cosine_score: float = 0.0
+    view_photo_ids: dict[str, str] | None = None
+    view_match_counts: dict[str, int] | None = None
 
 
 class CompactSearchResponse(BaseModel):

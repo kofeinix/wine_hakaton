@@ -14,6 +14,7 @@
 
 Использование:
   python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global,patches]
+  python scripts/eval_search.py --image data/eval/<wine_id>/vivino_1.jpg --stages global
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ import httpx
 EVAL_DIR = Path(__file__).resolve().parent.parent / "data" / "eval"
 SEARCH_ENDPOINT = "/api/v1/search/image/extended"
 COMPACT_SEARCH_ENDPOINT = "/api/v1/search/image"
+CATBOOST_SEARCH_ENDPOINT = "/api/v1/search/image/catboost"
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 # Расширение -> MIME-тип (сервер требует content_type, начинающийся с "image/")
@@ -65,6 +67,7 @@ async def search_image(
     topk: int = 10,
     stages: list[str] | None = None,
     main_photos_only: bool = False,
+    catboost: bool = False,
 ) -> dict:
     """Выполняет поиск по картинке и возвращает JSON-ответ."""
     mime = MIME_BY_EXT.get(image_path.suffix.lower(), "image/jpeg")
@@ -77,7 +80,10 @@ async def search_image(
         params["main_photos_only"] = True
     with image_path.open("rb") as f:
         files = {"image": (image_path.name, f, mime)}
-        endpoint = COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT
+        if catboost:
+            endpoint = CATBOOST_SEARCH_ENDPOINT
+        else:
+            endpoint = COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT
         resp = await client.post(
             f"{api_url}{endpoint}",
             files=files,
@@ -99,23 +105,37 @@ def rank_of_expected(result: list[dict], expected_id: str) -> int | None:
 async def run(
     api_url: str,
     limit: int | None,
+    image_path: Path | None = None,
+    expected_id: str | None = None,
     views: list[str] | None = None,
     topk: int = 10,
     stages: list[str] | None = None,
     main_photos_only: bool = False,
+    catboost: bool = False,
 ) -> None:
-    images = collect_images(EVAL_DIR)
+    if image_path is not None:
+        image_path = image_path.expanduser().resolve()
+        if not image_path.is_file():
+            print(f"Ошибка: файл {image_path} не найден", file=sys.stderr)
+            sys.exit(1)
+        if image_path.suffix.lower() not in IMAGE_EXTS:
+            print(f"Ошибка: неподдерживаемый формат изображения {image_path.suffix}", file=sys.stderr)
+            sys.exit(1)
+        images = [(expected_id or image_path.parent.name, image_path)]
+    else:
+        images = collect_images(EVAL_DIR)
     if not images:
         print("Нет изображений для оценки.", file=sys.stderr)
         sys.exit(1)
 
-    if limit is not None:
+    if limit is not None and image_path is None:
         images = images[:limit]
 
     print(f"Всего изображений для оценки: {len(images)}")
-    print(f"API: {api_url}{COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT}")
+    endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else (COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT)
+    print(f"API: {api_url}{endpoint}")
     print(f"Views: {views or 'runtime active views'}")
-    print(f"Stages: {stages or ['global', 'patches']}")
+    print(f"Stages: {'catboost' if catboost else stages or ['global', 'patches']}")
     print(f"Main photos only: {main_photos_only}")
     print(f"Top-K: {topk}\n")
 
@@ -131,6 +151,7 @@ async def run(
                     topk=topk,
                     stages=stages,
                     main_photos_only=main_photos_only,
+                    catboost=catboost,
                 )
             except Exception as exc:  # noqa: BLE001
                 print(f"[{idx}/{len(images)}] ОШИБКА {img_path.name}: {exc}")
@@ -138,7 +159,7 @@ async def run(
                     {
                         "expected": expected_id,
                         "image": img_path.name,
-                        "stages": stages or ["global", "patches"],
+                        "stages": ["catboost"] if catboost else stages or ["global", "patches"],
                         "main_photos_only": main_photos_only,
                         "error": str(exc),
                     }
@@ -159,7 +180,7 @@ async def run(
                 {
                     "expected": expected_id,
                     "image": img_path.name,
-                    "stages": stages or ["global", "patches"],
+                    "stages": ["catboost"] if catboost else stages or ["global", "patches"],
                     "main_photos_only": main_photos_only,
                     "active_views": global_diag.get("active_views"),
                     "ocr_source_view": ocr_diag.get("source_view"),
@@ -293,6 +314,20 @@ def main() -> None:
         help="Ограничить число обрабатываемых изображений (для отладки)",
     )
     parser.add_argument(
+        "--image",
+        type=Path,
+        default=None,
+        help=(
+            "Путь к одному изображению для точечной проверки. "
+            "Если --expected-id не указан, ожидаемый wine_id берется из имени родительской папки."
+        ),
+    )
+    parser.add_argument(
+        "--expected-id",
+        default=None,
+        help="Ожидаемый wine_id для --image, если его нельзя взять из имени родительской папки.",
+    )
+    parser.add_argument(
         "--view",
         action="append",
         choices=["original", "bottle_crop", "label_crop"],
@@ -323,16 +358,24 @@ def main() -> None:
         action="store_true",
         help="Искать только по векторам main-фото, исключая yandex_* фото.",
     )
+    parser.add_argument(
+        "--catboost",
+        action="store_true",
+        help="Оценивать экспериментальный CatBoost endpoint /search/image/catboost.",
+    )
     args = parser.parse_args()
     stages = normalize_stages_arg(args.stages)
     asyncio.run(
         run(
             args.api_url,
             args.limit,
+            image_path=args.image,
+            expected_id=args.expected_id,
             views=args.view,
             topk=args.topk,
             stages=stages,
             main_photos_only=args.main_photos_only,
+            catboost=args.catboost,
         )
     )
 

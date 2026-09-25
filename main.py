@@ -5,8 +5,8 @@ from src.container.app_container import AppContainer
 from src.settings import setup_logging
 from src.settings.settings import all_settings
 
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('host.docker.internal', port=56789, stdout_to_server=True, stderr_to_server=True)
+import pydevd_pycharm
+pydevd_pycharm.settrace('host.docker.internal', port=56789, stdout_to_server=True, stderr_to_server=True)
 
 async def main() -> int:
     """

@@ -37,6 +37,11 @@ class GrapeAliasCreate(BaseModel):
     alias: str = Field(min_length=1)
 
 
+class ColorAliasCreate(BaseModel):
+    color: str = Field(min_length=1)
+    alias: str = Field(min_length=1)
+
+
 class WineCreate(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=False)
 
