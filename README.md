@@ -151,7 +151,7 @@ COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/
 ## API
 
 - `GET /health` - проверка, что API жив.
-- `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`. Query-параметр `stages` задает pipeline: `global`, `patches`, `llm`. Legacy-значения тоже поддерживаются: `stages=1` = `global`, `stages=2` = `global,patches`. `main_photos_only=true` ограничивает Qdrant-поиск только векторами `photo_id=main`, исключая `yandex_*`.
+- `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`. Query-параметр `stages`: `global` (визуальный поиск + OCR-реранк, выполняется всегда) и опциональный `llm` (выбор кандидата vision-LLM). `main_photos_only=true` ограничивает Qdrant-поиск только векторами `photo_id=main`, исключая `yandex_*`.
 - `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop бутылки/этикетки, OCR rerank, полные карточки вин, scores и источники совпадения. Поддерживает тот же `stages`.
 - `GET /api/v1/wines/{wine_id}` - детали вина по id.
 - `GET /api/v1/wines/{wine_id}/photos/{filename}` - файл фотографии вина из MinIO. URL приходит в `image_url` и `photos[].url` ответа `GET /api/v1/wines/{wine_id}` или extended search.
@@ -161,14 +161,14 @@ COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/
 Пример поиска по изображению:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/search/image?limit=3&stages=global,patches&main_photos_only=true" \
+curl -X POST "http://localhost:8000/api/v1/search/image?limit=3&main_photos_only=true" \
   -F "image=@./label.jpg"
 ```
 
 Пример расширенного поиска:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3&stages=global,patches" \
+curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3" \
   -F "image=@./label.jpg"
 ```
 
@@ -222,27 +222,18 @@ VITE_API_TARGET=http://localhost:8000 npm run dev
 ## Подготовить модели
 
 Команда `prepare_models.py` проверяет наличие YOLO PT-моделей в `models/yolo`,
-скачивает SigLIP2 в `models/siglip2` и DINOv3 в `models/dinov3`.
+и скачивает SigLIP2 в `models/siglip2`.
 
 ```bash
 ./prepare_models
 ```
 
-Модель `facebook/dinov3-vitb16-pretrain-lvd1689m` закрыта gated-доступом на
-Hugging Face. Перед скачиванием примите условия модели в Hugging Face и
-передайте токен:
-
-```bash
-HF_TOKEN=<your_token> ./prepare_models
-```
-
 Модель `google/siglip2-base-patch16-224` занимает около 1.5 GB. Скачивание нужно сделать один раз; повторный запуск переиспользует уже скачанные файлы.
 
-Global-вектора для Qdrant можно экспортировать как SigLIP2 или DINOv3 NPZ:
+Global-вектора SigLIP2 для Qdrant экспортируются в NPZ:
 
 ```bash
-uv run python scripts/index_siglip2_views_qdrant.py --encoder siglip2
-uv run python scripts/index_siglip2_views_qdrant.py --encoder dinov3
+uv run python scripts/index_siglip2_views_qdrant.py
 ```
 
 Для расширенного набора фото можно сначала досчитать `bottle_crop` и
@@ -274,31 +265,9 @@ uv run python scripts/prepare_image_views.py \
 
 uv run python scripts/index_siglip2_views_qdrant.py \
   --images-dir data/images_extended \
-  --encoder siglip2 \
   --photo-dir-pattern main 'yandex_*' 'flux_*' 'vivino_*'
 
 uv run python scripts/init_qdrant.py --embeddings-dir data/embeddings
-```
-
-По умолчанию DINOv3 создаёт collection metadata `wine_original_dinov3`, `wine_label_crop_dinov3`. Для быстрого A/B через текущие runtime collection names можно перезаписать suffix:
-
-```bash
-uv run python scripts/index_siglip2_views_qdrant.py --encoder dinov3 --collection-encoder siglip2
-uv run python scripts/init_qdrant.py --embeddings-dir data/embeddings
-```
-
-Чтобы приложение считало query-вектора той же моделью, что лежит в Qdrant, задайте runtime encoder:
-
-```env
-SEARCH__GLOBAL_ENCODER=dinov3
-SEARCH__COLLECTION_ENCODER=dinov3
-```
-
-Если вы сгенерировали DINOv3-вектора с `--collection-encoder siglip2`, то для A/B через старые имена коллекций используйте:
-
-```env
-SEARCH__GLOBAL_ENCODER=dinov3
-SEARCH__COLLECTION_ENCODER=siglip2
 ```
 
 ## YOLO PT
@@ -313,7 +282,7 @@ SEARCH__COLLECTION_ENCODER=siglip2
 
 ## OCR / LLM
 
-Приложение работает с OpenAI-compatible Chat Completions API. В базовом flow vision-модель используется для OCR по приоритету `label_crop -> bottle_crop -> original`, затем OCR-текст участвует в rerank top-50 кандидатов. Отдельный stage `llm` сохранен как опциональный rerank-кандидат, но по умолчанию frontend и API используют только `global,patches`.
+Приложение работает с OpenAI-compatible Chat Completions API. В базовом flow vision-модель используется для OCR по приоритету `label_crop -> bottle_crop -> original`, затем OCR-текст участвует в rerank top-50 кандидатов. Отдельный stage `llm` — опциональный выбор кандидата vision-LLM; по умолчанию frontend и API используют только `global`.
 
 ### OCR rerank
 
@@ -358,11 +327,41 @@ ocr_bonus = 0.1 * (0.5·B(name) + 0.85·B(producer) + 0.25·B(grapes))
 
 ### CatBoost (этап 2)
 
-`scripts/train_catboost_reranker.py` обучает CatBoost **поверх формулы этапа 1**: скор формулы
-передаётся как `baseline` (`--stage1-baseline-scale`, по умолчанию 100), модель учит поправку.
-Масштаб пишется в метаданные модели и применяется при инференсе. С нуля CatBoost на ~500
-запросах переобучается и проигрывает формуле (81–82% CV). Датасет сохраняет сырой OCR-текст.
-Модель, обученную на прежних признаках, нужно переобучить.
+CatBoost обучается **поверх формулы этапа 1**: её скор идёт в `baseline`
+(`--stage1-baseline-scale`, по умолчанию 100), модель учит поправку; масштаб пишется в
+метаданные модели и применяется при инференсе. С нуля на ~500 запросах CatBoost
+переобучается (81–82% CV против 87.4% у формулы), поэтому обучаем на `images_extended`,
+а проверяем на реальном `data/eval`.
+
+Запросы для обучения — `data/images_extended/<wine_id>/<photo>/original.jpg`:
+
+| Папки | Что это | В индексе Qdrant | Как ищем |
+|---|---|---|---|
+| `yandex_*` | реальные фото из веба | да | leave-one-out: точки этого фото исключаются фильтром |
+| `flux_*` | сгенерированные сцены | да | leave-one-out |
+| `main` | каталожное фото | да | не бывает запросом |
+
+Leave-one-out оставляет в индексе остальные фото вина — как у реального пользователя, чьё
+вино в каталоге есть. Индекс переиндексировать не нужно: признаки считаются на том же индексе,
+что и в проде.
+
+```bash
+# хосты из .env — докерные; для запуска с хоста:
+export QDRANT__HOST=localhost DATABASE__HOST=localhost LLM__BASE_URL=http://localhost:1234/v1
+
+# 1. датасеты (дописываются: сбор можно прервать и продолжить; OCR кешируется в data/catboost/ocr_cache.jsonl)
+uv run python scripts/train_catboost_reranker.py collect --source eval --with-ocr
+uv run python scripts/train_catboost_reranker.py collect --source extended --with-ocr \
+    --max-per-wine 'yandex_*=2' 'flux_*=2'          # по умолчанию yandex_* и flux_*
+
+# 2. обучение на extended, оценка на реальном eval, финальная модель — на extended + eval
+uv run python scripts/train_catboost_reranker.py train --refit-with-valid \
+    --train-dataset data/catboost/extended.jsonl --valid-dataset data/catboost/eval.jsonl
+```
+
+Отчёт печатает Acc@1 / MRR для `baseline` (только изображение), `stage1 formula` и `catboost`
+на valid. Число деревьев выбирается early stopping'ом по valid, поэтому метрика catboost на
+eval немного оптимистична.
 
 Если YOLO не нашел `label_crop` ни на исходном изображении, ни внутри `bottle_crop`, API считает, что пользователь мог прислать близкое фото этикетки: `label_crop` становится равен `original`, и поиск идет по label collection.
 

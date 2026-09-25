@@ -6,28 +6,19 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import sys
 from pathlib import Path
 
 from huggingface_hub import snapshot_download
-from huggingface_hub.errors import GatedRepoError
 
 
 DEFAULT_MODEL_ROOT = Path("models")
 DEFAULT_SIGLIP2_MODEL_ID = "google/siglip2-base-patch16-224"
-DEFAULT_DINOV3_MODEL_ID = "facebook/dinov3-vitb16-pretrain-lvd1689m"
 YOLO_REQUIRED_FILES = (
     Path("yolo") / "label.pt",
     Path("yolo") / "yolo26x.pt",
 )
 SIGLIP2_DIR_NAME = "siglip2"
-DINO_V3_DIR_NAME = "dinov3"
 SIGLIP2_REQUIRED_FILES = (
-    "config.json",
-    "model.safetensors",
-    "preprocessor_config.json",
-)
-DINO_V3_REQUIRED_FILES = (
     "config.json",
     "model.safetensors",
     "preprocessor_config.json",
@@ -36,7 +27,7 @@ DINO_V3_REQUIRED_FILES = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Prepare YOLO PT, SigLIP2, and DINOv3 weights for docker compose."
+        description="Prepare YOLO PT and SigLIP2 weights for docker compose."
     )
     parser.add_argument(
         "--model-root",
@@ -50,19 +41,9 @@ def parse_args() -> argparse.Namespace:
         help=f"Hugging Face model id. Default: {DEFAULT_SIGLIP2_MODEL_ID}",
     )
     parser.add_argument(
-        "--dinov3-model-id",
-        default=DEFAULT_DINOV3_MODEL_ID,
-        help=f"Hugging Face model id. Default: {DEFAULT_DINOV3_MODEL_ID}",
-    )
-    parser.add_argument(
         "--revision",
         default=None,
-        help="Optional Hugging Face revision, tag, or commit SHA for both models.",
-    )
-    parser.add_argument(
-        "--dinov3-revision",
-        default=None,
-        help="Optional Hugging Face revision, tag, or commit SHA for DINOv3.",
+        help="Optional Hugging Face revision, tag, or commit SHA for SigLIP2.",
     )
     parser.add_argument(
         "--hf-token",
@@ -119,44 +100,6 @@ def download_siglip2(
     print(f"SigLIP2 ready: {local_path}")
 
 
-def download_dinov3(
-    model_root: Path,
-    model_id: str,
-    revision: str | None,
-    token: str | None,
-) -> None:
-    dinov3_dir = model_root / DINO_V3_DIR_NAME
-    dinov3_dir.mkdir(parents=True, exist_ok=True)
-
-    if all((dinov3_dir / file_name).is_file() for file_name in DINO_V3_REQUIRED_FILES):
-        cleanup_huggingface_local_cache(dinov3_dir)
-        print(f"DINOv3 ready: {dinov3_dir}")
-        return
-
-    try:
-        local_path = snapshot_download(
-            repo_id=model_id,
-            revision=revision,
-            local_dir=dinov3_dir,
-            token=token,
-            allow_patterns=[
-                "config.json",
-                "model.safetensors",
-                "model.safetensors.index.json",
-                "*.safetensors",
-                "preprocessor_config.json",
-            ],
-        )
-    except GatedRepoError as exc:
-        raise RuntimeError(
-            f"DINOv3 model '{model_id}' is gated on Hugging Face. "
-            "Accept the model terms on Hugging Face, then run with "
-            "HF_TOKEN=<your_token> ./prepare_models or pass --hf-token."
-        ) from exc
-    cleanup_huggingface_local_cache(dinov3_dir)
-    print(f"DINOv3 ready: {local_path}")
-
-
 def cleanup_huggingface_local_cache(model_dir: Path) -> None:
     cache_dir = model_dir / ".cache"
     if cache_dir.exists():
@@ -174,16 +117,6 @@ def main() -> int:
 
     assert_yolo_model(args.model_root)
     download_siglip2(args.model_root, args.siglip2_model_id, args.revision, hf_token)
-    try:
-        download_dinov3(
-            args.model_root,
-            args.dinov3_model_id,
-            args.dinov3_revision or args.revision,
-            hf_token,
-        )
-    except RuntimeError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
     print("Model directory ready for docker compose: ./models -> /models")
     return 0
 

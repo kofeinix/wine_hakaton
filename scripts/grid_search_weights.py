@@ -7,7 +7,7 @@ Grid search по весам cosine-агрегации на eval-наборе.
 сохраняются top-k кандидаты по каждому view.
 Затем локально перебираются комбинации весов, лимитов и параметров агрегации,
 после чего считаются Acc@1 / MRR / Recall@10 после такого же wine-level fusion,
-как в WineService.
+как в visual_search.
 
 Использование:
   python scripts/grid_search_weights.py [--limit N]
@@ -33,19 +33,16 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.api.services.photo_service import WinePhotoService
-from src.api.services.wine_service import (
+from src.api.services.visual_search import (
     GLOBAL_CANDIDATE_LIMIT,
-    LABEL_PHOTO_AREA_THRESHOLD,
-    LABEL_PHOTO_CONFIDENCE_THRESHOLD,
     PER_VIEW_TOP_K,
     VIEW_SCORE_BEST_WEIGHT,
     VIEW_SCORE_MEAN_WEIGHT,
     VIEW_SCORE_TOP_K_PHOTOS,
     VIEW_WEIGHTS,
-    WineService,
+    select_views,
 )
 from src.connections.qdrant import QdrantClient
-from src.ml.dinov3 import DinoV3ImageEmbedder
 from src.ml.siglip2 import SiglipImageEmbedder
 from src.ml.yolo import YoloBottleCropper, YoloLabelCropper
 from src.settings.settings import YoloSettings, all_settings
@@ -56,18 +53,18 @@ IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 VIEWS = ("original", "bottle_crop", "label_crop")
 VIEW_INDEX = {view: idx for idx, view in enumerate(VIEWS)}
 
-# Текущие runtime-веса WineService. Они явно входят в сетку ниже.
+# Текущие runtime-веса visual_search. Они явно входят в сетку ниже.
 DEFAULT_VIEW_WEIGHTS = VIEW_WEIGHTS.copy()
 
 # Сетка VIEW_WEIGHTS. Значения потом нормализуются по активным views,
-# как в WineService._normalized_weights.
+# как в visual_search.normalized_weights.
 VIEW_WEIGHT_VALUES = {
     "original": [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45],
     "bottle_crop": [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30],
     "label_crop": [0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70],
 }
 
-# Сетка runtime-параметров WineService.
+# Сетка runtime-параметров visual_search.
 GLOBAL_CANDIDATE_LIMITS = [25, GLOBAL_CANDIDATE_LIMIT, 75, 100]
 PER_VIEW_TOP_KS = [50, 100, PER_VIEW_TOP_K]
 
@@ -242,9 +239,7 @@ def close_query_images(query_views) -> None:
         image.close()
 
 
-def build_embedder() -> SiglipImageEmbedder | DinoV3ImageEmbedder:
-    if all_settings.search.global_encoder == "dinov3":
-        return DinoV3ImageEmbedder(all_settings.dinov3)
+def build_embedder() -> SiglipImageEmbedder:
     return SiglipImageEmbedder(all_settings.embeddings)
 
 
@@ -286,21 +281,11 @@ async def collect_candidates(
             query_views = None
             try:
                 query_views = photo_service.build_query_views(img_path.read_bytes())
-                active_views = [
-                    view
-                    for view in VIEWS
-                    if view in query_views.images
-                    and query_views.crops.get(view) is not None
-                    and query_views.crops[view].available
-                ]
-                label_area_ratio = WineService._label_crop_area_ratio(query_views.crops)
-                label_confidence = WineService._label_crop_confidence(query_views.crops)
-                label_photo_mode = (
-                    label_area_ratio > LABEL_PHOTO_AREA_THRESHOLD
-                    and label_confidence > LABEL_PHOTO_CONFIDENCE_THRESHOLD
-                )
-                if label_photo_mode and "label_crop" in active_views:
-                    active_views = [view for view in active_views if view == "label_crop"]
+                selection = select_views(query_views)
+                active_views = selection.active_views
+                label_area_ratio = selection.label_area_ratio
+                label_confidence = selection.label_confidence
+                label_photo_mode = selection.label_photo_mode
 
                 vectors = embedder.embed_many([query_views.images[view] for view in active_views])
                 search_tasks = [
@@ -435,11 +420,10 @@ def main() -> None:
         print(f"Всего изображений: {len(images)}")
         print(
             "Runtime config: "
-            f"global_encoder={all_settings.search.global_encoder}, "
             f"collection_encoder={all_settings.search.collection_encoder}, "
             f"collections={[view_collection(view) for view in VIEWS]}"
         )
-        print("Оценивается только visual global fusion, без OCR/patch/LLM rerank.")
+        print("Оценивается только visual global fusion, без OCR/LLM rerank.")
         collect_topk = max(args.topk, max(PER_VIEW_TOP_KS))
         print(f"Собираю кандидатов по views: {VIEWS} (topk={collect_topk})...")
         records = asyncio.run(collect_candidates(images, collect_topk))

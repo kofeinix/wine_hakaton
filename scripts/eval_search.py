@@ -13,7 +13,7 @@
   - итоговые метрики качества (Accuracy@1, MRR, средние score).
 
 Использование:
-  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global,patches]
+  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global|global,llm]
   python scripts/eval_search.py --image data/eval/<wine_id>/vivino_1.jpg --stages global
 """
 
@@ -158,7 +158,7 @@ async def run(
     endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else (COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT)
     print(f"API: {api_url}{endpoint}")
     print(f"Views: {views or 'runtime active views'}")
-    print(f"Stages: {'catboost' if catboost else stages or ['global', 'patches']}")
+    print(f"Stages: {'catboost' if catboost else stages or ['global']}")
     print(f"Main photos only: {main_photos_only}")
     print(f"Top-K: {topk}\n")
 
@@ -190,7 +190,7 @@ async def run(
                     {
                         "expected": expected_id,
                         "image": img_path.name,
-                        "stages": ["catboost"] if catboost else stages or ["global", "patches"],
+                        "stages": ["catboost"] if catboost else stages or ["global"],
                         "main_photos_only": main_photos_only,
                         "error": str(exc),
                     }
@@ -224,7 +224,7 @@ async def run(
                 {
                     "expected": expected_id,
                     "image": img_path.name,
-                    "stages": ["catboost"] if catboost else stages or ["global", "patches"],
+                    "stages": ["catboost"] if catboost else stages or ["global"],
                     "main_photos_only": main_photos_only,
                     "active_views": global_diag.get("active_views"),
                     "fusion": fusion,
@@ -419,9 +419,8 @@ def main() -> None:
         action="append",
         default=None,
         help=(
-            "Стадии pipeline: global, patches, llm. Можно указать несколько раз "
-            "или через запятую. Legacy: 1 = global, 2 = global+patches. "
-            "По умолчанию global,patches."
+            "Стадии pipeline: global (визуальный поиск + OCR-реранк, всегда), "
+            "llm (опциональный выбор кандидата vision-LLM). По умолчанию global."
         ),
     )
     parser.add_argument(

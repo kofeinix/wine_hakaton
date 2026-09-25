@@ -1,4 +1,3 @@
-from typing import Literal
 
 from pydantic import BaseModel, Field, computed_field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -103,34 +102,12 @@ class EmbeddingSettings(BaseModel):
     )
 
 
-class DinoV3Settings(BaseModel):
-    """DINOv3 local model configuration."""
-
-    model_id: str = Field(
-        default="facebook/dinov3-vitb16-pretrain-lvd1689m",
-        description="Hugging Face model id",
-    )
-    model_dir: str = Field(
-        default="/models/dinov3", description="Path to mounted DINOv3 model files"
-    )
-    device: str = Field(
-        default="auto", description="DINOv3 device: auto, cpu, cuda, or mps"
-    )
-    patch_batch_size: int = Field(
-        default=32, description="Batch size for on-the-fly DINOv3 patch-token encoding"
-    )
-
-
 class SearchSettings(BaseModel):
     """Runtime image search configuration."""
 
-    global_encoder: Literal["siglip2", "dinov3"] = Field(
+    collection_encoder: str = Field(
         default="siglip2",
-        description="Encoder used for query global vectors in runtime search",
-    )
-    collection_encoder: Literal["siglip2", "dinov3"] = Field(
-        default="siglip2",
-        description="Qdrant collection suffix used for global vector search",
+        description="Suffix of Qdrant collections: wine_<view>_<collection_encoder>",
     )
 
 
@@ -180,7 +157,6 @@ class AllSettings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     yolo: YoloSettings = Field(default_factory=YoloSettings)
     embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
-    dinov3: DinoV3Settings = Field(default_factory=DinoV3Settings)
     search: SearchSettings = Field(default_factory=SearchSettings)
     llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)

@@ -22,3 +22,4 @@ data/embeddings/
 # офлайн-эксперименты OCR (scripts/ocr_lab)
 data/ocr_lab_cache/
 data/eval_responses_*.json
+data/catboost/

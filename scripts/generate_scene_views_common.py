@@ -258,7 +258,7 @@ def build_qwen_prompt(view: SceneView) -> str:
         side = "left" if view.angle < 0 else "right"
         angle_instruction = (
             posture
-            + f"Show a noticeable 20 to 25 degree three-quarter product view by changing only the bottle's orientation around its vertical axis. "
+            + "Show a noticeable 20 to 25 degree three-quarter product view by changing only the bottle's orientation around its vertical axis. "
             + "Keep the shelf and surrounding scene in a normal shopper-facing view. This must not be a perfectly straight-on label view. "
             + "The front label must no longer look flat to the camera; its plane is clearly angled in perspective and not parallel to the camera sensor. "
             + f"The front label remains readable, but the {side} glass sidewall, shoulder curve, bottle thickness, "

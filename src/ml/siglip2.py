@@ -5,12 +5,7 @@ import torch
 from PIL import Image
 from transformers import AutoModel, AutoProcessor
 
-from src.ml.vision_features import (
-    VisionFeatures,
-    extract_global_vector,
-    extract_patch_tokens,
-    features_to_numpy,
-)
+from src.ml.vision_features import extract_global_vector
 from src.settings.settings import EmbeddingSettings
 
 logger = logging.getLogger(__name__)
@@ -22,7 +17,7 @@ class SiglipImageEmbedder:
         self._processor = None
         self._model = None
         self._device: torch.device | None = None
-        logger.info(f"SigLIP2 class initialized")
+        logger.info("SigLIP2 class initialized")
 
     async def start(self) -> None:
         if self._model is not None:
@@ -44,8 +39,7 @@ class SiglipImageEmbedder:
         self._model = AutoModel.from_pretrained(model_id, dtype=torch.float32).to(device)
         self._model.eval()
         self._device = device
-        logger.info(f"SigLIP2 model loaded")
-
+        logger.info("SigLIP2 model loaded")
 
     def embed_many(self, images: list[Image.Image]) -> list[list[float]]:
         assert self._processor is not None
@@ -59,28 +53,10 @@ class SiglipImageEmbedder:
         inputs = {key: value.to(self._device) for key, value in inputs.items()}
         with torch.inference_mode():
             embedding = extract_global_vector(self._model, inputs)
-        global_vectors, _ = features_to_numpy(embedding, None)
-        return global_vectors.tolist()
+        return embedding.detach().cpu().numpy().astype("float32").tolist()
 
     def embed(self, image: Image.Image) -> list[float]:
         return self.embed_many([image])[0]
-
-    def embed_features(self, image: Image.Image) -> VisionFeatures:
-        assert self._processor is not None
-        assert self._model is not None
-        assert self._device is not None
-
-        inputs = self._processor(images=image, return_tensors="pt")
-        inputs = {key: value.to(self._device) for key, value in inputs.items()}
-        with torch.inference_mode():
-            embedding = extract_global_vector(self._model, inputs)
-            patch_tokens, patch_grid = extract_patch_tokens(self._model, inputs)
-        global_vectors, patch_arrays = features_to_numpy(embedding, patch_tokens)
-        return VisionFeatures(
-            global_vector=global_vectors[0].tolist(),
-            patch_tokens=patch_arrays[0].tolist() if patch_arrays is not None else [],
-            patch_grid=patch_grid,
-        )
 
     async def stop(self) -> None:
         if self._model is None and self._processor is None:

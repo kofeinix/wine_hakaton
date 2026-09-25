@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from src.connections.database.models import ColorAlias, Grape, Producer, Region, Wine, WineGrape, WineImage
+from src.connections.database.models import ColorAlias, Grape, Producer, Wine, WineGrape, WineImage
 from src.connections.database.postgres import DatabaseClient
 
 logger = logging.getLogger(__name__)

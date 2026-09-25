@@ -45,10 +45,10 @@ async def search_by_image(
         description="Restrict aggregation to specific views: original, bottle_crop, label_crop. Empty = all.",
     ),
     stages: list[str] = Query(
-        default=["global", "patches"],
+        default=["global"],
         description=(
-            "Search pipeline stages: global, patches, llm. "
-            "Legacy values are supported: 1 = global, 2 = global + patches."
+            "Search pipeline stages: global (visual search + OCR rerank, always on), "
+            "llm (optional vision-LLM choice among candidates)."
         ),
     ),
     main_photos_only: bool = Query(
@@ -121,10 +121,10 @@ async def search_by_image_extended(
     image: UploadFile = File(..., description="Wine bottle or label image"),
     limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
     stages: list[str] = Query(
-        default=["global", "patches"],
+        default=["global"],
         description=(
-            "Search pipeline stages: global, patches, llm. "
-            "Legacy values are supported: 1 = global, 2 = global + patches."
+            "Search pipeline stages: global (visual search + OCR rerank, always on), "
+            "llm (optional vision-LLM choice among candidates)."
         ),
     ),
     main_photos_only: bool = Query(
