@@ -31,6 +31,7 @@ from src.connections.database.models import Grape, Wine
 from src.ml.catboost_reranker import CatBoostWineReranker, build_candidate_feature_rows
 from src.ml.patch_scoring import patch_similarity_score
 from src.ml.text_normalization import normalize_match_text
+from src.ml.tfidf import tfidf_cosine_similarity
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -70,6 +71,9 @@ OCR_FUZZY_WRATIO_WEIGHT = 0.25
 OCR_FUZZY_TOKEN_SET_WEIGHT = 0.75
 OCR_DOMAIN_WEIGHT = 0.65
 OCR_FUZZY_WEIGHT = 0.35
+OCR_TFIDF_WEIGHT = 0.20
+OCR_TFIDF_MIN_QUERY_TOKENS = 2
+OCR_TFIDF_MIN_CANDIDATE_TOKENS = 2
 OCR_GRAPE_WEIGHT = 0.45
 OCR_PRODUCER_WEIGHT = 0.18
 OCR_NAME_WEIGHT = 0.14
@@ -154,6 +158,7 @@ class WineCandidate:
     view_photo_ids: dict[str, str] | None = None
     view_match_counts: dict[str, int] | None = None
     patch_score: float | None = None
+    tfidf_score: float | None = None
 
 
 @dataclass(frozen=True)
@@ -208,6 +213,7 @@ class WineService:
                     cosine_score=candidate.cosine_score,
                     view_photo_ids=candidate.view_photo_ids,
                     view_match_counts=candidate.view_match_counts,
+                    tfidf_score=candidate.tfidf_score,
                 )
                 for candidate in candidates
             ]
@@ -243,6 +249,7 @@ class WineService:
                 cosine_score=candidate.cosine_score,
                 view_photo_ids=candidate.view_photo_ids,
                 view_match_counts=candidate.view_match_counts,
+                tfidf_score=candidate.tfidf_score,
                 wine=wine_by_id.get(candidate.wine_id),
             )
             for candidate in candidates
@@ -294,6 +301,7 @@ class WineService:
                     cosine_score=candidate.cosine_score,
                     view_photo_ids=candidate.view_photo_ids,
                     view_match_counts=candidate.view_match_counts,
+                    tfidf_score=candidate.tfidf_score,
                 )
                 for candidate in candidates
             ]
@@ -641,11 +649,16 @@ class WineService:
         wines = await self.repository.load_wines_by_ids(wine_ids)
         color_aliases_by_color = await self._load_color_aliases_by_color()
         wine_by_id = {str(wine.id): wine for wine in wines}
+        candidate_texts = [
+            normalize_match_text(self._wine_to_ocr_candidate_text(wine_by_id.get(wine_id)))
+            for wine_id in wine_ids
+        ]
+        tfidf_scores = tfidf_cosine_similarity(ocr_text, candidate_texts)
         result: dict[str, dict[str, float]] = {}
-        for wine_id in wine_ids:
+        for wine_id, normalized_candidate, tfidf_score in zip(
+            wine_ids, candidate_texts, tfidf_scores, strict=True
+        ):
             wine = wine_by_id.get(wine_id)
-            candidate_text = self._wine_to_ocr_candidate_text(wine)
-            normalized_candidate = normalize_match_text(candidate_text)
             wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
             token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
             fuzzy_score = (
@@ -653,12 +666,17 @@ class WineService:
                 + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
             ) / 100.0
             structured_score = self._structured_ocr_score(ocr_text, wine, color_aliases_by_color)
-            ocr_score = OCR_DOMAIN_WEIGHT * structured_score["domain_score"] + OCR_FUZZY_WEIGHT * fuzzy_score
+            ocr_score = (
+                OCR_DOMAIN_WEIGHT * structured_score["domain_score"]
+                + OCR_FUZZY_WEIGHT * fuzzy_score
+                + OCR_TFIDF_WEIGHT * tfidf_score
+            )
             result[wine_id] = {
                 "ocr_applied": 1.0,
                 "ocr_score": float(ocr_score),
                 "ocr_domain_score": float(structured_score["domain_score"]),
                 "ocr_fuzzy_score": float(fuzzy_score),
+                "ocr_tfidf_score": float(tfidf_score),
                 "ocr_grape_score": float(structured_score["grape_score"]),
                 "ocr_grape_match_count": float(structured_score["grape_match_count"]),
                 "ocr_grape_total_count": float(structured_score["grape_total_count"]),
@@ -1241,12 +1259,17 @@ class WineService:
         wines = await self.repository.load_wines_by_ids([candidate.wine_id for candidate in candidates])
         color_aliases_by_color = await self._load_color_aliases_by_color()
         wine_by_id = {str(wine.id): wine for wine in wines}
+        candidate_texts = [
+            normalize_match_text(self._wine_to_ocr_candidate_text(wine_by_id.get(candidate.wine_id)))
+            for candidate in candidates
+        ]
+        tfidf_scores = tfidf_cosine_similarity(ocr_text, candidate_texts)
         reranked: list[WineCandidate] = []
         diagnostics: list[dict[str, Any]] = []
-        for candidate in candidates:
+        for candidate, normalized_candidate, tfidf_score in zip(
+            candidates, candidate_texts, tfidf_scores, strict=True
+        ):
             wine = wine_by_id.get(candidate.wine_id)
-            candidate_text = self._wine_to_ocr_candidate_text(wine)
-            normalized_candidate = normalize_match_text(candidate_text)
             wratio = fuzz.WRatio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
             token_set = fuzz.token_set_ratio(ocr_text, normalized_candidate) if normalized_candidate else 0.0
             fuzzy_score = (
@@ -1254,7 +1277,11 @@ class WineService:
                 + OCR_FUZZY_TOKEN_SET_WEIGHT * token_set
             ) / 100.0
             structured_score = self._structured_ocr_score(ocr_text, wine, color_aliases_by_color)
-            ocr_score = OCR_DOMAIN_WEIGHT * structured_score["domain_score"] + OCR_FUZZY_WEIGHT * fuzzy_score
+            ocr_score = (
+                OCR_DOMAIN_WEIGHT * structured_score["domain_score"]
+                + OCR_FUZZY_WEIGHT * fuzzy_score
+                + OCR_TFIDF_WEIGHT * tfidf_score
+            )
             final_score = OCR_VISUAL_WEIGHT * candidate.score + OCR_TEXT_WEIGHT * ocr_score
             reranked.append(
                 WineCandidate(
@@ -1269,6 +1296,7 @@ class WineService:
                     view_photo_ids=candidate.view_photo_ids,
                     view_match_counts=candidate.view_match_counts,
                     patch_score=candidate.patch_score,
+                    tfidf_score=tfidf_score,
                 )
             )
             diagnostics.append(
@@ -1278,6 +1306,7 @@ class WineService:
                     "ocr_score": ocr_score,
                     "domain_score": structured_score["domain_score"],
                     "fuzzy_score": fuzzy_score,
+                    "tfidf_score": tfidf_score,
                     "grape_score": structured_score["grape_score"],
                     "producer_score": structured_score["producer_score"],
                     "name_score": structured_score["name_score"],
@@ -1305,6 +1334,7 @@ class WineService:
                     "ocr_score": round(float(item["ocr_score"]), 4),
                     "domain_score": round(float(item["domain_score"]), 4),
                     "fuzzy_score": round(float(item["fuzzy_score"]), 4),
+                    "tfidf_score": round(float(item["tfidf_score"]), 4),
                     "grape_score": round(float(item["grape_score"]), 4),
                     "producer_score": round(float(item["producer_score"]), 4),
                     "name_score": round(float(item["name_score"]), 4),
