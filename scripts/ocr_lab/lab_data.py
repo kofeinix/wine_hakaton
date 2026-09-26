@@ -106,7 +106,9 @@ def load_records(responses: Path | None = None) -> list[dict]:
     skipped = 0
     for row in rows:
         resp = row.get("response") or {}
-        ocr = (resp.get("diagnostics") or {}).get("ocr_rerank") or {}
+        ocr = dict((resp.get("diagnostics") or {}).get("ocr_rerank") or {})
+        if resp.get("ocr"):  # новый формат: текст в ответе, пул — в diagnostics (debug=true)
+            ocr["text"] = resp["ocr"].get("text") or ""
         pool = ocr.get("pool")
         if pool:  # новые ответы API: визуальный скор до OCR-реранка для всего пула
             cands = [{"wine_id": str(c["wine_id"]), "visual": float(c["visual_score"])} for c in pool]

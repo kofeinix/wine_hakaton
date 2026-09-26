@@ -144,6 +144,47 @@ class MinioSettings(BaseModel):
         default=None, description="Path to ca certs for Minio"
     )
 
+DEFAULT_JWT_SECRET = "insecure-default-secret-set-AUTH__JWT_SECRET-in-env"
+
+
+class AuthSettings(BaseModel):
+    """Упрощённая авторизация: email + пароль, JWT access-токен."""
+
+    jwt_secret: str = Field(
+        default=DEFAULT_JWT_SECRET, description="Секрет подписи JWT (AUTH__JWT_SECRET), от 32 байт"
+    )
+    jwt_algorithm: str = Field(default="HS256")
+    access_token_ttl_minutes: int = Field(
+        default=7 * 24 * 60, description="Время жизни access-токена"
+    )
+    anon_cookie_name: str = Field(
+        default="wine_anon_id", description="Cookie анонимного пользователя (временная история)"
+    )
+    anon_history_ttl_hours: int = Field(
+        default=72, description="Сколько хранится история анонимного пользователя"
+    )
+
+
+class NotificationSettings(BaseModel):
+    """Напоминания "вы недавно смотрели вино, как вам?"."""
+
+    enabled: bool = Field(default=True)
+    delay_minutes: float = Field(
+        default=60,
+        description="Через сколько минут после последнего поиска (конец сессии) присылать сводку",
+    )
+    max_age_hours: float = Field(
+        default=24, description="Вина из поисков старше этого в сводку не попадают"
+    )
+    check_interval_seconds: float = Field(
+        default=60, description="Как часто фоновая задача ищет поиски для напоминания"
+    )
+    message_template: str = Field(
+        default="Вы недавно смотрели вина ({count}). Что-то взяли?",
+        description="Текст сводки; {count} — сколько вин в ней",
+    )
+
+
 class AllSettings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="ignore",
@@ -161,5 +202,7 @@ class AllSettings(BaseSettings):
     llm: LlmSettings = Field(default_factory=LlmSettings)
     rate_limiter: RateLimiterSettings = Field(default_factory=RateLimiterSettings)
     minio: MinioSettings = Field(default_factory=MinioSettings)
+    auth: AuthSettings = Field(default_factory=AuthSettings)
+    notifications: NotificationSettings = Field(default_factory=NotificationSettings)
 
 all_settings = AllSettings()

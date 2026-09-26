@@ -116,6 +116,14 @@ class WineRepository:
             aliases.setdefault(color, []).append(alias)
         return aliases
 
+    async def get_image(self, photo_id: str) -> WineImage | None:
+        try:
+            id_ = UUID(photo_id)
+        except ValueError:
+            return None
+        async with self.database.session() as session:
+            return await session.get(WineImage, id_)
+
     async def load_ocr_vocabulary(self) -> tuple[list[str], list[str], dict[str, list[str]]]:
         """Названия вин, производители и сорта (id -> название + синонимы) для OCR-матчинга."""
         async with self.database.session() as session:

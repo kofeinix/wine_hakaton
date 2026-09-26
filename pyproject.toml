@@ -31,6 +31,8 @@ dependencies = [
     "rapidfuzz>=3.14.6",
     "pydevd-pycharm~=253.31033.139",
     "transliterate>=1.10.2",
+    "pyjwt>=2.10",
+    "bcrypt>=4.2",
 ]
 
 [[tool.uv.index]]

@@ -55,6 +55,9 @@ class WineCandidate:
     cosine_score: float = 0.0
     view_photo_ids: dict[str, str] | None = None
     view_match_counts: dict[str, int] | None = None
+    # после OCR-реранка: score = visual_score + ocr_score
+    visual_score: float | None = None
+    ocr_score: float = 0.0
 
 
 @dataclass(frozen=True)

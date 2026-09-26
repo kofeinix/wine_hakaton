@@ -29,7 +29,6 @@ import httpx
 
 EVAL_DIR = Path(__file__).resolve().parent.parent / "data" / "eval"
 SEARCH_ENDPOINT = "/api/v1/search/image/extended"
-COMPACT_SEARCH_ENDPOINT = "/api/v1/search/image"
 CATBOOST_SEARCH_ENDPOINT = "/api/v1/search/image/catboost"
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
@@ -89,7 +88,8 @@ async def search_image(
 ) -> dict:
     """Выполняет поиск по картинке и возвращает JSON-ответ."""
     mime = MIME_BY_EXT.get(image_path.suffix.lower(), "image/jpeg")
-    params: dict = {"limit": topk}
+    # не засорять историю поиска; debug — пул кандидатов для scripts/ocr_lab
+    params: dict = {"limit": topk, "save_history": False, "debug": True}
     if stages:
         params["stages"] = stages
     if views:
@@ -98,10 +98,7 @@ async def search_image(
         params["main_photos_only"] = True
     with image_path.open("rb") as f:
         files = {"image": (image_path.name, f, mime)}
-        if catboost:
-            endpoint = CATBOOST_SEARCH_ENDPOINT
-        else:
-            endpoint = COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT
+        endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else SEARCH_ENDPOINT
         resp = await client.post(
             f"{api_url}{endpoint}",
             files=files,
@@ -110,6 +107,27 @@ async def search_image(
         )
     resp.raise_for_status()
     return resp.json()
+
+
+def normalize_response(data: dict) -> dict:
+    """Ответ /extended или /catboost -> общий вид для отчёта."""
+    results = [
+        {
+            "wine_id": str(match.get("wine_id")),
+            "score": float(match.get("final_score", match.get("score", 0.0)) or 0.0),
+            "visual": float(match.get("visual_score", 0.0) or 0.0),
+            "ocr": float(match.get("ocr_score", 0.0) or 0.0),
+        }
+        for match in data.get("results") or []
+    ]
+    ocr = data.get("ocr") or {}
+    return {
+        "results": results,
+        "active_views": (data.get("search") or {}).get("active_views"),
+        "ocr_applied": ocr.get("applied"),
+        "ocr_source_view": ocr.get("source_view"),
+        "total_ms": (data.get("timings_ms") or {}).get("total_ms"),
+    }
 
 
 def rank_of_expected(result: list[dict], expected_id: str) -> int | None:
@@ -155,7 +173,7 @@ async def run(
         images = images[:limit]
 
     print(f"Всего изображений для оценки: {len(images)}")
-    endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else (COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT)
+    endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else SEARCH_ENDPOINT
     print(f"API: {api_url}{endpoint}")
     print(f"Views: {views or 'runtime active views'}")
     print(f"Stages: {'catboost' if catboost else stages or ['global']}")
@@ -201,24 +219,13 @@ async def run(
             if len(responses) % 50 == 0:
                 save_responses()  # чекпоинт: длинный прогон не пропадёт при обрыве
 
-            result = data.get("result") or data.get("results") or []
-            diagnostics = data.get("diagnostics") or {}
-            global_diag = diagnostics.get("global") or {}
-            ocr_diag = diagnostics.get("ocr_rerank") or {}
-            catboost_diag = diagnostics.get("catboost") or {}
-            fusion = global_diag.get("fusion")
-            if catboost:
-                # catboost endpoint кладёт fusion в global, а OCR-статус в catboost.ocr_applied
-                ocr_applied = catboost_diag.get("ocr_applied", ocr_diag.get("applied"))
-                ocr_source_view = catboost_diag.get("ocr_source_view", ocr_diag.get("source_view"))
-            else:
-                ocr_applied = ocr_diag.get("applied")
-                ocr_source_view = ocr_diag.get("source_view")
+            parsed = normalize_response(data)
+            result = parsed["results"]
             top1 = result[0] if result else None
             top2 = result[1] if len(result) > 1 else None
             rank = rank_of_expected(result, expected_id)
             correct = rank == 1
-            gap = (top1.get("score", 0.0) - top2.get("score", 0.0)) if top1 and top2 else 0.0
+            gap = (top1["score"] - top2["score"]) if top1 and top2 else 0.0
 
             rows.append(
                 {
@@ -226,18 +233,16 @@ async def run(
                     "image": img_path.name,
                     "stages": ["catboost"] if catboost else stages or ["global"],
                     "main_photos_only": main_photos_only,
-                    "active_views": global_diag.get("active_views"),
-                    "fusion": fusion,
-                    "ocr_source_view": ocr_source_view,
-                    "ocr_applied": ocr_applied,
-                    "ocr_rerank_applied": ocr_diag.get("rerank_applied"),
-                    "catboost_loaded": catboost_diag.get("loaded"),
-                    "top1_id": top1.get("wine_id") if top1 else None,
-                    "top1_score": top1.get("score") if top1 else None,
-                    "top1_cos": top1.get("cosine_score") if top1 else None,
-                    "top2_id": top2.get("wine_id") if top2 else None,
-                    "top2_score": top2.get("score") if top2 else None,
-                    "top2_cos": top2.get("cosine_score") if top2 else None,
+                    "active_views": parsed["active_views"],
+                    "ocr_source_view": parsed["ocr_source_view"],
+                    "ocr_applied": parsed["ocr_applied"],
+                    "total_ms": parsed["total_ms"],
+                    "top1_id": top1["wine_id"] if top1 else None,
+                    "top1_score": top1["score"] if top1 else None,
+                    "top1_visual": top1["visual"] if top1 else None,
+                    "top1_ocr": top1["ocr"] if top1 else None,
+                    "top2_id": top2["wine_id"] if top2 else None,
+                    "top2_score": top2["score"] if top2 else None,
                     "gap": gap,
                     "rank": rank,
                     "correct": correct,
@@ -245,16 +250,15 @@ async def run(
                 }
             )
             status = "OK " if correct else "MISS"
-            fusion_label = fusion or "n/a"
-            ocr_label = f"{ocr_source_view or 'n/a'}{'*' if ocr_applied else ''}"
+            ocr_label = f"{parsed['ocr_source_view'] or 'n/a'}{'*' if parsed['ocr_applied'] else ''}"
             print(
                 f"[{idx}/{len(images)}] {status} {img_path.name} "
-                f"expected={expected_id[:8]} top1={top1.get('wine_id', 'N/A')[:8] if top1 else 'N/A'} "
-                f"fused={top1.get('score', 0.0) if top1 else 0.0:.4f} "
-                f"raw_cos={top1.get('cosine_score', 0.0) if top1 else 0.0:.4f} "
-                f"fused_gap={gap:.4f} rank={rank} "
-                f"views={','.join(global_diag.get('active_views') or []) or 'n/a'} "
-                f"fusion={fusion_label} ocr={ocr_label}"
+                f"expected={expected_id[:8]} top1={top1['wine_id'][:8] if top1 else 'N/A'} "
+                f"final={top1['score'] if top1 else 0.0:.4f} "
+                f"visual={top1['visual'] if top1 else 0.0:.4f} ocr={top1['ocr'] if top1 else 0.0:.4f} "
+                f"gap={gap:.4f} rank={rank} "
+                f"views={','.join(parsed['active_views'] or []) or 'n/a'} ocr_src={ocr_label} "
+                f"time={parsed['total_ms'] or 0:.0f}ms"
             )
 
     print("\n" + "=" * 100)
@@ -262,8 +266,8 @@ async def run(
     print("=" * 100)
     header = (
         f"{'Ожидаемый uuid':<38} {'Картинка':<14} {'Top-1 uuid':<38} "
-        f"{'Fused':<8} {'RawCos':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} "
-        "Views Fusion OCR Конкуренты (uuid:fused)"
+        f"{'Final':<8} {'Visual':<8} {'OCR':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} "
+        "Views OCR-src Конкуренты (uuid:final)"
     )
     print(header)
     print("-" * 100)
@@ -272,18 +276,18 @@ async def run(
             print(f"{row['expected']:<38} {row['image']:<14} {'ОШИБКА':<38}")
             continue
         competitors = ", ".join(
-            f"{m.get('wine_id', '?')[:8]}:{m.get('score', 0.0):.3f}"
+            f"{m['wine_id'][:8]}:{m['score']:.3f}"
             for m in row["result"][1:5]
         )
         ocr_label = f"{row.get('ocr_source_view') or '-'}{'*' if row.get('ocr_applied') else ''}"
         print(
             f"{row['expected']:<38} {row['image']:<14} "
             f"{str(row['top1_id']):<38} {row['top1_score'] or 0.0:<8.4f} "
-            f"{row['top1_cos'] or 0.0:<8.4f} "
+            f"{row['top1_visual'] or 0.0:<8.4f} {row['top1_ocr'] or 0.0:<8.4f} "
             f"{row['top2_score'] or 0.0:<8.4f} {row['gap'] or 0.0:<8.4f} "
             f"{str(row['rank']):<5} {'OK' if row['correct'] else 'MISS':<6} "
             f"{','.join(row.get('active_views') or []) or '-'} "
-            f"{row.get('fusion') or '-'} {ocr_label} {competitors}"
+            f"{ocr_label} {competitors}"
         )
 
     # Сводка по винам (папкам)
@@ -403,9 +407,8 @@ def main() -> None:
         action="append",
         choices=["original", "bottle_crop", "label_crop"],
         help=(
-            "Ограничить агрегацию одним сигналом. Можно указать несколько раз. "
-            "При использовании --view скрипт дергает compact endpoint без diagnostics. "
-            "По умолчанию используется полный runtime pipeline через extended endpoint."
+            "Искать только по этим кропам (параметр views у /extended). Можно указать несколько раз. "
+            "По умолчанию — все кропы, как в проде."
         ),
     )
     parser.add_argument(

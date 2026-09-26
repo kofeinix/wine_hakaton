@@ -16,6 +16,11 @@ from src.connections.database.base import Base
 
 logger = logging.getLogger(__name__)
 
+# create_all не меняет существующие таблицы; новые колонки добавляем идемпотентно
+SCHEMA_PATCHES = (
+    "ALTER TABLE IF EXISTS wine_images ADD COLUMN IF NOT EXISTS is_generated BOOLEAN NOT NULL DEFAULT false",
+)
+
 
 class DatabaseClient:
     def __init__(self, settings: DatabaseSettings) -> None:
@@ -57,6 +62,8 @@ class DatabaseClient:
 
         async with self.engine.begin() as conn:  # type: ignore[misc]
             await conn.run_sync(Base.metadata.create_all)
+            for patch in SCHEMA_PATCHES:
+                await conn.execute(text(patch))
 
     async def drop_tables(self) -> None:
         import src.connections.database.models  # noqa: F401

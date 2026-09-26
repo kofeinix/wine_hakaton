@@ -11,18 +11,21 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict, replace
-from pathlib import Path, PurePosixPath
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 from time import perf_counter
 from typing import Any
 
 from src.api.repositories.wine_repository import WineRepository
 from src.api.schemas import (
-    CompactSearchMatch,
-    CompactSearchResponse,
-    SearchMatchResponse,
+    CatBoostMatch,
+    CatBoostSearchResponse,
+    OcrInfo,
+    SearchInfo,
+    SearchMatch,
     SearchResponse,
-    WinePhotoResponse,
+    SearchTimings,
+    WinePhoto,
     WineResponse,
 )
 from src.api.services.ocr_match_service import OcrMatchService
@@ -39,6 +42,7 @@ from src.api.services.visual_search import (
     image_to_jpeg_bytes,
     main_photos_filter,
     ocr_source_view,
+    select_views,
 )
 from src.connections.database.models import Wine
 from src.ml.catboost_reranker import CatBoostWineReranker, build_candidate_feature_rows
@@ -65,6 +69,19 @@ SUGAR_VARIANTS = {
 }
 
 
+@dataclass
+class SearchOutcome:
+    """Результат поиска до сборки HTTP-ответа."""
+
+    candidates: list[WineCandidate]  # итоговый порядок, не больше limit
+    crops: dict[str, Any]
+    ocr: dict[str, Any]
+    matches: VisualMatches
+    reranked: int  # сколько кандидатов прошло OCR-реранк
+    timings_ms: dict[str, float]
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+
+
 class WineService:
     def __init__(self, connection_manager) -> None:
         self.connection_manager = connection_manager
@@ -84,112 +101,116 @@ class WineService:
 
     # --- публичные методы (routes.py) ------------------------------------------
 
-    async def search_by_image(
+    async def build_response(
         self,
-        image_bytes: bytes,
-        limit: int = 10,
-        views: list[str] | None = None,
-        stages: int | str | list[str] | None = None,
-        main_photos_only: bool = False,
-    ) -> CompactSearchResponse:
-        candidates, _diagnostics, _crops = await self._search_candidates(
-            image_bytes=image_bytes,
-            limit=limit,
-            views=views,
-            stages=stages,
-            main_photos_only=main_photos_only,
-        )
-        return CompactSearchResponse(result=[CompactSearchMatch(**_match_fields(c)) for c in candidates])
-
-    async def search_by_image_extended(
-        self,
-        image_bytes: bytes,
-        filename: str | None = None,
-        content_type: str | None = None,
-        limit: int = 10,
-        stages: int | str | list[str] | None = None,
-        main_photos_only: bool = False,
+        outcome: SearchOutcome,
+        search_id: str | None = None,
+        debug: bool = False,
     ) -> SearchResponse:
-        candidates, diagnostics, crops = await self._search_candidates(
-            image_bytes=image_bytes,
-            limit=limit,
-            stages=stages,
-            main_photos_only=main_photos_only,
-        )
-        wines = await self.repository.load_wines_by_ids([candidate.wine_id for candidate in candidates])
-        wine_by_id = {str(wine.id): self._wine_to_response(wine) for wine in wines}
-        results = [
-            SearchMatchResponse(**_match_fields(candidate), wine=wine_by_id.get(candidate.wine_id))
-            for candidate in candidates
-        ]
-        best = results[0] if results else None
-        second = results[1] if len(results) > 1 else None
+        """Ответ /search/image/extended: результаты с разложением скора и карточками вин."""
+        wines = await self.repository.load_wines_by_ids([c.wine_id for c in outcome.candidates])
+        cards = {str(wine.id): wine_to_response(wine) for wine in wines}
+        selection = outcome.matches.selection
         return SearchResponse(
-            status="found" if best else "not_found",
-            slug=best.slug if best else None,
-            confidence=best.score if best else 0.0,
-            gap=(best.score - second.score) if best and second else 0.0,
-            wine=best.wine if best else None,
-            top5=[{"slug": result.slug, "score": result.score} for result in results[:5]],
-            results=results,
-            crops=crops,
-            diagnostics={**diagnostics, "filename": filename, "content_type": content_type},
+            search_id=search_id,
+            status="found" if outcome.candidates else "not_found",
+            results=[
+                SearchMatch(
+                    rank=rank,
+                    slug=candidate.slug,
+                    wine_id=candidate.wine_id,
+                    visual_score=round(_visual_score(candidate), 4),
+                    ocr_score=round(candidate.ocr_score, 4),
+                    final_score=round(candidate.score, 4),
+                    wine=cards.get(candidate.wine_id),
+                )
+                for rank, candidate in enumerate(outcome.candidates, start=1)
+            ],
+            ocr=OcrInfo(
+                applied=outcome.ocr["applied"],
+                source_view=outcome.ocr["source_view"],
+                text=outcome.ocr["text"],
+            ),
+            crops=outcome.crops,
+            search=SearchInfo(
+                active_views=selection.active_views,
+                label_photo_mode=selection.label_photo_mode,
+                candidates=outcome.reranked,
+            ),
+            timings_ms=SearchTimings(**outcome.timings_ms),
+            diagnostics=outcome.diagnostics if debug else None,
         )
 
-    async def search_by_image_catboost(
+    async def search_catboost(
         self,
         image_bytes: bytes,
         limit: int = 10,
         views: list[str] | None = None,
         main_photos_only: bool = False,
-    ) -> CompactSearchResponse:
+    ) -> CatBoostSearchResponse:
         candidates, _diagnostics, _crops = await self._search_candidates_catboost(
             image_bytes=image_bytes,
             limit=limit,
             views=views,
             main_photos_only=main_photos_only,
         )
-        return CompactSearchResponse(result=[CompactSearchMatch(**_match_fields(c)) for c in candidates])
+        return CatBoostSearchResponse(
+            results=[
+                CatBoostMatch(rank=rank, slug=c.slug, wine_id=c.wine_id, score=round(c.score, 4))
+                for rank, c in enumerate(candidates, start=1)
+            ]
+        )
 
     async def get_wine(self, wine_id: str) -> WineResponse | None:
         wine = await self.repository.get_wine(wine_id)
         if wine is None:
             return None
-        return self._wine_to_response(wine)
+        return wine_to_response(wine)
 
-    async def get_photo_file_by_wine_id(self, wine_id: str, filename: str):
-        wine = await self.repository.get_wine(wine_id)
-        if wine is None:
+    async def get_photo(self, photo_id: str):
+        """(BytesIO, content_type) фото из MinIO или None."""
+        image = await self.repository.get_image(photo_id)
+        if image is None:
             return None
-        for image in wine.images:
-            object_name = image.minio_path
-            if PurePosixPath(object_name).name == filename:
-                return await self.connection_manager.minio.get_file_with_content_type(object_name)
-        return None
+        return await self.connection_manager.minio.get_file_with_content_type(image.minio_path)
 
     # --- основной поиск ---------------------------------------------------------
 
-    async def _search_candidates(
+    async def search(
         self,
         image_bytes: bytes,
-        limit: int,
+        limit: int = 10,
         views: list[str] | None = None,
         stages: int | str | list[str] | None = None,
         main_photos_only: bool = False,
-    ) -> tuple[list[WineCandidate], dict[str, Any], dict]:
+    ) -> SearchOutcome:
+        """Кропы -> OCR -> визуальный поиск -> OCR-реранк -> (опционально) выбор LLM."""
+        started = perf_counter()
+        timings: dict[str, float] = {}
+
+        def lap(name: str, since: float) -> float:
+            now = perf_counter()
+            timings[name] = round((now - since) * 1000, 1)
+            return now
+
         search_stages = self._normalize_search_stages(stages)
         query_views = self.photo_service.build_query_views(image_bytes)
+        mark = lap("crops_ms", started)
         ocr = await self._extract_ocr_text(query_views)
-        matches = await self.visual.run(
-            query_views,
-            allowed=views,
-            query_filter=main_photos_filter() if main_photos_only else None,
+        mark = lap("ocr_ms", mark)
+        selection = select_views(query_views, views)
+        vectors = self.visual.embed(query_views, selection)
+        mark = lap("embedding_ms", mark)
+        matches = await self.visual.search(
+            selection, vectors, main_photos_filter() if main_photos_only else None
         )
+        mark = lap("vector_search_ms", mark)
+
         global_limit = max(limit, GLOBAL_CANDIDATE_LIMIT)
         candidates = group_by_wine(matches, limit=global_limit)
         logger.info("Global search found top_%s candidates. %s", len(candidates), _format_top_gap(candidates))
-
         candidates, ocr_diagnostics = await self._rerank_with_ocr(candidates[:OCR_RERANK_LIMIT], ocr["text"])
+        mark = lap("rerank_ms", mark)
 
         llm_selection: dict[str, Any] | None = None
         if "llm" in search_stages:
@@ -197,32 +218,34 @@ class WineService:
                 image_bytes=image_bytes,
                 candidates=candidates[:GLOBAL_CANDIDATE_LIMIT],
             )
+            lap("llm_ms", mark)
+        timings["total_ms"] = round((perf_counter() - started) * 1000, 1)
 
         diagnostics = {
-            "global": {
+            "visual": {
                 **self._visual_diagnostics(matches),
-                "fusion": "weighted_cosine",
                 "aggregation": "view_best75_top3mean25_then_weighted_max_sum",
                 "candidate_limit": global_limit,
                 "stages": search_stages,
                 "main_photos_only": main_photos_only,
             },
-            "llm_rerank": {
-                "applied": llm_selection is not None,
-                "reason": (
-                    "not_requested" if "llm" not in search_stages
-                    else "selected_candidate" if llm_selection is not None
-                    else "llm_unavailable"
-                ),
-                "selection": llm_selection,
-            },
             "ocr_rerank": {
-                **ocr,
                 **ocr_diagnostics,
+                "ocr_status": ocr["reason"],
+                "normalized_text": ocr["normalized_text"],
                 "formula": "final = visual_score + ocr_bonus (src/ml/ocr_matching.py)",
             },
+            "llm_rerank": {"requested": "llm" in search_stages, "selection": llm_selection},
         }
-        return candidates[:limit], diagnostics, query_views.crops
+        return SearchOutcome(
+            candidates=candidates[:limit],
+            crops=query_views.crops,
+            ocr=ocr,
+            matches=matches,
+            reranked=min(len(candidates), OCR_RERANK_LIMIT),
+            timings_ms=timings,
+            diagnostics=diagnostics,
+        )
 
     def _visual_diagnostics(self, matches: VisualMatches) -> dict[str, Any]:
         selection = matches.selection
@@ -292,7 +315,15 @@ class WineService:
 
         visual_by_id = {candidate.wine_id: candidate.score for candidate in candidates}
         reranked = sorted(
-            (replace(candidate, score=candidate.score + scores[candidate.wine_id].bonus) for candidate in candidates),
+            (
+                replace(
+                    candidate,
+                    score=candidate.score + scores[candidate.wine_id].bonus,
+                    visual_score=candidate.score,
+                    ocr_score=scores[candidate.wine_id].bonus,
+                )
+                for candidate in candidates
+            ),
             key=lambda item: item.score,
             reverse=True,
         )
@@ -487,51 +518,39 @@ class WineService:
             "grape_name": ", ".join(grape_names),
         }
 
-    # --- ответы -------------------------------------------------------------------
+def wine_to_response(wine: Wine) -> WineResponse:
+    """Карточка вина для ответов API (поиск, история, избранное, уведомления)."""
+    def photo(image) -> WinePhoto:
+        return WinePhoto(id=str(image.id), url=f"/api/v1/photos/{image.id}", is_main=image.is_main)
 
-    def _wine_to_response(self, wine: Wine) -> WineResponse:
-        photos = [
-            WinePhotoResponse(
-                id=str(image.id),
-                url=f"/api/v1/wines/{wine.id}/photos/{PurePosixPath(image.minio_path).name}",
-                object_name=image.minio_path,
-                filename=PurePosixPath(image.minio_path).name,
-                is_main=image.is_main,
-                source_url=image.source_url,
-            )
-            for image in wine.images
-        ]
-        wine_type = " ".join(part for part in [wine.color, wine.sugar] if part) or None
-        return WineResponse(
-            id=str(wine.id),
-            slug=wine.sku,
-            sku=wine.sku,
-            name=wine.name,
-            producer=wine.producer.name if wine.producer else None,
-            region=wine.region.name if wine.region else None,
-            country=wine.region.country if wine.region else None,
-            vintage=wine.year,
-            year=wine.year,
-            color=wine.color,
-            sugar=wine.sugar,
-            style=wine_type,
-            wine_type=wine_type,
-            alcohol=wine.alcohol,
-            price=float(wine.price) if wine.price is not None else None,
-            stock=wine.stock,
-            rating=float(wine.rating) if wine.rating is not None else None,
-            description=wine.description,
-            url=wine.source_url,
-            source_url=wine.source_url,
-            image_url=photos[0].url if photos else None,
-            grapes=[link.grape.name for link in wine.grape_links if link.grape is not None],
-            photos=photos,
-        )
+    # main первым, затем остальные настоящие по имени файла (yandex_1, yandex_2, ...)
+    real = sorted((i for i in wine.images if not i.is_generated), key=lambda i: (not i.is_main, i.minio_path))
+    generated = sorted((i for i in wine.images if i.is_generated), key=lambda i: i.minio_path)
+    photos = [photo(image) for image in real]
+    return WineResponse(
+        id=str(wine.id),
+        slug=wine.sku,
+        name=wine.name,
+        producer=wine.producer.name if wine.producer else None,
+        region=wine.region.name if wine.region else None,
+        country=wine.region.country if wine.region else None,
+        year=wine.year,
+        color=wine.color,
+        sugar=wine.sugar,
+        alcohol=wine.alcohol,
+        price=float(wine.price) if wine.price is not None else None,
+        rating=float(wine.rating) if wine.rating is not None else None,
+        description=wine.description,
+        grapes=[link.grape.name for link in wine.grape_links if link.grape is not None],
+        source_url=wine.source_url,
+        image_url=photos[0].url if photos else None,
+        photos=photos,
+        generated_photos=[photo(image) for image in generated],
+    )
 
 
-def _match_fields(candidate: WineCandidate) -> dict[str, Any]:
-    """Поля кандидата для CompactSearchMatch / SearchMatchResponse."""
-    return asdict(candidate)
+def _visual_score(candidate: WineCandidate) -> float:
+    return candidate.visual_score if candidate.visual_score is not None else candidate.score
 
 
 def _ocr_result(reason: str, source_view: str | None, text: str = "", normalized: str = "") -> dict[str, Any]:

@@ -30,14 +30,39 @@ OpenAPI-документация будет доступна на `http://localh
 
 ## Фото в MinIO
 
-Фотографии передаются одним архивом `data/photos.tar.gz`.
-При `docker compose up --build` Compose автоматически:
+Фото лежат в bucket `wine` как `<wine_id>/<photo_dir>.jpg` (так их ищет API по
+`wine_images.minio_path`):
 
-- запускает `minio-init` на базе `minio/mc`;
-- создает bucket из `MINIO__BUCKET` (по умолчанию `wine`);
-- загружает `data/photos.tar.gz` через MinIO Snowball auto-extract (`X-Amz-Meta-Snowball-Auto-Extract=true`);
-- MinIO сам извлекает содержимое архива в bucket отдельными объектами;
-- сохраняет структуру `data/photos/<wine_id>/<filename>` как `wine/<wine_id>/<filename>` внутри bucket.
+- настоящие — `main`, `yandex_*`, `vivino_*` → в API `wine.photos` (`main` первым, он же `image_url`);
+- сгенерированные сцены `flux_*` (`wine_images.is_generated = true`) → `wine.generated_photos`,
+  фронтенд показывает их по кнопке.
+
+**Свежий запуск** (склонировали репозиторий): положите архив `photos.tar.gz` в `./data/` и
+выполните `docker compose up --build`. Сервис `minio-init`:
+
+- если bucket пуст — распаковывает `data/photos.tar.gz` в bucket (Snowball auto-extract);
+- если bucket уже заполнен — ничего не делает (`MINIO_RESEED=1 docker compose up minio-init` — перезалить);
+- если архива нет — пишет предупреждение и не блокирует запуск (фото будут отдавать 404).
+
+`db-init` при каждом запуске приводит каталог к `data/db/*.json` (`--prune`): лишние строки
+каталога удаляются, пользователи, история, избранное и отзывы не трогаются.
+
+Архив собирается ровно по `data/db/wine_images.json` (~5.3 GB; без flux — ~1.2 GB):
+
+```bash
+uv run python scripts/build_photos_archive.py                 # все фото
+uv run python scripts/build_photos_archive.py --no-generated  # без сгенерированных
+```
+
+Обновить набор фото из `data/images_extended` (загрузка в работающий MinIO, синхронизация
+`wine_images` и `data/db/wine_images.json`, удаление лишних объектов из bucket):
+
+```bash
+export MINIO__HOST=localhost DATABASE__HOST=localhost
+uv run python scripts/seed_minio_photos.py                                                  # загрузить новые
+uv run python scripts/seed_minio_photos.py --skip-upload --sync-db --prune-minio --dry-run  # посмотреть
+uv run python scripts/seed_minio_photos.py --skip-upload --sync-db --prune-minio --write-json
+```
 
 ## Postgres init
 
@@ -151,17 +176,41 @@ COPYFILE_DISABLE=1 LC_ALL=C tar --exclude='._*' --exclude='.DS_Store' -czf data/
 ## API
 
 - `GET /health` - проверка, что API жив.
-- `POST /api/v1/search/image` - принимает изображение бутылки или этикетки в multipart-поле `image` и возвращает компактный результат `{"result": [{"wine_id": "...", "score": 0.0}]}`. Query-параметр `stages`: `global` (визуальный поиск + OCR-реранк, выполняется всегда) и опциональный `llm` (выбор кандидата vision-LLM). `main_photos_only=true` ограничивает Qdrant-поиск только векторами `photo_id=main`, исключая `yandex_*`.
-- `POST /api/v1/search/image/extended` - тот же поиск, но с диагностикой: crop бутылки/этикетки, OCR rerank, полные карточки вин, scores и источники совпадения. Поддерживает тот же `stages`.
-- `GET /api/v1/wines/{wine_id}` - детали вина по id.
-- `GET /api/v1/wines/{wine_id}/photos/{filename}` - файл фотографии вина из MinIO. URL приходит в `image_url` и `photos[].url` ответа `GET /api/v1/wines/{wine_id}` или extended search.
+- `POST /api/v1/search/image` — фото бутылки или этикетки в multipart-поле `image`; ответ — только
+  slug найденного вина: `{"slug": "..."}` (`null`, если ничего не найдено).
+- `POST /api/v1/search/image/extended` — тот же поиск, ответ для фронтенда:
+
+  ```json
+  {
+    "search_id": "…",                 // для POST /favorites
+    "status": "found",
+    "results": [
+      {"rank": 1, "slug": "…", "wine_id": "…",
+       "visual_score": 0.81, "ocr_score": 0.22, "final_score": 1.03,
+       "wine": {"name": "…", "producer": "…", "color": "…", "sugar": "…", "grapes": [],
+                "image_url": "/api/v1/photos/<id>", "photos": [{"id": "…", "url": "/api/v1/photos/<id>", "is_main": true}]}}
+    ],
+    "ocr": {"applied": true, "source_view": "label_crop", "text": "…"},
+    "crops": {"original": {…}, "bottle_crop": {…}, "label_crop": {"available": true, "box": [x1, y1, x2, y2]}},
+    "search": {"active_views": ["label_crop"], "label_photo_mode": true, "candidates": 50},
+    "timings_ms": {"total_ms": 1602, "crops_ms": 113, "ocr_ms": 1310, "embedding_ms": 78,
+                   "vector_search_ms": 28, "rerank_ms": 72, "llm_ms": null},
+    "diagnostics": null               // полная отладка только при debug=true
+  }
+  ```
+
+  Параметры: `limit`, `stages` (`global` — всегда; `llm` — дополнительно выбор vision-LLM),
+  `main_photos_only`, `views` (эксперименты по кропам), `save_history`, `debug`.
+- `GET /api/v1/wines/{wine_id}` — карточка вина.
+- `GET /api/v1/photos/{photo_id}` — файл фото из MinIO (ссылки — в `wine.photos[].url` и
+  `wine.image_url`), с `Cache-Control` на неделю.
 
 Старые demo-ручки `GET /api/v1/wines`, `GET/POST /api/v1/wines/{wine_id}/reviews` и `GET /api/v1/dictionaries` удалены вместе с in-memory stub-сервисом.
 
 Пример поиска по изображению:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/search/image?limit=3&main_photos_only=true" \
+curl -X POST "http://localhost:8000/api/v1/search/image" \
   -F "image=@./label.jpg"
 ```
 
@@ -177,6 +226,43 @@ curl -X POST "http://localhost:8000/api/v1/search/image/extended?limit=3" \
 ```bash
 curl "http://localhost:8000/api/v1/wines/664766e5-a73d-5609-a0d7-cffbbe62d466"
 ```
+
+## Пользователи: вход, история, избранное, напоминания
+
+Упрощённая авторизация: email + пароль (bcrypt), JWT access-токен в заголовке
+`Authorization: Bearer <token>` (в Swagger — кнопка **Authorize**). Таблицы `users`,
+`search_history`, `favorites`, `wine_reviews`, `notifications`, `notification_wines`
+создаются автоматически при старте API.
+
+| Метод | Путь | Доступ | Что делает |
+|---|---|---|---|
+| POST | `/api/v1/auth/register` | все | регистрация → токен; временная история переносится в аккаунт |
+| POST | `/api/v1/auth/login` | все | вход → токен; временная история переносится в аккаунт |
+| GET | `/api/v1/auth/me` | токен | текущий пользователь |
+| GET | `/api/v1/history` | все | история поиска: аккаунт или временная по cookie `wine_anon_id` |
+| GET | `/api/v1/history/wines?since=&until=` | токен | просмотренные вина за промежуток (по умолчанию сутки) с избранным и отзывом |
+| DELETE | `/api/v1/history/{search_id}` | все | удалить запись истории |
+| GET / POST | `/api/v1/favorites` | токен | список / добавить `{wine_id, search_id?}` |
+| DELETE | `/api/v1/favorites/{wine_id}` | токен | убрать из избранного |
+| GET | `/api/v1/reviews` | токен | мои оценки и комментарии |
+| PUT / DELETE | `/api/v1/reviews/{wine_id}` | токен | оценка 1–5 и/или комментарий `{rating?, comment?, notification_id?}` / удалить |
+| GET | `/api/v1/notifications?unread_only=` | токен | напоминания + число непрочитанных |
+| GET | `/api/v1/notifications/{id}` | токен | открыть: вина за период с избранным и отзывом (отмечает прочитанным) |
+| POST | `/api/v1/notifications/{id}/read`, `/read-all` | токен | отметить прочитанными |
+
+- `/search/image` и `/search/image/extended` сохраняют поиск в историю; extended возвращает
+  `search_id` (его можно передать в `POST /favorites`). Без токена поиск работает, история
+  временная — по cookie, хранится `AUTH__ANON_HISTORY_TTL_HOURS`. `save_history=false` —
+  не сохранять (так делает `scripts/eval_search.py`).
+- **Напоминание — одно на сессию.** Сессия закончена, если с последнего поиска прошло
+  `NOTIFICATIONS__DELAY_MINUTES`. Тогда все её поиски собираются в одно уведомление «Вы недавно
+  смотрели вина (N). Что-то взяли?»: вина (top-1 каждого поиска, без повторов) за последние
+  `NOTIFICATIONS__MAX_AGE_HOURS`, которые пользователь ещё не добавил в избранное и не оценил.
+  Если таких нет — уведомления нет. По нажатию фронтенд открывает `GET /notifications/{id}`:
+  список вин с кнопками «в избранное» (`POST /favorites`) и «оценить» (`PUT /reviews/{wine_id}`
+  с `notification_id`). Фоновая задача проверяет раз в `NOTIFICATIONS__CHECK_INTERVAL_SECONDS`.
+- Настройки — `AUTH__*` и `NOTIFICATIONS__*` в `.env` (см. `.env.example`). Обязательно задайте
+  `AUTH__JWT_SECRET`.
 
 ## Frontend
 
@@ -309,9 +395,9 @@ ocr_bonus = 0.1 * (0.5·B(name) + 0.85·B(producer) + 0.25·B(grapes))
 - Отсутствие чего-либо в OCR **не штрафуется**: в формуле только бонусы и явные противоречия.
 - Все строки сравниваются как есть и в RU→LAT / LAT→RU транслитерации (и сущности, и OCR).
 
-Диагностика `/search/image/extended` → `diagnostics.ocr_rerank`: `text` (сырой OCR),
-`candidate_scores` (top-10 со всеми компонентами) и `pool` (весь пул до реранка:
-`visual_score`, `ocr_bonus`) — для офлайн-анализа.
+В ответе `/search/image/extended` у каждого результата `visual_score`, `ocr_score` и `final_score`,
+распознанный текст — в `ocr.text`. С `debug=true` в `diagnostics.ocr_rerank` добавляются
+`candidate_scores` (top-10 со всеми компонентами) и `pool` (весь пул до реранка) — для офлайн-анализа.
 
 Эксперименты — [`scripts/ocr_lab`](scripts/ocr_lab/README.md). Кросс-валидация на 578 eval-фото
 (группировка по вину):

@@ -1,75 +1,53 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class WinePhotoResponse(BaseModel):
+class WinePhoto(BaseModel):
     id: str
-    url: str
-    object_name: str
-    filename: str
+    url: str = Field(description="GET-ссылка на файл фото (бэкенд отдаёт его из MinIO)")
     is_main: bool
-    source_url: str | None = None
 
 
 class WineResponse(BaseModel):
     id: str
     slug: str
-    sku: str
     name: str
     producer: str | None = None
     region: str | None = None
     country: str | None = None
-    vintage: int | None = None
     year: int | None = None
     color: str | None = None
     sugar: str | None = None
-    style: str | None = None
-    wine_type: str | None = None
     alcohol: float | None = None
     price: float | None = None
     currency: str = "RUB"
-    stock: int | None = None
     rating: float | None = None
     description: str | None = None
-    url: str | None = None
-    source_url: str | None = None
-    image_url: str | None = None
     grapes: list[str] = Field(default_factory=list)
-    photos: list[WinePhotoResponse] = Field(default_factory=list)
+    source_url: str | None = None
+    image_url: str | None = Field(default=None, description="Главное фото (первое из photos)")
+    photos: list[WinePhoto] = Field(default_factory=list, description="Настоящие фото: main, yandex, vivino")
+    generated_photos: list[WinePhoto] = Field(
+        default_factory=list, description="Сгенерированные сцены (полка, стол, в руке) — показывать по кнопке"
+    )
 
 
-class SearchMatchResponse(BaseModel):
-    wine_id: str
+class SlugResponse(BaseModel):
+    slug: str | None = Field(description="Slug найденного вина; null — не найдено")
+
+
+class SearchMatch(BaseModel):
+    rank: int
     slug: str
-    score: float
-    max_score: float
-    mean_score: float
-    n_photos: int
-    score_std: float
-    cosine_score: float = 0.0
-    view_photo_ids: dict[str, str] | None = None
-    view_match_counts: dict[str, int] | None = None
+    wine_id: str
+    visual_score: float = Field(description="Скор визуального поиска (SigLIP2 + Qdrant)")
+    ocr_score: float = Field(description="OCR-бонус: совпадение текста этикетки с карточкой вина")
+    final_score: float = Field(description="visual_score + ocr_score — по нему отсортированы результаты")
     wine: WineResponse | None = None
-
-
-class CompactSearchMatch(BaseModel):
-    wine_id: str
-    slug: str
-    score: float
-    max_score: float
-    mean_score: float
-    n_photos: int
-    score_std: float
-    cosine_score: float = 0.0
-    view_photo_ids: dict[str, str] | None = None
-    view_match_counts: dict[str, int] | None = None
-
-
-class CompactSearchResponse(BaseModel):
-    result: list[CompactSearchMatch]
 
 
 class CropResponse(BaseModel):
@@ -81,13 +59,154 @@ class CropResponse(BaseModel):
     source_view: str | None = None
 
 
+class OcrInfo(BaseModel):
+    applied: bool = Field(description="OCR распознал текст и участвовал в ранжировании")
+    source_view: str | None = Field(default=None, description="С какого кропа читали: label_crop / bottle_crop / original")
+    text: str = ""
+
+
+class SearchInfo(BaseModel):
+    active_views: list[str] = Field(description="По каким кропам искали в Qdrant")
+    label_photo_mode: bool = Field(description="Фото этикетки крупным планом — искали только по ней")
+    candidates: int = Field(description="Сколько вин-кандидатов переранжировал OCR")
+
+
+class SearchTimings(BaseModel):
+    total_ms: float
+    crops_ms: float = Field(description="YOLO: кропы бутылки и этикетки")
+    ocr_ms: float = Field(description="Распознавание текста vision-LLM")
+    embedding_ms: float = Field(description="SigLIP2-эмбеддинги кропов")
+    vector_search_ms: float = Field(description="Поиск в Qdrant")
+    rerank_ms: float = Field(description="OCR-реранк кандидатов")
+    llm_ms: float | None = Field(default=None, description="Выбор кандидата LLM (stage=llm)")
+
+
 class SearchResponse(BaseModel):
-    status: str
-    slug: str | None = None
-    confidence: float = 0.0
-    gap: float = 0.0
-    wine: WineResponse | None = None
-    top5: list[dict[str, float | str]] = Field(default_factory=list)
-    results: list[SearchMatchResponse] = Field(default_factory=list)
+    search_id: str | None = Field(default=None, description="id записи истории; передайте в POST /favorites")
+    status: str = Field(description="found / not_found")
+    results: list[SearchMatch] = Field(default_factory=list)
+    ocr: OcrInfo
     crops: dict[str, CropResponse] = Field(default_factory=dict)
-    diagnostics: dict[str, Any] = Field(default_factory=dict)
+    search: SearchInfo
+    timings_ms: SearchTimings
+    diagnostics: dict[str, Any] | None = Field(default=None, description="Полная отладка — только при debug=true")
+
+
+class CatBoostMatch(BaseModel):
+    rank: int
+    slug: str
+    wine_id: str
+    score: float
+
+
+class CatBoostSearchResponse(BaseModel):
+    results: list[CatBoostMatch]
+
+
+# --- пользователи ---------------------------------------------------------------
+
+
+class Credentials(BaseModel):
+    email: str = Field(min_length=3, max_length=320, examples=["user@example.com"])
+    password: str = Field(min_length=6, max_length=128, examples=["secret123"])
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    created_at: datetime
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
+class SearchResultRef(BaseModel):
+    wine_id: str
+    score: float
+
+
+class SearchHistoryItem(BaseModel):
+    id: str
+    created_at: datetime
+    confidence: float | None = None
+    top_wine: WineResponse | None = None
+    results: list[SearchResultRef] = Field(default_factory=list)
+
+
+class SearchHistoryResponse(BaseModel):
+    items: list[SearchHistoryItem]
+    anonymous: bool = Field(description="true — временная история по cookie, без аккаунта")
+
+
+class FavoriteRequest(BaseModel):
+    wine_id: str
+    search_id: str | None = Field(default=None, description="search_id из ответа поиска")
+
+
+class FavoriteItem(BaseModel):
+    wine: WineResponse
+    search_id: str | None = None
+    created_at: datetime
+
+
+class FavoritesResponse(BaseModel):
+    items: list[FavoriteItem]
+
+
+class ReviewRequest(BaseModel):
+    rating: int | None = Field(default=None, ge=1, le=5, description="Оценка 1–5")
+    comment: str | None = Field(default=None, max_length=2000)
+    notification_id: str | None = Field(default=None, description="Напоминание, из которого оставлен отзыв")
+
+
+class ReviewResponse(BaseModel):
+    wine_id: str
+    rating: int | None = None
+    comment: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ReviewItem(ReviewResponse):
+    wine: WineResponse
+
+
+class ReviewsResponse(BaseModel):
+    items: list[ReviewItem]
+
+
+class ViewedWine(BaseModel):
+    """Вино, которое пользователь смотрел: карточка + его избранное и отзыв."""
+
+    wine: WineResponse
+    viewed_at: datetime
+    search_id: str | None = None
+    is_favorite: bool
+    review: ReviewResponse | None = None
+
+
+class ViewedWinesResponse(BaseModel):
+    items: list[ViewedWine]
+
+
+class NotificationItem(BaseModel):
+    id: str
+    kind: str
+    message: str
+    period_start: datetime
+    period_end: datetime
+    wines_count: int
+    created_at: datetime
+    read_at: datetime | None = None
+
+
+class NotificationDetail(NotificationItem):
+    wines: list[ViewedWine]
+
+
+class NotificationsResponse(BaseModel):
+    items: list[NotificationItem]
+    unread: int
