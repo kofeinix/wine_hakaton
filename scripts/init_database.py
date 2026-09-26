@@ -5,6 +5,7 @@ import logging
 import sys
 from pathlib import Path
 
+from sqlalchemy import delete, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -67,7 +68,20 @@ async def upsert_rows(session, model, rows: list[dict]) -> None:
         )
 
 
-async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool) -> None:
+async def prune_rows(session, model, rows: list[dict]) -> int:
+    """Удалить строки таблицы, первичного ключа которых нет в rows."""
+    pk_columns = list(model.__table__.primary_key.columns)
+    keep = {tuple(str(row[column.name]) for column in pk_columns) for row in rows}
+    existing = (await session.execute(select(*pk_columns))).all()
+    stale = [tuple(pk) for pk in existing if tuple(str(value) for value in pk) not in keep]
+    batch_size = max(1, ASYNC_PG_MAX_QUERY_ARGUMENTS // len(pk_columns))
+    for offset in range(0, len(stale), batch_size):
+        batch = stale[offset : offset + batch_size]
+        await session.execute(delete(model).where(tuple_(*pk_columns).in_(batch)))
+    return len(stale)
+
+
+async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prune: bool = False) -> None:
     database = DatabaseClient(all_settings.database)
     await database.connect()
 
@@ -119,6 +133,21 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool) -> N
             await upsert_rows(session, Wine, wines)
             await upsert_rows(session, WineGrape, wine_grapes)
             await upsert_rows(session, WineImage, wine_images)
+            if prune:
+                # от дочерних таблиц к родительским; таблицы пользователей не трогаем
+                for model, rows in (
+                    (WineImage, wine_images),
+                    (WineGrape, wine_grapes),
+                    (GrapeAlias, grape_aliases),
+                    (ColorAlias, color_aliases),
+                    (Wine, wines),
+                    (Grape, grapes),
+                    (Region, regions),
+                    (Producer, producers),
+                ):
+                    removed = await prune_rows(session, model, rows)
+                    if removed:
+                        logger.info("Pruned %s stale rows from %s", removed, model.__tablename__)
             await session.commit()
 
         logger.info(
@@ -143,7 +172,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Import normalized wine JSON files into Postgres.")
     parser.add_argument("--db-dir", type=Path, default=DEFAULT_DB_DIR)
     parser.add_argument("--no-create-tables", action="store_true")
-    parser.add_argument("--drop-existing", action="store_true")
+    parser.add_argument(
+        "--drop-existing",
+        action="store_true",
+        help="Удалить ВСЕ таблицы (включая пользователей, историю, избранное) перед импортом.",
+    )
+    parser.add_argument(
+        "--prune",
+        action="store_true",
+        help="Удалить из таблиц каталога строки, которых нет в JSON (пользовательские данные не трогаются).",
+    )
     return parser.parse_args()
 
 
@@ -155,5 +193,6 @@ if __name__ == "__main__":
             db_dir=args.db_dir,
             create_tables=not args.no_create_tables,
             drop_existing=args.drop_existing,
+            prune=args.prune,
         )
     )
