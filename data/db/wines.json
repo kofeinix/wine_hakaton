@@ -136,8 +136,8 @@
     "created_at": "2026-09-06 16:21:28.593820+00:00",
     "updated_at": "2026-09-06 16:21:28.593820+00:00",
     "rating": "3.00",
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "8-12°C",
+    "shade": "Соломенный"
   },
   {
     "id": "222c3a79-0da1-5383-9ff0-c220df605327",
@@ -156,8 +156,8 @@
     "created_at": "2026-09-06 16:21:31.651614+00:00",
     "updated_at": "2026-09-06 16:21:31.651614+00:00",
     "rating": "5.00",
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "8-10°C",
+    "shade": "Соломенный"
   },
   {
     "id": "aa56075d-e495-58f6-bf1f-dc396511d2d2",
@@ -39128,7 +39128,7 @@
     "year": null,
     "color": "Белое",
     "sugar": "экстра брют",
-    "alcohol": null,
+    "alcohol": "10%",
     "price": null,
     "stock": null,
     "description": "Аромат: преобладают грушевые ноты с оттенками акации, липового цвета и леденцов.\n\nВкус: оттенки ментола добавляют свежести и готовят к мягкой кислотности и общей легкости с преобладанием кислинки сливы, уходящей в длительное послевкусие.\n\nТехнология: Ручной сбор, Охлаждение винограда до 2-4°С, Мягкое прессование в мембранном прессе, Остановка брожения холодом, Выдержка на осадке 6 месяцев",
@@ -39136,8 +39136,8 @@
     "created_at": "2026-09-06 16:21:30.094803+00:00",
     "updated_at": "2026-09-06 17:21:52.354290+00:00",
     "rating": "1.00",
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "8-10°C",
+    "shade": "Светло-соломенный"
   },
   {
     "id": "812d5b56-a9e9-5cb8-9220-889c15dfd514",
@@ -40516,8 +40516,8 @@
     "created_at": "2026-09-08 19:12:48.844827+00:00",
     "updated_at": "2026-09-08 19:12:48.844827+00:00",
     "rating": null,
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "8-10°C",
+    "shade": "Розовый"
   },
   {
     "id": "9f2f4fc9-84fa-598c-b46c-2b0c16e44762",
@@ -40736,8 +40736,8 @@
     "created_at": "2026-09-08 19:12:46.500673+00:00",
     "updated_at": "2026-09-08 19:12:46.500673+00:00",
     "rating": null,
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "10-12°C",
+    "shade": "Соломенный с золотистыми переливами"
   },
   {
     "id": "e98dccec-2d30-5154-9a5d-3827d84099e0",
@@ -40756,8 +40756,8 @@
     "created_at": "2026-09-08 19:12:50.213512+00:00",
     "updated_at": "2026-09-08 19:12:50.213512+00:00",
     "rating": null,
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "14-16°C",
+    "shade": "Глубокий рубиновый"
   },
   {
     "id": "0cd3371f-71bb-5411-9978-bf8344c580d1",
@@ -40776,8 +40776,8 @@
     "created_at": "2026-09-08 19:12:51.598972+00:00",
     "updated_at": "2026-09-08 19:12:51.598972+00:00",
     "rating": null,
-    "serving_temperature": null,
-    "shade": null
+    "serving_temperature": "10-12°C",
+    "shade": "Золотистый с розовым отливом"
   },
   {
     "id": "fcacf245-6dec-5d04-8164-b0c4233bbed1",

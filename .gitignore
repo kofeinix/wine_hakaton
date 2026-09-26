@@ -30,3 +30,6 @@ data/catboost/
 .playwright-mcp/
 
 docs/
+
+# сырые ответы vino-svoe.ru (scripts/enrich_wines_from_site.py)
+data/site_cache/

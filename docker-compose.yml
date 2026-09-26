@@ -15,6 +15,9 @@ services:
         condition: service_started
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
+    # node_modules живёт в именованном томе и перекрывает установку из образа:
+    # после смены package.json том устаревает, поэтому досинхронизируем зависимости при старте
+    command: ["sh", "-c", "npm install --no-audit --no-fund && npm run dev"]
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
