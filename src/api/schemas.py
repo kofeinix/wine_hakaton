@@ -64,6 +64,10 @@ class OcrInfo(BaseModel):
     source_view: str | None = Field(default=None, description="С какого кропа читали: label_crop / bottle_crop / original")
     text: str = ""
     cached: bool = Field(default=False, description="Текст взят из кеша (это фото уже распознавали)")
+    skipped: bool = Field(
+        default=False,
+        description="OCR не понадобился: визуальный результат уверенный (SEARCH__OCR_SKIP_VISUAL_GAP)",
+    )
 
 
 class SearchInfo(BaseModel):

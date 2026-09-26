@@ -109,6 +109,13 @@ class SearchSettings(BaseModel):
         default="siglip2",
         description="Suffix of Qdrant collections: wine_<view>_<collection_encoder>",
     )
+    ocr_skip_visual_gap: float = Field(
+        default=0.10,
+        description=(
+            "Не ждать OCR, если визуальный top-1 лучше top-2 больше чем на эту долю "
+            "((v1 - v2) / v2). На eval при 0.10 — 14% поисков без OCR и без потери точности. 0 — всегда OCR."
+        ),
+    )
 
 
 class LlmSettings(BaseModel):

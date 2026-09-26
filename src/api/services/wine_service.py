@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+from contextlib import suppress
 import logging
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
@@ -101,6 +102,7 @@ class WineService:
             collection_encoder=connection_manager.settings.search.collection_encoder,
         )
         self.ocr_matcher = OcrMatchService(self.repository, SUGAR_VARIANTS)
+        self.ocr_skip_visual_gap = connection_manager.settings.search.ocr_skip_visual_gap
         self._catboost_reranker: CatBoostWineReranker | None = None
         self._catboost_load_failed = False
         # YOLO и SigLIP — CPU/GPU-работа: в отдельном потоке, чтобы не блокировать event loop.
@@ -143,6 +145,7 @@ class WineService:
                 source_view=outcome.ocr["source_view"],
                 text=outcome.ocr["text"],
                 cached=outcome.ocr["cached"],
+                skipped=outcome.ocr["skipped"],
             ),
             crops=outcome.crops,
             search=SearchInfo(
@@ -225,12 +228,27 @@ class WineService:
             return result
 
         # OCR ждёт LLM, визуальный поиск — модель и Qdrant: независимы, идут параллельно
-        ocr, matches = await asyncio.gather(ocr_stage(), visual_stage())
-        mark = perf_counter()
-
+        ocr_task = asyncio.create_task(ocr_stage())
+        try:
+            matches = await visual_stage()
+        except BaseException:
+            ocr_task.cancel()
+            raise
         global_limit = max(limit, GLOBAL_CANDIDATE_LIMIT)
         candidates = group_by_wine(matches, limit=global_limit)
         logger.info("Global search found top_%s candidates. %s", len(candidates), _format_top_gap(candidates))
+
+        visual_gap = _relative_gap(candidates)
+        if not ocr_task.done() and 0 < self.ocr_skip_visual_gap < visual_gap:
+            # визуальный результат уверенный: OCR его не меняет (проверено на eval) — не ждём LLM
+            ocr_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await ocr_task
+            ocr = _ocr_result("skipped_confident_visual", ocr_source_view(query_views), skipped=True)
+            timings["ocr_ms"] = 0.0
+        else:
+            ocr = await ocr_task  # уже готов (например, из кеша) — используем
+        mark = perf_counter()
         candidates, ocr_diagnostics = await self._rerank_with_ocr(candidates[:OCR_RERANK_LIMIT], ocr["text"])
         timings["rerank_ms"] = ms(mark)
         mark = perf_counter()
@@ -255,6 +273,8 @@ class WineService:
             "ocr_rerank": {
                 **ocr_diagnostics,
                 "ocr_status": ocr["reason"],
+                "visual_gap": round(visual_gap, 4) if visual_gap != float("inf") else None,
+                "ocr_skip_visual_gap": self.ocr_skip_visual_gap,
                 "normalized_text": ocr["normalized_text"],
                 "formula": "final = visual_score + ocr_bonus (src/ml/ocr_matching.py)",
             },
@@ -590,15 +610,26 @@ def _ocr_result(
     text: str = "",
     normalized: str = "",
     cached: bool = False,
+    skipped: bool = False,
 ) -> dict[str, Any]:
     return {
         "applied": bool(normalized),
         "cached": cached,
+        "skipped": skipped,
         "reason": reason,
         "source_view": source_view,
         "text": text,
         "normalized_text": normalized,
     }
+
+
+def _relative_gap(candidates: list[WineCandidate]) -> float:
+    """Отрыв визуального top-1 от top-2: (v1 - v2) / v2; один кандидат — бесконечность."""
+    if not candidates:
+        return 0.0
+    if len(candidates) < 2 or candidates[1].score <= 0:
+        return float("inf")
+    return (candidates[0].score - candidates[1].score) / candidates[1].score
 
 
 def _format_top_gap(candidates: list[WineCandidate]) -> str:
