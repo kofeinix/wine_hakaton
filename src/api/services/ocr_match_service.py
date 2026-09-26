@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from src.api.repositories.wine_repository import WineRepository
@@ -53,10 +54,11 @@ class OcrMatchService:
         if not normalize_match_text(raw_ocr_text) or not wine_ids:
             return {}
         catalog = await self.catalog()
-        wines = {str(wine.id): wine for wine in await self.repository.load_wines_by_ids(wine_ids)}
+        wines = {str(wine.id): wine for wine in await self.repository.load_wines_by_ids(wine_ids, for_ocr=True)}
         candidates = [to_ocr_candidate(wine_id, wines.get(wine_id)) for wine_id in wine_ids]
-        query = OcrQuery.build(raw_ocr_text, catalog)
-        return {score.wine_id: score for score in score_candidates(query, catalog, candidates)}
+        # сопоставление — чистый CPU (~50 мс): в потоке, чтобы не блокировать event loop
+        scores = await asyncio.to_thread(_score, raw_ocr_text, catalog, candidates)
+        return {score.wine_id: score for score in scores}
 
 
 def to_ocr_candidate(wine_id: str, wine: Wine | None) -> OcrCandidate:
@@ -76,3 +78,7 @@ def to_ocr_candidate(wine_id: str, wine: Wine | None) -> OcrCandidate:
         sugar=wine.sugar,
         alcohol=wine.alcohol,
     )
+
+
+def _score(raw_ocr_text: str, catalog: OcrCatalog, candidates: list[OcrCandidate]) -> list[OcrCandidateScore]:
+    return score_candidates(OcrQuery.build(raw_ocr_text, catalog), catalog, candidates)

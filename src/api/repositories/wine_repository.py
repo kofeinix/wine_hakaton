@@ -24,17 +24,7 @@ class WineRepository:
             return None
 
         async with self.database.session() as session:
-            return await session.get(
-                Wine,
-                id_,
-                options=[
-                    selectinload(Wine.producer),
-                    selectinload(Wine.region),
-                    selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
-                    selectinload(Wine.color_aliases),
-                    selectinload(Wine.images),
-                ],
-            )
+            return await session.scalar(self._with_wine_options(select(Wine)).where(Wine.id == id_))
 
     async def wine_scores_by_photo_ids(self, photo_scores: dict[str, float]) -> dict[str, float]:
         photo_ids = []
@@ -83,7 +73,8 @@ class WineRepository:
 
         return {str(photo_id): str(wine_id) for photo_id, wine_id in rows}
 
-    async def load_wines_by_ids(self, wine_ids: list[str]) -> list[Wine]:
+    async def load_wines_by_ids(self, wine_ids: list[str], for_ocr: bool = False) -> list[Wine]:
+        """Карточки вин. for_ocr=True — только то, что нужно OCR-матчингу (без фото и региона)."""
         ids = []
         for wine_id in dict.fromkeys(wine_ids):
             try:
@@ -98,7 +89,9 @@ class WineRepository:
             return list(
                 (
                     await session.scalars(
-                        self._with_wine_options(select(Wine)).where(Wine.id.in_(ids))
+                        (self._with_ocr_options if for_ocr else self._with_wine_options)(select(Wine)).where(
+                            Wine.id.in_(ids)
+                        )
                     )
                 ).all()
             )
@@ -142,6 +135,12 @@ class WineRepository:
             selectinload(Wine.producer),
             selectinload(Wine.region),
             selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
-            selectinload(Wine.color_aliases),
             selectinload(Wine.images),
+        )
+
+    @staticmethod
+    def _with_ocr_options(statement):
+        return statement.options(
+            selectinload(Wine.producer),
+            selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
         )

@@ -63,6 +63,7 @@ class OcrInfo(BaseModel):
     applied: bool = Field(description="OCR распознал текст и участвовал в ранжировании")
     source_view: str | None = Field(default=None, description="С какого кропа читали: label_crop / bottle_crop / original")
     text: str = ""
+    cached: bool = Field(default=False, description="Текст взят из кеша (это фото уже распознавали)")
 
 
 class SearchInfo(BaseModel):
@@ -74,7 +75,7 @@ class SearchInfo(BaseModel):
 class SearchTimings(BaseModel):
     total_ms: float
     crops_ms: float = Field(description="YOLO: кропы бутылки и этикетки")
-    ocr_ms: float = Field(description="Распознавание текста vision-LLM")
+    ocr_ms: float = Field(description="Распознавание текста vision-LLM (параллельно с эмбеддингами и Qdrant)")
     embedding_ms: float = Field(description="SigLIP2-эмбеддинги кропов")
     vector_search_ms: float = Field(description="Поиск в Qdrant")
     rerank_ms: float = Field(description="OCR-реранк кандидатов")

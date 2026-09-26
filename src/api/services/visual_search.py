@@ -232,15 +232,6 @@ class VisualSearcher:
         weights = normalized_weights([view for view in selection.active_views if per_view_counts.get(view)])
         return VisualMatches(selection, wine_view_matches, wine_slugs, per_view_counts, weights)
 
-    async def run(
-        self,
-        query_views,
-        allowed: list[str] | None = None,
-        query_filter: qdrant_models.Filter | None = None,
-    ) -> VisualMatches:
-        selection = select_views(query_views, allowed)
-        return await self.search(selection, self.embed(query_views, selection), query_filter)
-
 
 def _label_crop_area_ratio(crops: dict[str, Any]) -> float:
     label = crops.get("label_crop")

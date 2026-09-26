@@ -10,7 +10,11 @@
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
 import logging
+from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from time import perf_counter
@@ -52,6 +56,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 OCR_RERANK_LIMIT = 50
+OCR_CACHE_SIZE = 512  # распознанный текст по хешу кропа: повторный поиск того же фото без LLM
 # "global" (визуальный поиск + OCR-реранк) выполняется всегда; "llm" — опциональный выбор LLM.
 VALID_SEARCH_STAGES = ("global", "llm")
 CATBOOST_RERANKER_MODEL_PATH = PROJECT_ROOT / "models" / "catboost" / "wine_reranker.cbm"
@@ -98,6 +103,13 @@ class WineService:
         self.ocr_matcher = OcrMatchService(self.repository, SUGAR_VARIANTS)
         self._catboost_reranker: CatBoostWineReranker | None = None
         self._catboost_load_failed = False
+        # YOLO и SigLIP — CPU/GPU-работа: в отдельном потоке, чтобы не блокировать event loop.
+        # Один воркер — модели не вызываются параллельно (Ultralytics не потокобезопасен).
+        self._cv_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="cv")
+        self._ocr_cache: OrderedDict[str, str] = OrderedDict()
+
+    async def _cv(self, fn, *args):
+        return await asyncio.get_running_loop().run_in_executor(self._cv_executor, fn, *args)
 
     # --- публичные методы (routes.py) ------------------------------------------
 
@@ -130,6 +142,7 @@ class WineService:
                 applied=outcome.ocr["applied"],
                 source_view=outcome.ocr["source_view"],
                 text=outcome.ocr["text"],
+                cached=outcome.ocr["cached"],
             ),
             crops=outcome.crops,
             search=SearchInfo(
@@ -184,33 +197,43 @@ class WineService:
         stages: int | str | list[str] | None = None,
         main_photos_only: bool = False,
     ) -> SearchOutcome:
-        """Кропы -> OCR -> визуальный поиск -> OCR-реранк -> (опционально) выбор LLM."""
+        """Кропы -> (OCR || визуальный поиск) -> OCR-реранк -> (опционально) выбор LLM."""
         started = perf_counter()
         timings: dict[str, float] = {}
 
-        def lap(name: str, since: float) -> float:
-            now = perf_counter()
-            timings[name] = round((now - since) * 1000, 1)
-            return now
+        def ms(since: float) -> float:
+            return round((perf_counter() - since) * 1000, 1)
 
         search_stages = self._normalize_search_stages(stages)
-        query_views = self.photo_service.build_query_views(image_bytes)
-        mark = lap("crops_ms", started)
-        ocr = await self._extract_ocr_text(query_views)
-        mark = lap("ocr_ms", mark)
+        query_views = await self._cv(self.photo_service.build_query_views, image_bytes)
+        timings["crops_ms"] = ms(started)
         selection = select_views(query_views, views)
-        vectors = self.visual.embed(query_views, selection)
-        mark = lap("embedding_ms", mark)
-        matches = await self.visual.search(
-            selection, vectors, main_photos_filter() if main_photos_only else None
-        )
-        mark = lap("vector_search_ms", mark)
+
+        async def ocr_stage() -> dict[str, Any]:
+            since = perf_counter()
+            result = await self._extract_ocr_text(query_views)
+            timings["ocr_ms"] = ms(since)
+            return result
+
+        async def visual_stage() -> VisualMatches:
+            since = perf_counter()
+            vectors = await self._cv(self.visual.embed, query_views, selection)
+            timings["embedding_ms"] = ms(since)
+            since = perf_counter()
+            result = await self.visual.search(selection, vectors, main_photos_filter() if main_photos_only else None)
+            timings["vector_search_ms"] = ms(since)
+            return result
+
+        # OCR ждёт LLM, визуальный поиск — модель и Qdrant: независимы, идут параллельно
+        ocr, matches = await asyncio.gather(ocr_stage(), visual_stage())
+        mark = perf_counter()
 
         global_limit = max(limit, GLOBAL_CANDIDATE_LIMIT)
         candidates = group_by_wine(matches, limit=global_limit)
         logger.info("Global search found top_%s candidates. %s", len(candidates), _format_top_gap(candidates))
         candidates, ocr_diagnostics = await self._rerank_with_ocr(candidates[:OCR_RERANK_LIMIT], ocr["text"])
-        mark = lap("rerank_ms", mark)
+        timings["rerank_ms"] = ms(mark)
+        mark = perf_counter()
 
         llm_selection: dict[str, Any] | None = None
         if "llm" in search_stages:
@@ -218,8 +241,8 @@ class WineService:
                 image_bytes=image_bytes,
                 candidates=candidates[:GLOBAL_CANDIDATE_LIMIT],
             )
-            lap("llm_ms", mark)
-        timings["total_ms"] = round((perf_counter() - started) * 1000, 1)
+            timings["llm_ms"] = ms(mark)
+        timings["total_ms"] = ms(started)
 
         diagnostics = {
             "visual": {
@@ -285,11 +308,21 @@ class WineService:
         image = query_views.images.get(source_view)
         if image is None:
             return _ocr_result("no_source_image", source_view)
+        jpeg = image_to_jpeg_bytes(image)
+        key = hashlib.sha1(jpeg).hexdigest()
+        cached = self._ocr_cache.get(key)
+        if cached is not None:
+            self._ocr_cache.move_to_end(key)
+            normalized = normalize_match_text(cached)
+            return _ocr_result("ok" if normalized else "empty_ocr_text", source_view, cached, normalized, cached=True)
         try:
-            text = await llm.ocr_image_text(image_to_jpeg_bytes(image))
+            text = await llm.ocr_image_text(jpeg)
         except Exception:
             logger.exception("OCR extraction failed for source view %s", source_view)
             return _ocr_result("ocr_failed", source_view)
+        self._ocr_cache[key] = text
+        while len(self._ocr_cache) > OCR_CACHE_SIZE:
+            self._ocr_cache.popitem(last=False)
 
         normalized = normalize_match_text(text)
         logger.info(
@@ -367,12 +400,10 @@ class WineService:
         views: list[str] | None = None,
         main_photos_only: bool = False,
     ) -> tuple[list[WineCandidate], dict[str, Any], dict]:
-        query_views = self.photo_service.build_query_views(image_bytes)
-        matches = await self.visual.run(
-            query_views,
-            allowed=views,
-            query_filter=main_photos_filter() if main_photos_only else None,
-        )
+        query_views = await self._cv(self.photo_service.build_query_views, image_bytes)
+        selection = select_views(query_views, views)
+        vectors = await self._cv(self.visual.embed, query_views, selection)
+        matches = await self.visual.search(selection, vectors, main_photos_filter() if main_photos_only else None)
         feature_args = {
             "wine_view_matches": matches.wine_view_matches,
             "wine_slugs": matches.wine_slugs,
@@ -553,9 +584,16 @@ def _visual_score(candidate: WineCandidate) -> float:
     return candidate.visual_score if candidate.visual_score is not None else candidate.score
 
 
-def _ocr_result(reason: str, source_view: str | None, text: str = "", normalized: str = "") -> dict[str, Any]:
+def _ocr_result(
+    reason: str,
+    source_view: str | None,
+    text: str = "",
+    normalized: str = "",
+    cached: bool = False,
+) -> dict[str, Any]:
     return {
         "applied": bool(normalized),
+        "cached": cached,
         "reason": reason,
         "source_view": source_view,
         "text": text,
