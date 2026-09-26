@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from src.connections.database.models import ColorAlias, Grape, Producer, Region, Wine, WineGrape, WineImage
+from src.connections.database.models import ColorAlias, Grape, Producer, Wine, WineGrape, WineImage
 from src.connections.database.postgres import DatabaseClient
 
 logger = logging.getLogger(__name__)
@@ -24,17 +24,7 @@ class WineRepository:
             return None
 
         async with self.database.session() as session:
-            return await session.get(
-                Wine,
-                id_,
-                options=[
-                    selectinload(Wine.producer),
-                    selectinload(Wine.region),
-                    selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
-                    selectinload(Wine.color_aliases),
-                    selectinload(Wine.images),
-                ],
-            )
+            return await session.scalar(self._with_wine_options(select(Wine)).where(Wine.id == id_))
 
     async def wine_scores_by_photo_ids(self, photo_scores: dict[str, float]) -> dict[str, float]:
         photo_ids = []
@@ -83,7 +73,8 @@ class WineRepository:
 
         return {str(photo_id): str(wine_id) for photo_id, wine_id in rows}
 
-    async def load_wines_by_ids(self, wine_ids: list[str]) -> list[Wine]:
+    async def load_wines_by_ids(self, wine_ids: list[str], for_ocr: bool = False) -> list[Wine]:
+        """Карточки вин. for_ocr=True — только то, что нужно OCR-матчингу (без фото и региона)."""
         ids = []
         for wine_id in dict.fromkeys(wine_ids):
             try:
@@ -98,7 +89,9 @@ class WineRepository:
             return list(
                 (
                     await session.scalars(
-                        self._with_wine_options(select(Wine)).where(Wine.id.in_(ids))
+                        (self._with_ocr_options if for_ocr else self._with_wine_options)(select(Wine)).where(
+                            Wine.id.in_(ids)
+                        )
                     )
                 ).all()
             )
@@ -116,12 +109,38 @@ class WineRepository:
             aliases.setdefault(color, []).append(alias)
         return aliases
 
+    async def get_image(self, photo_id: str) -> WineImage | None:
+        try:
+            id_ = UUID(photo_id)
+        except ValueError:
+            return None
+        async with self.database.session() as session:
+            return await session.get(WineImage, id_)
+
+    async def load_ocr_vocabulary(self) -> tuple[list[str], list[str], dict[str, list[str]]]:
+        """Названия вин, производители и сорта (id -> название + синонимы) для OCR-матчинга."""
+        async with self.database.session() as session:
+            wine_names = list((await session.scalars(select(Wine.name))).all())
+            producer_names = list((await session.scalars(select(Producer.name))).all())
+            grapes = (await session.scalars(select(Grape).options(selectinload(Grape.aliases)))).all()
+        return (
+            wine_names,
+            producer_names,
+            {str(grape.id): [grape.name, *(alias.alias for alias in grape.aliases)] for grape in grapes},
+        )
+
     @staticmethod
     def _with_wine_options(statement):
         return statement.options(
             selectinload(Wine.producer),
             selectinload(Wine.region),
             selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
-            selectinload(Wine.color_aliases),
             selectinload(Wine.images),
+        )
+
+    @staticmethod
+    def _with_ocr_options(statement):
+        return statement.options(
+            selectinload(Wine.producer),
+            selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
         )

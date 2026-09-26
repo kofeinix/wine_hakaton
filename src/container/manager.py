@@ -6,7 +6,6 @@ from src.connections.qdrant import QdrantClient
 from src.connections.redis import RedisClient
 from src.connections.rate_limiter import RateLimiterManager
 from src.llm.langchain_openai import ChatOpenAIWrapper
-from src.ml.dinov3 import DinoV3ImageEmbedder
 from src.ml.siglip2 import SiglipImageEmbedder
 from src.ml.yolo import YoloBottleCropper, YoloLabelCropper
 from src.settings.settings import AllSettings
@@ -23,11 +22,9 @@ class ConnectionManager:
         self.rate_limiter: RateLimiterManager | None = None
         self.llm: ChatOpenAIWrapper | None = None
         self.minio: MinioClient | None = None
-        self.yolo: YoloLabelCropper | None = None
         self.bottle_yolo: YoloBottleCropper | None = None
         self.label_yolo: YoloLabelCropper | None = None
         self.embeddings: SiglipImageEmbedder | None = None
-        self.dinov3: DinoV3ImageEmbedder | None = None
         self._initialize()
 
     def _initialize(self):
@@ -46,9 +43,7 @@ class ConnectionManager:
         )
         self.bottle_yolo = YoloBottleCropper(bottle_yolo_settings)
         self.label_yolo = YoloLabelCropper(label_yolo_settings)
-        self.yolo = self.label_yolo
         self.embeddings = SiglipImageEmbedder(self.settings.embeddings)
-        self.dinov3 = DinoV3ImageEmbedder(self.settings.dinov3)
 
     async def start(self):
         await self.database.connect()
@@ -60,7 +55,6 @@ class ConnectionManager:
         await self.bottle_yolo.start()
         await self.label_yolo.start()
         await self.embeddings.start()
-        await self.dinov3.start()
 
     async def stop(self):
         await self.database.close()
@@ -72,4 +66,3 @@ class ConnectionManager:
         await self.bottle_yolo.stop()
         await self.label_yolo.stop()
         await self.embeddings.stop()
-        await self.dinov3.stop()

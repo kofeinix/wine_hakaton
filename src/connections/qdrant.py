@@ -70,7 +70,7 @@ class QdrantClient:
         if not self._is_connected:
             raise RuntimeError("Qdrant client not connected")
         try:
-            return await self.client.query_points(
+            return await self._query_points(
                 collection_name=collection_name,
                 query=vector,
                 query_filter=query_filter,
@@ -80,6 +80,17 @@ class QdrantClient:
         except Exception:
             logger.exception("Vector search failure in collection %s", collection_name)
             return None
+
+    # Повтор на обрыв keep-alive соединения (httpx.ReadError): без него view молча
+    # получал 0 точек и поиск возвращал пустой результат.
+    @retry(
+        wait=wait_exponential_jitter(initial=0.2, max=1),
+        stop=stop_after_attempt(3),
+        before_sleep=before_sleep_log(logger, 30),  # int 30 — WARNING
+        reraise=True,
+    )
+    async def _query_points(self, **kwargs: Any) -> QueryResponse:
+        return await self.client.query_points(**kwargs)
 
     async def retrieve_vectors(
         self,

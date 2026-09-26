@@ -127,7 +127,7 @@ class MinioClient:
                 length=file_length,
                 metadata=metadata,
             )
-        except Exception as e:
+        except Exception:
             logger.exception(
                 f"Failed to put data {filename} to minio bucket {self.bucket}")
             raise
@@ -166,7 +166,7 @@ class MinioClient:
                 length=file_length,
                 metadata=metadata,
             )
-        except Exception as e:
+        except Exception:
             logger.exception(f"Failed to put file {filename} to minio bucket {self.bucket}")
             raise
 
@@ -220,7 +220,7 @@ class MinioClient:
             response.close()
             response.release()
             return file_data
-        except Exception as e:
+        except Exception:
             logger.exception(
                 f"Exception occurred during downloading file {object_name} from the storage.",
             )
@@ -295,7 +295,7 @@ class MinioClient:
                 bucket_name=self.bucket,
                 object_name=filename,
             )
-        except Exception as e:
+        except Exception:
             logger.exception(
                 f"Failed to delete file {filename} from minio bucket {self.bucket}",
             )

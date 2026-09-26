@@ -94,7 +94,8 @@ services:
       - scripts/init_database.py
       - --db-dir
       - /data/db
-      - --drop-existing
+      # каталог приводится к data/db/*.json; пользователи, история, избранное не трогаются
+      - --prune
 
   minio:
     image: minio/minio:latest
@@ -124,26 +125,37 @@ services:
       minio:
         condition: service_healthy
     environment:
-      MINIO__HOST: minio
-      MINIO__PORT:  ${MINIO__PORT:-9000}
       MINIO__ACCESS_KEY: ${MINIO__ACCESS_KEY:-minio}
       MINIO__SECRET_KEY: ${MINIO__SECRET_KEY:-miniosecret}
       MINIO__BUCKET: ${MINIO__BUCKET:-wine}
-      MINIO__VERIFY_SSL: "false"
-      MINIO_SEED_ARCHIVE: /data/photos.tar.gz
+      # архив собирает scripts/build_photos_archive.py (или скачайте готовый в ./data/)
+      MINIO_SEED_ARCHIVE: /seed/photos.tar.gz
+      # 1 — перезалить bucket из архива, даже если он уже заполнен
+      MINIO_RESEED: ${MINIO_RESEED:-0}
     volumes:
-      - ./data/photos.tar.gz:/data/photos.tar.gz:ro
+      - ./data:/seed:ro
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         set -eu
-        mc alias set local http://minio:9000 "$$MINIO__ACCESS_KEY" "$$MINIO__SECRET_KEY"
+        mc alias set local http://minio:9000 "$$MINIO__ACCESS_KEY" "$$MINIO__SECRET_KEY" >/dev/null
         mc mb --ignore-existing "local/$$MINIO__BUCKET"
-        mc rm --recursive --force "local/$$MINIO__BUCKET" >/dev/null
+        existing=$$(mc ls --recursive "local/$$MINIO__BUCKET" | head -n 1)
+        if [ -n "$$existing" ] && [ "$$MINIO_RESEED" != "1" ]; then
+          echo "MinIO bucket '$$MINIO__BUCKET' already has photos; skipping seed (MINIO_RESEED=1 to reseed)."
+          exit 0
+        fi
+        if [ ! -f "$$MINIO_SEED_ARCHIVE" ]; then
+          echo "WARNING: data/photos.tar.gz not found: bucket '$$MINIO__BUCKET' stays empty, wine photos will 404."
+          echo "Put photos.tar.gz into ./data/ (or run scripts/build_photos_archive.py) and rerun: docker compose up minio-init"
+          exit 0
+        fi
+        mc rm --recursive --force "local/$$MINIO__BUCKET" >/dev/null 2>&1 || true
         mc cp --disable-multipart \
           --attr "X-Amz-Meta-Snowball-Auto-Extract=true" \
           "$$MINIO_SEED_ARCHIVE" "local/$$MINIO__BUCKET/" >/dev/null
-        echo "MinIO bucket '$$MINIO__BUCKET' is ready with seeded photos."
+        count=$$(mc ls --recursive "local/$$MINIO__BUCKET" | wc -l)
+        echo "MinIO bucket '$$MINIO__BUCKET' seeded with $$count photos."
 
   qdrant:
     image: qdrant/qdrant:latest

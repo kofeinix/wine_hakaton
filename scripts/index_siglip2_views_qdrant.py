@@ -14,7 +14,7 @@ from typing import Iterable
 import numpy as np
 import torch
 from PIL import Image, ImageOps
-from transformers import AutoImageProcessor, AutoModel, AutoProcessor
+from transformers import AutoModel, AutoProcessor
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -229,8 +229,6 @@ def save_view_npz(
 
 
 def load_processor(encoder: str, model_dir: Path):
-    if encoder == "dinov3":
-        return AutoImageProcessor.from_pretrained(model_dir)
     return AutoProcessor.from_pretrained(model_dir)
 
 
@@ -305,7 +303,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Export global image embeddings for original/bottle/label views to NPZ files.")
     parser.add_argument("--images-dir", type=Path, default=DEFAULT_IMAGES_DIR)
     parser.add_argument("--wines-json", type=Path, default=DEFAULT_WINES_JSON)
-    parser.add_argument("--encoder", choices=["siglip2", "dinov3"], default="siglip2")
     parser.add_argument("--model-dir", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -324,16 +321,14 @@ def parse_args() -> argparse.Namespace:
         "--collection-encoder",
         default=None,
         help=(
-            "Collection name suffix for NPZ metadata. "
-            "Default: selected encoder. Use 'siglip2' to overwrite current runtime collections."
+            "Collection name suffix for NPZ metadata (wine_<view>_<suffix>). "
+            "Default: SEARCH__COLLECTION_ENCODER (siglip2) — runtime collections."
         ),
     )
     return parser.parse_args()
 
 
-def default_model_dir(encoder: str) -> Path:
-    if encoder == "dinov3":
-        return resolve_model_dir(Path(all_settings.dinov3.model_dir))
+def default_model_dir() -> Path:
     return resolve_model_dir(Path(all_settings.embeddings.model_dir))
 
 
@@ -347,22 +342,20 @@ def resolve_model_dir(path: Path) -> Path:
     return path
 
 
-def default_device(encoder: str) -> str:
-    if encoder == "dinov3":
-        return all_settings.dinov3.device
+def default_device() -> str:
     return all_settings.embeddings.device
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     args = parse_args()
-    model_dir = args.model_dir or default_model_dir(args.encoder)
-    device = args.device or default_device(args.encoder)
-    collection_encoder = args.collection_encoder or args.encoder
+    model_dir = args.model_dir or default_model_dir()
+    device = args.device or default_device()
+    collection_encoder = args.collection_encoder or all_settings.search.collection_encoder
     index_image_views(
         images_dir=args.images_dir,
         wines_json=args.wines_json,
-        encoder=args.encoder,
+        encoder="siglip2",
         model_dir=model_dir,
         output_dir=args.output_dir,
         batch_size=args.batch_size,

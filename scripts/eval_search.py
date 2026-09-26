@@ -13,7 +13,7 @@
   - итоговые метрики качества (Accuracy@1, MRR, средние score).
 
 Использование:
-  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global,patches]
+  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global|global,llm]
   python scripts/eval_search.py --image data/eval/<wine_id>/vivino_1.jpg --stages global
 """
 
@@ -29,7 +29,6 @@ import httpx
 
 EVAL_DIR = Path(__file__).resolve().parent.parent / "data" / "eval"
 SEARCH_ENDPOINT = "/api/v1/search/image/extended"
-COMPACT_SEARCH_ENDPOINT = "/api/v1/search/image"
 CATBOOST_SEARCH_ENDPOINT = "/api/v1/search/image/catboost"
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
@@ -43,8 +42,16 @@ MIME_BY_EXT = {
 }
 
 
-def collect_images(eval_dir: Path) -> list[tuple[str, Path]]:
-    """Возвращает список (ожидаемый_uuid, путь_к_картинке)."""
+def collect_images(eval_dir: Path, image_name: str | None = None) -> list[tuple[str, Path]]:
+    """Возвращает список (ожидаемый_uuid, путь_к_картинке).
+
+    Поддерживает две структуры:
+      - <wine_id>/<image>.jpg            (data/eval)
+      - <wine_id>/main/<image>.jpg       (data/images_extended)
+
+    image_name: если задан, берутся только файлы с таким именем
+    (например "original.jpg" для структуры <wine_id>/main/original.jpg).
+    """
     items: list[tuple[str, Path]] = []
     if not eval_dir.is_dir():
         print(f"Ошибка: директория {eval_dir} не найдена", file=sys.stderr)
@@ -53,9 +60,19 @@ def collect_images(eval_dir: Path) -> list[tuple[str, Path]]:
         if not folder.is_dir():
             continue
         wine_id = folder.name
+        # Структура <wine_id>/main/<image>.jpg
+        main_dir = folder / "main"
+        if main_dir.is_dir():
+            for img in sorted(main_dir.iterdir()):
+                if img.is_file() and img.suffix.lower() in IMAGE_EXTS:
+                    if image_name is None or img.name == image_name:
+                        items.append((wine_id, img))
+            continue
+        # Плоская структура <wine_id>/<image>.jpg
         for img in sorted(folder.iterdir()):
             if img.is_file() and img.suffix.lower() in IMAGE_EXTS:
-                items.append((wine_id, img))
+                if image_name is None or img.name == image_name:
+                    items.append((wine_id, img))
     return items
 
 
@@ -71,7 +88,8 @@ async def search_image(
 ) -> dict:
     """Выполняет поиск по картинке и возвращает JSON-ответ."""
     mime = MIME_BY_EXT.get(image_path.suffix.lower(), "image/jpeg")
-    params: dict = {"limit": topk}
+    # не засорять историю поиска; debug — пул кандидатов для scripts/ocr_lab
+    params: dict = {"limit": topk, "save_history": False, "debug": True}
     if stages:
         params["stages"] = stages
     if views:
@@ -80,10 +98,7 @@ async def search_image(
         params["main_photos_only"] = True
     with image_path.open("rb") as f:
         files = {"image": (image_path.name, f, mime)}
-        if catboost:
-            endpoint = CATBOOST_SEARCH_ENDPOINT
-        else:
-            endpoint = COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT
+        endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else SEARCH_ENDPOINT
         resp = await client.post(
             f"{api_url}{endpoint}",
             files=files,
@@ -92,6 +107,27 @@ async def search_image(
         )
     resp.raise_for_status()
     return resp.json()
+
+
+def normalize_response(data: dict) -> dict:
+    """Ответ /extended или /catboost -> общий вид для отчёта."""
+    results = [
+        {
+            "wine_id": str(match.get("wine_id")),
+            "score": float(match.get("final_score", match.get("score", 0.0)) or 0.0),
+            "visual": float(match.get("visual_score", 0.0) or 0.0),
+            "ocr": float(match.get("ocr_score", 0.0) or 0.0),
+        }
+        for match in data.get("results") or []
+    ]
+    ocr = data.get("ocr") or {}
+    return {
+        "results": results,
+        "active_views": (data.get("search") or {}).get("active_views"),
+        "ocr_applied": ocr.get("applied"),
+        "ocr_source_view": ocr.get("source_view"),
+        "total_ms": (data.get("timings_ms") or {}).get("total_ms"),
+    }
 
 
 def rank_of_expected(result: list[dict], expected_id: str) -> int | None:
@@ -112,6 +148,9 @@ async def run(
     stages: list[str] | None = None,
     main_photos_only: bool = False,
     catboost: bool = False,
+    eval_dir: Path | None = None,
+    image_name: str | None = None,
+    responses_output: Path | None = None,
 ) -> None:
     if image_path is not None:
         image_path = image_path.expanduser().resolve()
@@ -121,9 +160,11 @@ async def run(
         if image_path.suffix.lower() not in IMAGE_EXTS:
             print(f"Ошибка: неподдерживаемый формат изображения {image_path.suffix}", file=sys.stderr)
             sys.exit(1)
-        images = [(expected_id or image_path.parent.name, image_path)]
+        # <wine_id>/<image>.jpg или <wine_id>/main/<image>.jpg
+        wine_dir = image_path.parent.parent if image_path.parent.name == "main" else image_path.parent
+        images = [(expected_id or wine_dir.name, image_path)]
     else:
-        images = collect_images(EVAL_DIR)
+        images = collect_images(eval_dir or EVAL_DIR, image_name=image_name)
     if not images:
         print("Нет изображений для оценки.", file=sys.stderr)
         sys.exit(1)
@@ -132,14 +173,22 @@ async def run(
         images = images[:limit]
 
     print(f"Всего изображений для оценки: {len(images)}")
-    endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else (COMPACT_SEARCH_ENDPOINT if views else SEARCH_ENDPOINT)
+    endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else SEARCH_ENDPOINT
     print(f"API: {api_url}{endpoint}")
     print(f"Views: {views or 'runtime active views'}")
-    print(f"Stages: {'catboost' if catboost else stages or ['global', 'patches']}")
+    print(f"Stages: {'catboost' if catboost else stages or ['global']}")
     print(f"Main photos only: {main_photos_only}")
     print(f"Top-K: {topk}\n")
 
     rows: list[dict] = []
+    # Полные ответы API (кандидаты, OCR-текст, пул до реранка) — датасет для scripts/ocr_lab.
+    responses: list[dict] = []
+
+    def save_responses() -> None:
+        if responses_output is not None and responses:
+            responses_output.parent.mkdir(parents=True, exist_ok=True)
+            responses_output.write_text(json.dumps(responses, ensure_ascii=False), encoding="utf-8")
+
     async with httpx.AsyncClient() as client:
         for idx, (expected_id, img_path) in enumerate(images, start=1):
             try:
@@ -159,39 +208,41 @@ async def run(
                     {
                         "expected": expected_id,
                         "image": img_path.name,
-                        "stages": ["catboost"] if catboost else stages or ["global", "patches"],
+                        "stages": ["catboost"] if catboost else stages or ["global"],
                         "main_photos_only": main_photos_only,
                         "error": str(exc),
                     }
                 )
                 continue
 
-            result = data.get("result") or data.get("results") or []
-            diagnostics = data.get("diagnostics") or {}
-            global_diag = diagnostics.get("global") or {}
-            ocr_diag = diagnostics.get("ocr_rerank") or {}
+            responses.append({"expected": expected_id, "image": str(img_path), "response": data})
+            if len(responses) % 50 == 0:
+                save_responses()  # чекпоинт: длинный прогон не пропадёт при обрыве
+
+            parsed = normalize_response(data)
+            result = parsed["results"]
             top1 = result[0] if result else None
             top2 = result[1] if len(result) > 1 else None
             rank = rank_of_expected(result, expected_id)
             correct = rank == 1
-            gap = (top1.get("score", 0.0) - top2.get("score", 0.0)) if top1 and top2 else 0.0
+            gap = (top1["score"] - top2["score"]) if top1 and top2 else 0.0
 
             rows.append(
                 {
                     "expected": expected_id,
                     "image": img_path.name,
-                    "stages": ["catboost"] if catboost else stages or ["global", "patches"],
+                    "stages": ["catboost"] if catboost else stages or ["global"],
                     "main_photos_only": main_photos_only,
-                    "active_views": global_diag.get("active_views"),
-                    "ocr_source_view": ocr_diag.get("source_view"),
-                    "ocr_applied": ocr_diag.get("applied"),
-                    "ocr_rerank_applied": ocr_diag.get("rerank_applied"),
-                    "top1_id": top1.get("wine_id") if top1 else None,
-                    "top1_score": top1.get("score") if top1 else None,
-                    "top1_cos": top1.get("cosine_score") if top1 else None,
-                    "top2_id": top2.get("wine_id") if top2 else None,
-                    "top2_score": top2.get("score") if top2 else None,
-                    "top2_cos": top2.get("cosine_score") if top2 else None,
+                    "active_views": parsed["active_views"],
+                    "ocr_source_view": parsed["ocr_source_view"],
+                    "ocr_applied": parsed["ocr_applied"],
+                    "total_ms": parsed["total_ms"],
+                    "top1_id": top1["wine_id"] if top1 else None,
+                    "top1_score": top1["score"] if top1 else None,
+                    "top1_visual": top1["visual"] if top1 else None,
+                    "top1_ocr": top1["ocr"] if top1 else None,
+                    "top2_id": top2["wine_id"] if top2 else None,
+                    "top2_score": top2["score"] if top2 else None,
                     "gap": gap,
                     "rank": rank,
                     "correct": correct,
@@ -199,14 +250,15 @@ async def run(
                 }
             )
             status = "OK " if correct else "MISS"
+            ocr_label = f"{parsed['ocr_source_view'] or 'n/a'}{'*' if parsed['ocr_applied'] else ''}"
             print(
                 f"[{idx}/{len(images)}] {status} {img_path.name} "
-                f"expected={expected_id[:8]} top1={top1.get('wine_id', 'N/A')[:8] if top1 else 'N/A'} "
-                f"fused={top1.get('score', 0.0) if top1 else 0.0:.4f} "
-                f"raw_cos={top1.get('cosine_score', 0.0) if top1 else 0.0:.4f} "
-                f"fused_gap={gap:.4f} rank={rank} "
-                f"views={','.join(global_diag.get('active_views') or []) or 'n/a'} "
-                f"ocr={ocr_diag.get('source_view') or 'n/a'}"
+                f"expected={expected_id[:8]} top1={top1['wine_id'][:8] if top1 else 'N/A'} "
+                f"final={top1['score'] if top1 else 0.0:.4f} "
+                f"visual={top1['visual'] if top1 else 0.0:.4f} ocr={top1['ocr'] if top1 else 0.0:.4f} "
+                f"gap={gap:.4f} rank={rank} "
+                f"views={','.join(parsed['active_views'] or []) or 'n/a'} ocr_src={ocr_label} "
+                f"time={parsed['total_ms'] or 0:.0f}ms"
             )
 
     print("\n" + "=" * 100)
@@ -214,8 +266,8 @@ async def run(
     print("=" * 100)
     header = (
         f"{'Ожидаемый uuid':<38} {'Картинка':<14} {'Top-1 uuid':<38} "
-        f"{'Fused':<8} {'RawCos':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} "
-        "Views OCR Конкуренты (uuid:fused)"
+        f"{'Final':<8} {'Visual':<8} {'OCR':<8} {'Top-2':<8} {'Gap':<8} {'Ранг':<5} {'Результат':<6} "
+        "Views OCR-src Конкуренты (uuid:final)"
     )
     print(header)
     print("-" * 100)
@@ -224,17 +276,18 @@ async def run(
             print(f"{row['expected']:<38} {row['image']:<14} {'ОШИБКА':<38}")
             continue
         competitors = ", ".join(
-            f"{m.get('wine_id', '?')[:8]}:{m.get('score', 0.0):.3f}"
+            f"{m['wine_id'][:8]}:{m['score']:.3f}"
             for m in row["result"][1:5]
         )
+        ocr_label = f"{row.get('ocr_source_view') or '-'}{'*' if row.get('ocr_applied') else ''}"
         print(
             f"{row['expected']:<38} {row['image']:<14} "
             f"{str(row['top1_id']):<38} {row['top1_score'] or 0.0:<8.4f} "
-            f"{row['top1_cos'] or 0.0:<8.4f} "
+            f"{row['top1_visual'] or 0.0:<8.4f} {row['top1_ocr'] or 0.0:<8.4f} "
             f"{row['top2_score'] or 0.0:<8.4f} {row['gap'] or 0.0:<8.4f} "
             f"{str(row['rank']):<5} {'OK' if row['correct'] else 'MISS':<6} "
             f"{','.join(row.get('active_views') or []) or '-'} "
-            f"{row.get('ocr_source_view') or '-'} {competitors}"
+            f"{ocr_label} {competitors}"
         )
 
     # Сводка по винам (папкам)
@@ -302,11 +355,32 @@ async def run(
     out_path = Path(__file__).resolve().parent.parent / "data" / "eval_results.json"
     out_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nПолные результаты сохранены в {out_path}")
+    save_responses()
+    if responses_output is not None:
+        print(f"Ответы API (для scripts/ocr_lab) сохранены в {responses_output}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Оценка качества поиска вин по изображению")
     parser.add_argument("--api-url", default="http://localhost:8000", help="Базовый URL API")
+    parser.add_argument(
+        "--eval-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Путь к папке с тестовыми изображениями. Поддерживает структуры "
+            "<wine_id>/<image>.jpg и <wine_id>/main/<image>.jpg. "
+            "По умолчанию data/eval."
+        ),
+    )
+    parser.add_argument(
+        "--image-name",
+        default=None,
+        help=(
+            "Брать только файлы с таким именем (например original.jpg для "
+            "структуры <wine_id>/main/original.jpg). По умолчанию все изображения."
+        ),
+    )
     parser.add_argument(
         "--limit",
         type=int,
@@ -319,7 +393,8 @@ def main() -> None:
         default=None,
         help=(
             "Путь к одному изображению для точечной проверки. "
-            "Если --expected-id не указан, ожидаемый wine_id берется из имени родительской папки."
+            "Если --expected-id не указан, ожидаемый wine_id берется из имени родительской папки "
+            "(для <wine_id>/main/<image> — из папки над main)."
         ),
     )
     parser.add_argument(
@@ -332,9 +407,8 @@ def main() -> None:
         action="append",
         choices=["original", "bottle_crop", "label_crop"],
         help=(
-            "Ограничить агрегацию одним сигналом. Можно указать несколько раз. "
-            "При использовании --view скрипт дергает compact endpoint без diagnostics. "
-            "По умолчанию используется полный runtime pipeline через extended endpoint."
+            "Искать только по этим кропам (параметр views у /extended). Можно указать несколько раз. "
+            "По умолчанию — все кропы, как в проде."
         ),
     )
     parser.add_argument(
@@ -348,9 +422,8 @@ def main() -> None:
         action="append",
         default=None,
         help=(
-            "Стадии pipeline: global, patches, llm. Можно указать несколько раз "
-            "или через запятую. Legacy: 1 = global, 2 = global+patches. "
-            "По умолчанию global,patches."
+            "Стадии pipeline: global (визуальный поиск + OCR-реранк, всегда), "
+            "llm (опциональный выбор кандидата vision-LLM). По умолчанию global."
         ),
     )
     parser.add_argument(
@@ -363,8 +436,23 @@ def main() -> None:
         action="store_true",
         help="Оценивать экспериментальный CatBoost endpoint /search/image/catboost.",
     )
+    parser.add_argument(
+        "--responses-output",
+        type=Path,
+        default=None,
+        help=(
+            "Куда сохранить полные ответы API для офлайн-анализа OCR (scripts/ocr_lab). "
+            "По умолчанию data/eval_responses_<имя eval-папки>.json; --no-save-responses — не сохранять."
+        ),
+    )
+    parser.add_argument("--no-save-responses", action="store_true")
     args = parser.parse_args()
     stages = normalize_stages_arg(args.stages)
+    responses_output = None
+    if not args.no_save_responses:
+        responses_output = args.responses_output or (
+            EVAL_DIR.parent / f"eval_responses_{(args.eval_dir or EVAL_DIR).name}.json"
+        )
     asyncio.run(
         run(
             args.api_url,
@@ -376,6 +464,9 @@ def main() -> None:
             stages=stages,
             main_photos_only=args.main_photos_only,
             catboost=args.catboost,
+            eval_dir=args.eval_dir,
+            image_name=args.image_name,
+            responses_output=responses_output,
         )
     )
 

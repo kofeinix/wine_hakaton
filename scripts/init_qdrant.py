@@ -27,8 +27,6 @@ DEFAULT_NPZ_FILES = (
     "original.npz",
     "bottle_crop.npz",
     "label_crop.npz",
-    "original_patches.npz",
-    "label_crop_patches.npz",
 )
 
 logger = logging.getLogger(__name__)

@@ -96,6 +96,7 @@ class WineImageCreate(BaseModel):
     wine_id: UUID
     source_url: str | None = None
     is_main: bool
+    is_generated: bool = False
     minio_path: str = Field(min_length=1)
 
     @field_validator("source_url", mode="before")

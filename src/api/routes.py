@@ -1,17 +1,22 @@
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 
-from src.api.schemas import (
-    CompactSearchResponse,
-    SearchResponse,
-    WineResponse,
-)
+from src.api.auth import OptionalUserId, ensure_anon_id
+from src.api.schemas import CatBoostSearchResponse, SearchResponse, SlugResponse, WineResponse
 from src.api.services import WineService
+from src.api.services.user_service import Owner
+from src.api.services.wine_service import SearchOutcome
 from src.api.utils import _read_image_upload
 
 router = APIRouter()
+
+IMAGE_ERRORS = {
+    400: {"description": "Uploaded image is empty"},
+    415: {"description": "Uploaded file is not an image"},
+}
+PHOTO_CACHE_SECONDS = 7 * 24 * 3600  # фото каталога не меняются
 
 
 def get_wine_service(request: Request) -> WineService:
@@ -19,126 +24,109 @@ def get_wine_service(request: Request) -> WineService:
 
 
 WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
+ImageUpload = Annotated[UploadFile, File(description="Фото бутылки или этикетки")]
+SaveHistory = Annotated[
+    bool,
+    Query(description="Сохранить поиск в историю (аккаунт по токену или временная история по cookie)"),
+]
+
+
+async def _record_search(
+    request: Request,
+    response: Response,
+    user_id: UUID | None,
+    outcome: SearchOutcome,
+) -> str | None:
+    owner = Owner(user_id=user_id, anon_id=None if user_id else ensure_anon_id(request, response))
+    candidates = outcome.candidates
+    return await request.app.state.user_service.record_search(
+        owner,
+        [(candidate.wine_id, candidate.score) for candidate in candidates],
+        candidates[0].score if candidates else None,
+    )
 
 
 @router.post(
     "/search/image",
-    response_model=CompactSearchResponse,
+    response_model=SlugResponse,
     tags=["search"],
-    summary="Search wine by image",
-    description=(
-        "Accepts a wine bottle or label image and returns compact matches as "
-        "`result: [{wine_id, score}]`. Use `/search/image/extended` for crop, OCR, "
-        "source, and full wine details."
-    ),
-    responses={
-        400: {"description": "Uploaded image is empty"},
-        415: {"description": "Uploaded file is not an image"},
-    },
+    summary="Найти вино по фото",
+    description="Возвращает только slug найденного вина. Подробности — `/search/image/extended`.",
+    responses=IMAGE_ERRORS,
 )
 async def search_by_image(
+    request: Request,
+    response: Response,
     wine_service: WineServiceDep,
-    image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
-    views: list[str] = Query(
-        default=[],
-        description="Restrict aggregation to specific views: original, bottle_crop, label_crop. Empty = all.",
-    ),
-    stages: list[str] = Query(
-        default=["global", "patches"],
-        description=(
-            "Search pipeline stages: global, patches, llm. "
-            "Legacy values are supported: 1 = global, 2 = global + patches."
-        ),
-    ),
-    main_photos_only: bool = Query(
-        default=False,
-        description="Search only vectors whose payload photo_id is 'main', excluding yandex_* photos.",
-    ),
-) -> CompactSearchResponse:
-    image_bytes = await _read_image_upload(image)
-    return await wine_service.search_by_image(
-        image_bytes=image_bytes,
-        limit=limit,
-        views=views or None,
-        stages=stages,
-        main_photos_only=main_photos_only,
-    )
-
-
-@router.post(
-    "/search/image/catboost",
-    response_model=CompactSearchResponse,
-    tags=["search"],
-    summary="Search wine by image with experimental CatBoost reranker",
-    description=(
-        "Runs a separate experimental image-search copy that builds reranker features from "
-        "Qdrant candidates and applies `models/catboost/wine_reranker.cbm` when available."
-    ),
-    responses={
-        400: {"description": "Uploaded image is empty"},
-        415: {"description": "Uploaded file is not an image"},
-    },
-)
-async def search_by_image_catboost(
-    wine_service: WineServiceDep,
-    image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
-    views: list[str] = Query(
-        default=[],
-        description="Restrict aggregation to specific views: original, bottle_crop, label_crop. Empty = all.",
-    ),
-    main_photos_only: bool = Query(
-        default=False,
-        description="Search only vectors whose payload photo_id is 'main', excluding yandex_* photos.",
-    ),
-) -> CompactSearchResponse:
-    image_bytes = await _read_image_upload(image)
-    return await wine_service.search_by_image_catboost(
-        image_bytes=image_bytes,
-        limit=limit,
-        views=views or None,
-        main_photos_only=main_photos_only,
-    )
+    user_id: OptionalUserId,
+    image: ImageUpload,
+    save_history: SaveHistory = True,
+) -> SlugResponse:
+    outcome = await wine_service.search(await _read_image_upload(image))
+    if save_history:
+        await _record_search(request, response, user_id, outcome)
+    return SlugResponse(slug=outcome.candidates[0].slug if outcome.candidates else None)
 
 
 @router.post(
     "/search/image/extended",
     response_model=SearchResponse,
     tags=["search"],
-    summary="Search wine by image with diagnostics",
+    summary="Найти вино по фото: результаты с карточками и диагностикой",
     description=(
-        "Runs the same image search pipeline as `/search/image`, but returns YOLO crop metadata, "
-        "OCR rerank diagnostics, full wine records, and source scores."
+        "Результаты с разложением скора (`visual_score` + `ocr_score` = `final_score`) и карточками вин "
+        "(фото — по `wine.photos[].url`), распознанный текст, кропы и время этапов. "
+        "`debug=true` — полная отладка (пул кандидатов, признаки OCR) для офлайн-анализа."
     ),
-    responses={
-        400: {"description": "Uploaded image is empty"},
-        415: {"description": "Uploaded file is not an image"},
-    },
+    responses=IMAGE_ERRORS,
 )
 async def search_by_image_extended(
+    request: Request,
+    response: Response,
     wine_service: WineServiceDep,
-    image: UploadFile = File(..., description="Wine bottle or label image"),
-    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of matches"),
+    user_id: OptionalUserId,
+    image: ImageUpload,
+    limit: int = Query(default=10, ge=1, le=50, description="Сколько результатов вернуть"),
     stages: list[str] = Query(
-        default=["global", "patches"],
-        description=(
-            "Search pipeline stages: global, patches, llm. "
-            "Legacy values are supported: 1 = global, 2 = global + patches."
-        ),
+        default=["global"],
+        description="global — визуальный поиск + OCR-реранк (всегда); llm — дополнительно выбор vision-LLM.",
     ),
-    main_photos_only: bool = Query(
-        default=False,
-        description="Search only vectors whose payload photo_id is 'main', excluding yandex_* photos.",
+    main_photos_only: bool = Query(default=False, description="Искать только по главным фото каталога"),
+    views: list[str] = Query(
+        default=[],
+        description="Для экспериментов: искать только по этим кропам (original, bottle_crop, label_crop).",
     ),
+    save_history: SaveHistory = True,
+    debug: bool = Query(default=False, description="Добавить полную диагностику"),
 ) -> SearchResponse:
-    image_bytes = await _read_image_upload(image)
-    return await wine_service.search_by_image_extended(
-        image_bytes=image_bytes,
-        filename=image.filename,
-        content_type=image.content_type or "application/octet-stream",
+    outcome = await wine_service.search(
+        await _read_image_upload(image),
         limit=limit,
+        views=views or None,
         stages=stages,
+        main_photos_only=main_photos_only,
+    )
+    search_id = await _record_search(request, response, user_id, outcome) if save_history else None
+    return await wine_service.build_response(outcome, search_id=search_id, debug=debug)
+
+
+@router.post(
+    "/search/image/catboost",
+    response_model=CatBoostSearchResponse,
+    tags=["search"],
+    summary="Экспериментальный поиск с CatBoost-реранкером",
+    description="Ранжирует кандидатов моделью `models/catboost/wine_reranker.cbm` (если она есть).",
+    responses=IMAGE_ERRORS,
+)
+async def search_by_image_catboost(
+    wine_service: WineServiceDep,
+    image: ImageUpload,
+    limit: int = Query(default=10, ge=1, le=50),
+    main_photos_only: bool = Query(default=False),
+) -> CatBoostSearchResponse:
+    return await wine_service.search_catboost(
+        await _read_image_upload(image),
+        limit=limit,
         main_photos_only=main_photos_only,
     )
 
@@ -147,13 +135,10 @@ async def search_by_image_extended(
     "/wines/{wine_id}",
     response_model=WineResponse,
     tags=["wines"],
-    summary="Get wine by id",
+    summary="Карточка вина",
     responses={404: {"description": "Wine not found"}},
 )
-async def get_wine(
-    wine_id: str,
-    wine_service: WineServiceDep,
-) -> WineResponse:
+async def get_wine(wine_id: str, wine_service: WineServiceDep) -> WineResponse:
     wine = await wine_service.get_wine(wine_id)
     if wine is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine not found")
@@ -161,19 +146,20 @@ async def get_wine(
 
 
 @router.get(
-    "/wines/{wine_id}/photos/{filename}",
+    "/photos/{photo_id}",
     tags=["wines"],
-    summary="Get wine photo",
-    responses={404: {"description": "Wine photo not found"}},
+    summary="Фото вина",
+    description="Файл фото из MinIO. Ссылки приходят в `wine.photos[].url`; ответ кешируется браузером.",
+    response_class=Response,
+    responses={200: {"content": {"image/jpeg": {}}}, 404: {"description": "Photo not found"}},
 )
-async def get_wine_photo(
-    wine_id: str,
-    filename: str,
-    wine_service: WineServiceDep,
-) -> StreamingResponse:
-    photo = await wine_service.get_photo_file_by_wine_id(wine_id, filename)
+async def get_photo(photo_id: str, wine_service: WineServiceDep) -> Response:
+    photo = await wine_service.get_photo(photo_id)
     if photo is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wine photo not found")
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
     file_data, content_type = photo
-    return StreamingResponse(file_data, media_type=content_type)
+    return Response(
+        content=file_data.getvalue(),
+        media_type=content_type,
+        headers={"Cache-Control": f"public, max-age={PHOTO_CACHE_SECONDS}, immutable"},
+    )
