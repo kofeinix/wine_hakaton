@@ -25,6 +25,7 @@ from src.api.repositories.wine_repository import WineRepository
 from src.api.schemas import (
     CatBoostMatch,
     CatBoostSearchResponse,
+    DetectionsResponse,
     OcrInfo,
     SearchInfo,
     SearchMatch,
@@ -34,11 +35,12 @@ from src.api.schemas import (
     WineResponse,
 )
 from src.api.services.ocr_match_service import OcrMatchService
-from src.api.services.photo_service import WinePhotoService
+from src.api.services.photo_service import QueryImageViews, WinePhotoService
 from src.api.services.visual_search import (
     GLOBAL_CANDIDATE_LIMIT,
     LABEL_PHOTO_AREA_THRESHOLD,
     LABEL_PHOTO_CONFIDENCE_THRESHOLD,
+    MULTI_WINE_LABEL_THRESHOLD,
     PER_VIEW_TOP_K,
     VisualMatches,
     VisualSearcher,
@@ -86,6 +88,7 @@ class SearchOutcome:
     reranked: int  # сколько кандидатов прошло OCR-реранк
     timings_ms: dict[str, float]
     diagnostics: dict[str, Any] = field(default_factory=dict)
+    query_views: QueryImageViews | None = None
 
 
 class WineService:
@@ -148,9 +151,13 @@ class WineService:
                 skipped=outcome.ocr["skipped"],
             ),
             crops=outcome.crops,
+            image=outcome.query_views.image if outcome.query_views else None,
+            detections=outcome.query_views.detections if outcome.query_views else DetectionsResponse(),
             search=SearchInfo(
                 active_views=selection.active_views,
                 label_photo_mode=selection.label_photo_mode,
+                multi_wine_mode=selection.multi_wine_mode,
+                labels_detected=selection.labels_detected,
                 candidates=outcome.reranked,
             ),
             timings_ms=SearchTimings(**outcome.timings_ms),
@@ -288,6 +295,7 @@ class WineService:
             reranked=min(len(candidates), OCR_RERANK_LIMIT),
             timings_ms=timings,
             diagnostics=diagnostics,
+            query_views=query_views,
         )
 
     def _visual_diagnostics(self, matches: VisualMatches) -> dict[str, Any]:
@@ -302,6 +310,9 @@ class WineService:
             "label_area_ratio": selection.label_area_ratio,
             "label_confidence": selection.label_confidence,
             "label_photo_mode": selection.label_photo_mode,
+            "labels_detected": selection.labels_detected,
+            "multi_wine_mode": selection.multi_wine_mode,
+            "multi_wine_label_threshold": MULTI_WINE_LABEL_THRESHOLD,
             "label_photo_area_threshold": LABEL_PHOTO_AREA_THRESHOLD,
             "label_photo_confidence_threshold": LABEL_PHOTO_CONFIDENCE_THRESHOLD,
         }

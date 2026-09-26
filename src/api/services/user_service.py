@@ -24,6 +24,8 @@ from src.api.schemas import (
     SearchResultRef,
     ViewedWine,
     WineResponse,
+    PublicReview,
+    WineReviewsResponse,
 )
 from src.api.services.wine_service import wine_to_response
 from src.connections.database.models import (
@@ -318,6 +320,43 @@ class UserService:
             await session.commit()
         return bool(result.rowcount)
 
+    async def wine_reviews(
+        self, wine_id: UUID, viewer_id: UUID | None = None, limit: int = 50
+    ) -> WineReviewsResponse | None:
+        """Все отзывы о вине: сводка по оценкам и лента (свой — первым). None — вина нет в каталоге."""
+        async with self.database.session() as session:
+            if await session.get(Wine, wine_id) is None:
+                return None
+            rows = (
+                await session.execute(
+                    select(WineReview, User.email)
+                    .join(User, User.id == WineReview.user_id)
+                    .where(WineReview.wine_id == wine_id)
+                    .order_by(WineReview.updated_at.desc())
+                )
+            ).all()
+        ratings = [review.rating for review, _ in rows if review.rating]
+        items = [
+            PublicReview(
+                author="Вы" if review.user_id == viewer_id else _mask_email(email),
+                is_mine=review.user_id == viewer_id,
+                rating=review.rating,
+                comment=review.comment,
+                created_at=review.created_at,
+                updated_at=review.updated_at,
+            )
+            for review, email in rows
+        ]
+        items.sort(key=lambda item: not item.is_mine)  # стабильно: свой первым, остальные по дате
+        return WineReviewsResponse(
+            wine_id=str(wine_id),
+            count=len(rows),
+            rated_count=len(ratings),
+            average_rating=round(sum(ratings) / len(ratings), 2) if ratings else None,
+            distribution={value: ratings.count(value) for value in range(1, 6)},
+            items=items[:limit],
+        )
+
     async def reviews(self, user_id: UUID) -> list[ReviewItem]:
         async with self.database.session() as session:
             rows = list(
@@ -518,6 +557,12 @@ def _latest_views(searches: list[SearchHistory]) -> list[ViewedRef]:
         if current is None or search.created_at > current.viewed_at:
             latest[search.top_wine_id] = ViewedRef(search.top_wine_id, search.created_at, search.id)
     return sorted(latest.values(), key=lambda ref: ref.viewed_at, reverse=True)
+
+
+def _mask_email(email: str) -> str:
+    """Публичное имя автора: первая буква логина, остальное скрыто."""
+    local = email.split("@", 1)[0]
+    return f"{local[:1].upper()}•••" if local else "Пользователь"
 
 
 def _review_response(review: WineReview) -> ReviewResponse:

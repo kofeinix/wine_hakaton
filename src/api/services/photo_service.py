@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from PIL import Image
 
-from src.api.schemas import CropResponse
+from src.api.schemas import CropResponse, DetectionResponse, DetectionsResponse, ImageSize
 from src.ml.utils import open_rgb_image
-from src.ml.yolo import LabelCrop, YoloBottleCropper, YoloLabelCropper
+from src.ml.yolo import Detection, LabelCrop, YoloBottleCropper, YoloLabelCropper
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 class QueryImageViews:
     images: dict[str, Image.Image]
     crops: dict[str, CropResponse]
+    image: ImageSize | None = None
+    detections: DetectionsResponse = field(default_factory=DetectionsResponse)
 
 
 class WinePhotoService:
@@ -86,7 +88,18 @@ class WinePhotoService:
         if label_crop is None:
             images["label_crop"] = original
 
-        return QueryImageViews(images=images, crops=crops)
+        # все детекции на фото (этикетки — только если искали по всему фото, а не внутри бутылки)
+        label_candidates = crops["label_crop"].source_view == "original" and label_crop is not None
+        detections = DetectionsResponse(
+            bottles=_detections(bottle_crop.candidates if bottle_crop else ()),
+            labels=_detections(label_crop.candidates if label_candidates else ()),
+        )
+        return QueryImageViews(
+            images=images,
+            crops=crops,
+            image=ImageSize(width=original.width, height=original.height),
+            detections=detections,
+        )
 
     @staticmethod
     def _try_crop(
@@ -113,3 +126,8 @@ class WinePhotoService:
             height=crop.image.height,
             source_view=source_view,
         )
+
+
+
+def _detections(items: tuple[Detection, ...]) -> list[DetectionResponse]:
+    return [DetectionResponse(box=item.box, confidence=round(item.confidence, 4)) for item in items]

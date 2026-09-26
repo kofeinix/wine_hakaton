@@ -29,6 +29,8 @@ GLOBAL_CANDIDATE_LIMIT = 50  # вин-кандидатов после групп
 # Фото крупным планом этикетки: этикетка занимает большую часть кадра -> ищем только по ней.
 LABEL_PHOTO_AREA_THRESHOLD = 0.60
 LABEL_PHOTO_CONFIDENCE_THRESHOLD = 0.50
+# Полка / витрина: столько этикеток и больше -> весь кадр не описывает нужное вино, ищем без original.
+MULTI_WINE_LABEL_THRESHOLD = 3
 # Скор view для вина: 0.75 * лучший cosine + 0.25 * среднее top-3 фото.
 VIEW_SCORE_TOP_K_PHOTOS = 3
 VIEW_SCORE_BEST_WEIGHT = 0.75
@@ -66,6 +68,8 @@ class ViewSelection:
     label_area_ratio: float
     label_confidence: float
     label_photo_mode: bool
+    labels_detected: int = 0
+    multi_wine_mode: bool = False
 
 
 @dataclass(frozen=True)
@@ -101,7 +105,22 @@ def select_views(query_views, allowed: list[str] | None = None) -> ViewSelection
             label_area_ratio,
             label_confidence,
         )
-    return ViewSelection(active_views, label_area_ratio, label_confidence, label_photo_mode)
+
+    detections = getattr(query_views, "detections", None)
+    labels_detected = len(getattr(detections, "labels", None) or [])
+    multi_wine_mode = labels_detected >= MULTI_WINE_LABEL_THRESHOLD
+    # явно переданные views (эксперименты) не переопределяем
+    if multi_wine_mode and allowed is None and "original" in active_views and len(active_views) > 1:
+        active_views = [view for view in active_views if view != "original"]
+        logger.info("Detected %d labels (shelf photo); searching without the original view.", labels_detected)
+    return ViewSelection(
+        active_views,
+        label_area_ratio,
+        label_confidence,
+        label_photo_mode,
+        labels_detected=labels_detected,
+        multi_wine_mode=multi_wine_mode,
+    )
 
 
 def normalized_weights(views: list[str]) -> dict[str, float]:

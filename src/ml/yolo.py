@@ -11,10 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
+class Detection:
+    box: tuple[int, int, int, int]
+    confidence: float
+
+
+@dataclass(frozen=True)
 class LabelCrop:
     image: Image.Image
     box: tuple[int, int, int, int]
     confidence: float
+    # все уверенные детекции на изображении (выбранная — одна из них), по убыванию уверенности
+    candidates: tuple[Detection, ...] = ()
 
 
 class UltralyticsCropper:
@@ -52,7 +60,9 @@ class UltralyticsCropper:
             raise RuntimeError("Model is not loaded yet")
 
         results = self._model.predict(
-            source=np.asarray(image.convert("RGB")),
+            # ultralytics считает numpy-массив BGR (как из cv2); RGB от PIL переворачиваем,
+            # иначе красное вино «синеет» и детекции теряют уверенность
+            source=np.ascontiguousarray(np.asarray(image.convert("RGB"))[:, :, ::-1]),
             classes=[self.class_id] if self.class_id is not None else None,
             conf=self.confidence_threshold,
             retina_masks=True,
@@ -89,7 +99,14 @@ class UltralyticsCropper:
         crop = image.crop(box)
         if self.remove_background and result.masks is not None:
             crop = self._crop_without_background(image, crop, box, result, best)
-        return LabelCrop(image=crop, box=box, confidence=confidence)
+        candidates = tuple(
+            Detection(box=tuple(int(v) for v in xyxy), confidence=float(conf))
+            for xyxy, conf in sorted(
+                zip(result.boxes.xyxy.cpu().numpy(), confs, strict=True), key=lambda item: -item[1]
+            )
+            if conf >= self.selection_min_confidence
+        )
+        return LabelCrop(image=crop, box=box, confidence=confidence, candidates=candidates)
 
     @staticmethod
     def _crop_without_background(

@@ -62,6 +62,21 @@ class CropResponse(BaseModel):
     source_view: str | None = None
 
 
+class DetectionResponse(BaseModel):
+    box: tuple[int, int, int, int] = Field(description="x1, y1, x2, y2 в координатах всего фото")
+    confidence: float
+
+
+class DetectionsResponse(BaseModel):
+    bottles: list[DetectionResponse] = Field(default_factory=list)
+    labels: list[DetectionResponse] = Field(default_factory=list)
+
+
+class ImageSize(BaseModel):
+    width: int
+    height: int
+
+
 class OcrInfo(BaseModel):
     applied: bool = Field(description="OCR распознал текст и участвовал в ранжировании")
     source_view: str | None = Field(default=None, description="С какого кропа читали: label_crop / bottle_crop / original")
@@ -76,6 +91,10 @@ class OcrInfo(BaseModel):
 class SearchInfo(BaseModel):
     active_views: list[str] = Field(description="По каким кропам искали в Qdrant")
     label_photo_mode: bool = Field(description="Фото этикетки крупным планом — искали только по ней")
+    multi_wine_mode: bool = Field(
+        default=False, description="На фото много этикеток (полка) — весь кадр в поиске не участвовал"
+    )
+    labels_detected: int = Field(default=0, description="Сколько этикеток нашёл детектор на фото")
     candidates: int = Field(description="Сколько вин-кандидатов переранжировал OCR")
 
 
@@ -95,6 +114,11 @@ class SearchResponse(BaseModel):
     results: list[SearchMatch] = Field(default_factory=list)
     ocr: OcrInfo
     crops: dict[str, CropResponse] = Field(default_factory=dict)
+    image: ImageSize | None = Field(default=None, description="Размер всего загруженного фото")
+    detections: DetectionsResponse = Field(
+        default_factory=DetectionsResponse,
+        description="Все найденные бутылки и этикетки — чтобы выбрать нужную, если на фото несколько вин",
+    )
     search: SearchInfo
     timings_ms: SearchTimings
     diagnostics: dict[str, Any] | None = Field(default=None, description="Полная отладка — только при debug=true")
@@ -184,6 +208,24 @@ class ReviewItem(ReviewResponse):
 
 class ReviewsResponse(BaseModel):
     items: list[ReviewItem]
+
+
+class PublicReview(BaseModel):
+    author: str = Field(description="Замаскированный автор (email не раскрываем)")
+    is_mine: bool = False
+    rating: int | None = None
+    comment: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class WineReviewsResponse(BaseModel):
+    wine_id: str
+    count: int = Field(description="Всего отзывов")
+    rated_count: int = Field(description="Сколько отзывов с оценкой")
+    average_rating: float | None = Field(default=None, description="Средняя оценка пользователей сервиса, 1–5")
+    distribution: dict[int, int] = Field(default_factory=dict, description="Сколько оценок по каждому числу бокалов")
+    items: list[PublicReview] = Field(default_factory=list, description="Свой отзыв первым, затем новые сверху")
 
 
 class ViewedWine(BaseModel):

@@ -25,6 +25,7 @@ from src.api.schemas import (
     TokenResponse,
     UserResponse,
     ViewedWinesResponse,
+    WineReviewsResponse,
 )
 from src.api.services.user_service import EmailTakenError, Owner, UserService, parse_uuid
 
@@ -207,6 +208,29 @@ async def remove_favorite(wine_id: str, user_id: CurrentUserId, users: UserServi
 @router.get("/reviews", response_model=ReviewsResponse, tags=["reviews"], summary="Мои оценки и комментарии")
 async def reviews(user_id: CurrentUserId, users: UserServiceDep) -> ReviewsResponse:
     return ReviewsResponse(items=await users.reviews(user_id))
+
+
+@router.get(
+    "/wines/{wine_id}/reviews",
+    response_model=WineReviewsResponse,
+    tags=["reviews"],
+    summary="Все отзывы о вине",
+    description=(
+        "Средняя оценка пользователей сервиса, распределение по бокалам и лента отзывов. "
+        "Доступно без входа; с токеном свой отзыв помечен is_mine и идёт первым. Авторы замаскированы."
+    ),
+    responses={404: {"description": "Вино не найдено"}},
+)
+async def wine_reviews(
+    wine_id: str,
+    users: UserServiceDep,
+    user_id: OptionalUserId,
+    limit: int = Query(default=50, ge=1, le=200),
+) -> WineReviewsResponse:
+    result = await users.wine_reviews(_require_uuid(wine_id, "Wine"), viewer_id=user_id, limit=limit)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Wine not found")
+    return result
 
 
 @router.put(
