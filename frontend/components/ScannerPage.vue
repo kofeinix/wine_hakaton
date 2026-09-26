@@ -11,12 +11,13 @@
       <ScannerStats />
     </section>
 
+    <BottlePicker />
+
     <WineResult :match="app.bestMatch.value" />
 
     <section v-if="app.similarMatches.value.length" class="similar-section">
       <div class="section-title">
-        <span>Похожие варианты</span>
-        <h2>Вина, которые стоит сравнить</h2>
+        <h2>Похожие варианты</h2>
       </div>
       <div class="wine-grid">
         <WineCard

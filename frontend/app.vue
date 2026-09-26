@@ -11,6 +11,8 @@
     <AppFooter />
     <AuthModal />
     <NotificationModal />
+    <WineDetailModal />
+    <RatingModal />
   </div>
 </template>
 

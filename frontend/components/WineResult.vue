@@ -81,15 +81,7 @@
       </div>
     </div>
 
-    <section class="rating-panel">
-      <h3>Поставь свою оценку</h3>
-      <div class="rating-actions">
-        <button v-for="value in 5" :key="value" type="button" @click="app.setReview(match, value)">
-          <Wine :size="34" />
-          <span>{{ value }}</span>
-        </button>
-      </div>
-    </section>
+    <WineReviews v-if="match.wine" :wine="match.wine" />
 
     <SearchDiagnostics />
   </section>

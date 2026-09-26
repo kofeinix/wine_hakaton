@@ -38,7 +38,7 @@
       class="ui-button primary large"
       type="button"
       :disabled="!app.selectedFile.value || app.isSearching.value"
-      @click="app.searchWine"
+      @click="app.searchWine()"
     >
       <LoaderCircle v-if="app.isSearching.value" :size="18" class="spin" />
       <Search v-else :size="18" />
