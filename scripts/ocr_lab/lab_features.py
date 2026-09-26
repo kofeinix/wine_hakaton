@@ -170,6 +170,27 @@ MATCHERS = {e: matchers(e) for e in ("name", "producer", "grape")}
 # ---------------------------------------------------------------- признаки записи
 
 ALC_RE = re.compile(r"(\d{1,2}(?:[.,]\d{1,2})?)\s*%")
+NUMBER_RE = re.compile(r"\d{1,2}(?:[.,]\d{1,2})?")
+
+
+def alcohol_numbers(value: object) -> tuple[float, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, int | float):
+        number = float(value)
+        return (number,) if 5.0 <= number <= 25.0 else ()
+    text = str(value)
+    if "%" not in text:
+        return ()
+    result: list[float] = []
+    for match in NUMBER_RE.finditer(text):
+        try:
+            number = float(match.group(0).replace(",", "."))
+        except ValueError:
+            continue
+        if 5.0 <= number <= 25.0:
+            result.append(number)
+    return tuple(result)
 
 
 def _vs_of(values) -> tuple[str, ...]:
@@ -197,14 +218,7 @@ def record_features(rec: dict) -> list[dict]:
     }
     color_scores = {k: m_win(_vs_of(vals), vw) for k, vals in CAT["color_aliases"].items()}
     sugar_scores = {k: m_win(_vs_of(vals), vw) for k, vals in SUGAR_VARIANTS.items()}
-    alc_values = []
-    for m in ALC_RE.finditer(raw):
-        try:
-            a = float(m.group(1).replace(",", "."))
-            if 5.0 <= a <= 25.0:
-                alc_values.append(a)
-        except ValueError:
-            pass
+    alc_values = alcohol_numbers(raw)
 
     entity_cache: dict = {}
 
@@ -249,9 +263,10 @@ def record_features(rec: dict) -> list[dict]:
         own_s = sugar_scores.get(sk, -1.0) if sk else -1.0
         other_s = max((s for k, s in sugar_scores.items() if k != sk), default=0.0)
         f["s_own"], f["s_other"] = own_s, other_s
-        wa = wine["alcohol"]
-        f["alc_match"] = float(bool(wa and alc_values and min(abs(a - wa) for a in alc_values) <= 0.3))
-        f["alc_miss"] = float(bool(wa and alc_values and min(abs(a - wa) for a in alc_values) > 1.0))
+        wa = alcohol_numbers(wine["alcohol"])
+        delta = min((abs(a - candidate_a) for a in alc_values for candidate_a in wa), default=None)
+        f["alc_match"] = float(delta is not None and delta <= 0.3)
+        f["alc_miss"] = float(delta is not None and delta > 1.0)
         f["ocr_len"] = float(len(rec["ocr"].split()))
         feats_all.append(f)
     return feats_all

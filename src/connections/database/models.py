@@ -16,6 +16,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     false,
     func,
 )
@@ -102,10 +103,12 @@ class Wine(Base):
     year: Mapped[int | None] = mapped_column(Integer)
     color: Mapped[str | None] = mapped_column(String(50), index=True)
     sugar: Mapped[str | None] = mapped_column(String(50), index=True)
-    alcohol: Mapped[float | None] = mapped_column(Float)
+    alcohol: Mapped[str | None] = mapped_column(String(50))
     price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     stock: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str | None] = mapped_column(Text)
+    serving_temperature: Mapped[str | None] = mapped_column(String(50))
+    shade: Mapped[str | None] = mapped_column(String(255))
     source_url: Mapped[str | None] = mapped_column(String(1000))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -122,6 +125,10 @@ class Wine(Base):
     producer: Mapped[Producer] = relationship(back_populates="wines")
     region: Mapped[Region | None] = relationship(back_populates="wines")
     grape_links: Mapped[list[WineGrape]] = relationship(
+        back_populates="wine",
+        cascade="all, delete-orphan",
+    )
+    food_links: Mapped[list[WineFood]] = relationship(
         back_populates="wine",
         cascade="all, delete-orphan",
     )
@@ -157,6 +164,37 @@ class WineGrape(Base):
 
     wine: Mapped[Wine] = relationship(back_populates="grape_links")
     grape: Mapped[Grape] = relationship(back_populates="wine_links")
+
+
+class Food(Base):
+    __tablename__ = "food"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+
+    wine_links: Mapped[list[WineFood]] = relationship(back_populates="food")
+
+
+class WineFood(Base):
+    __tablename__ = "wine_food"
+    __table_args__ = (UniqueConstraint("wine_id", "food_id", name="uq_wine_food_pair"),)
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    wine_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("wines.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    food_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("food.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+
+    wine: Mapped[Wine] = relationship(back_populates="food_links")
+    food: Mapped[Food] = relationship(back_populates="wine_links")
 
 
 class WineImage(Base):

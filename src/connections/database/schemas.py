@@ -53,10 +53,12 @@ class WineCreate(BaseModel):
     year: int | None = None
     color: str | None = None
     sugar: str | None = None
-    alcohol: float | None = None
+    alcohol: str | None = None
     price: Decimal | None = None
     stock: int | None = None
     description: str | None = None
+    serving_temperature: str | None = None
+    shade: str | None = None
     source_url: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -67,10 +69,11 @@ class WineCreate(BaseModel):
         "year",
         "color",
         "sugar",
-        "alcohol",
         "price",
         "stock",
         "description",
+        "serving_temperature",
+        "shade",
         "source_url",
         "rating",
         mode="before",
@@ -78,6 +81,17 @@ class WineCreate(BaseModel):
     @classmethod
     def normalize_empty_strings(cls, value: object) -> object:
         return _empty_to_none(value)
+
+    @field_validator("alcohol", mode="before")
+    @classmethod
+    def normalize_alcohol(cls, value: object) -> object:
+        value = _empty_to_none(value)
+        if value is None:
+            return None
+        if isinstance(value, int | float | Decimal):
+            number = f"{float(value):g}"
+            return f"{number}%"
+        return str(value).strip()
 
 
 class WineGrapeCreate(BaseModel):
@@ -89,6 +103,17 @@ class WineGrapeCreate(BaseModel):
     @classmethod
     def normalize_empty_strings(cls, value: object) -> object:
         return _empty_to_none(value)
+
+
+class FoodCreate(BaseModel):
+    id: UUID
+    name: str = Field(min_length=1)
+
+
+class WineFoodCreate(BaseModel):
+    id: UUID
+    wine_id: UUID
+    food_id: UUID
 
 
 class WineImageCreate(BaseModel):

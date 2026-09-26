@@ -22,12 +22,15 @@ class WineResponse(BaseModel):
     year: int | None = None
     color: str | None = None
     sugar: str | None = None
-    alcohol: float | None = None
+    alcohol: str | None = None
+    serving_temperature: str | None = None
+    shade: str | None = None
     price: float | None = None
     currency: str = "RUB"
     rating: float | None = None
     description: str | None = None
     grapes: list[str] = Field(default_factory=list)
+    food_pairings: list[str] = Field(default_factory=list)
     source_url: str | None = None
     image_url: str | None = Field(default=None, description="Главное фото (первое из photos)")
     photos: list[WinePhoto] = Field(default_factory=list, description="Настоящие фото: main, yandex, vivino")

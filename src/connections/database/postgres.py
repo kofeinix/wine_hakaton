@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 # create_all не меняет существующие таблицы; новые колонки добавляем идемпотентно
 SCHEMA_PATCHES = (
     "ALTER TABLE IF EXISTS wine_images ADD COLUMN IF NOT EXISTS is_generated BOOLEAN NOT NULL DEFAULT false",
+    "ALTER TABLE IF EXISTS wines ADD COLUMN IF NOT EXISTS serving_temperature VARCHAR(50)",
+    "ALTER TABLE IF EXISTS wines ADD COLUMN IF NOT EXISTS shade VARCHAR(255)",
+    "ALTER TABLE IF EXISTS wines ALTER COLUMN alcohol TYPE VARCHAR(50) USING alcohol::text",
 )
 
 

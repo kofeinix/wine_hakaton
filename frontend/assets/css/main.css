@@ -1,0 +1,1035 @@
+:root {
+  --primary: #8f3d42;
+  --primary-hover: #ab494f;
+  --primary-active: #723135;
+  --primary-deep: #7b3528;
+  --primary-soft: #f9f1f1;
+  --primary-soft-hover: #edd4d6;
+  --bg-page: #fefdfa;
+  --bg-card: #fdf9ed;
+  --bg-badge: #f8ecc9;
+  --bg-surface: #ffffff;
+  --text-primary: #2c2a28;
+  --text-muted: #857e79;
+  --text-meta: #9a948f;
+  --text-subtle: #aea9a5;
+  --border: #d7d4d2;
+  --shadow-filter: 0 16px 24px rgba(133, 126, 121, 0.1);
+  --shadow-elevated: 0 1px 3px rgba(2, 3, 6, 0.07), 0 4px 6px rgba(2, 3, 6, 0.04),
+    0 6px 8px rgba(2, 3, 6, 0.03), 0 24px 8px rgba(2, 3, 6, 0.01);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(248, 236, 201, 0.55), transparent 32rem),
+    var(--bg-page);
+}
+
+.site-header {
+  position: sticky;
+  top: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: min(1329px, calc(100% - 32px));
+  min-height: 64px;
+  margin: 16px auto 0;
+  padding: 10px 24px;
+  border-radius: 100px;
+  background: rgba(239, 219, 198, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: max-content;
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary-deep);
+  color: white;
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+}
+
+.brand strong {
+  display: block;
+  font-family: "Playfair Display", serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.brand small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 8px;
+}
+
+.main-nav button,
+.main-nav a {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.main-nav .active {
+  color: var(--primary-deep);
+}
+
+.main-nav .active::after {
+  position: absolute;
+  right: 16px;
+  bottom: -10px;
+  left: 16px;
+  height: 4px;
+  border-radius: 4px 4px 0 0;
+  background: var(--primary-deep);
+  content: "";
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-button,
+.pill-user {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--primary);
+  min-height: 40px;
+  padding: 0 14px;
+  box-shadow: var(--shadow-elevated);
+}
+
+.pill-user span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+main {
+  width: min(1329px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 72px 0 96px;
+}
+
+.page-heading {
+  max-width: 760px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+.breadcrumbs {
+  margin: 0 0 12px;
+  color: var(--text-meta);
+  font-size: 14px;
+}
+
+.page-heading h1,
+.section-title h2 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(38px, 6vw, 56px);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.page-heading p:last-child,
+.section-title span {
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.scanner-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 560px) 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.scan-card,
+.side-panel,
+.sommelier-card,
+.auth-required,
+.rating-panel,
+.notification-modal,
+.auth-modal {
+  background: var(--bg-card);
+  border-radius: 24px;
+}
+
+.scan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 520px;
+  padding: 32px;
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+
+.scan-card.dragging {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-filter);
+}
+
+.scanner-illustration {
+  position: relative;
+  display: grid;
+  width: 128px;
+  height: 128px;
+  place-items: center;
+  margin: 0 auto 8px;
+  border: 2px solid var(--primary-soft-hover);
+  border-radius: 32px;
+  color: var(--primary);
+}
+
+.spark {
+  position: absolute;
+  color: var(--primary-hover);
+}
+
+.spark-one {
+  top: 16px;
+  right: 12px;
+}
+
+.spark-two {
+  bottom: 18px;
+  left: 16px;
+}
+
+.scan-card h2,
+.sommelier-card h2,
+.auth-required h2,
+.rating-panel h3,
+.auth-modal h2,
+.notification-modal h2 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 35px;
+  text-align: center;
+}
+
+.scan-card p,
+.sommelier-card p,
+.auth-required p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 24px;
+  text-align: center;
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  transition: background-color 0.3s ease-in, color 0.3s ease-in, transform 0.3s ease-out;
+}
+
+.ui-button.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.ui-button.primary:hover {
+  background: var(--primary-hover);
+}
+
+.ui-button.secondary {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.ui-button.secondary:hover {
+  background: var(--primary-soft-hover);
+}
+
+.ui-button.tertiary,
+.ui-button.transparent {
+  background: transparent;
+  color: var(--primary);
+}
+
+.ui-button.tertiary:hover,
+.ui-button.transparent:hover {
+  background: var(--primary-soft);
+}
+
+.ui-button.large {
+  min-height: 56px;
+  border-radius: 16px;
+}
+
+.ui-button.small {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.scan-action {
+  width: 100%;
+}
+
+.selected-file {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.selected-file img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.selected-file strong,
+.selected-file span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-file span {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.error-message {
+  color: var(--primary-active);
+  font-weight: 600;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-filter);
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-row span {
+  color: var(--text-muted);
+}
+
+.stat-row strong {
+  color: var(--primary);
+  font-family: "Playfair Display", serif;
+  font-size: 42px;
+  font-weight: 500;
+}
+
+.result-section,
+.similar-section {
+  margin-top: 96px;
+}
+
+.section-title {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.wine-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 560px;
+}
+
+.wine-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 48px 64px;
+  border-radius: 40px 0 0 40px;
+  background: var(--bg-card);
+}
+
+.match-label,
+.producer-link {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.wine-info h3 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(32px, 4vw, 42px);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.rating-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 24px;
+  background: var(--bg-badge);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.wine-fact {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.wine-fact span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 15px;
+}
+
+.wine-fact strong {
+  display: block;
+  margin-top: 4px;
+  line-height: 24px;
+}
+
+.description {
+  color: var(--text-primary);
+  font-size: 18px;
+  line-height: 27px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.as-link {
+  text-decoration: none;
+}
+
+.wine-visual {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 20px;
+  overflow: hidden;
+  padding: 32px;
+  border-radius: 0 40px 40px 0;
+  background:
+    linear-gradient(rgba(44, 42, 40, 0.2), rgba(44, 42, 40, 0.2)),
+    radial-gradient(circle at 30% 20%, #e8d3b3, #7b3528);
+}
+
+.photo-stage {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+}
+
+.photo-stage img {
+  max-width: min(320px, 80%);
+  max-height: 430px;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 24px rgba(44, 42, 40, 0.22));
+}
+
+.photo-stage span {
+  color: white;
+}
+
+.thumb-strip,
+.generated-grid {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.thumb-strip button {
+  flex: 0 0 60px;
+  width: 60px;
+  height: 72px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.thumb-strip button.active {
+  border-color: var(--primary);
+}
+
+.thumb-strip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.glass-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.glass-tiles div {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.glass-tiles .wide {
+  grid-column: 1 / -1;
+}
+
+.glass-tiles svg {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+}
+
+.glass-tiles span {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.glass-tiles strong {
+  font-family: "Playfair Display", serif;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.generated-block,
+.diagnostics,
+.rating-panel {
+  margin-top: 24px;
+}
+
+.generated-grid {
+  margin-top: 16px;
+}
+
+.generated-grid img {
+  width: 220px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+.rating-panel {
+  max-width: 680px;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 32px;
+}
+
+.rating-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.rating-actions button {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg-badge);
+  color: var(--primary);
+}
+
+.rating-actions span {
+  font-size: 12px;
+}
+
+.diagnostics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.diagnostics-grid div {
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--bg-card);
+}
+
+.diagnostics-grid span,
+.diagnostics-grid small {
+  display: block;
+  color: var(--text-muted);
+}
+
+.diagnostics-grid strong {
+  display: block;
+  margin: 8px 0;
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.wine-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.wine-card,
+.favorite-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 414px;
+  padding: 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  text-align: left;
+  transition: transform 0.3s ease-out;
+}
+
+.wine-card:hover,
+.favorite-card:hover {
+  transform: translateY(-4px);
+}
+
+.wine-card img,
+.favorite-card img {
+  width: 100%;
+  height: 235px;
+  object-fit: contain;
+}
+
+.rating-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  border-radius: 16px;
+  background: var(--bg-badge);
+  padding: 6px 10px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.wine-card strong,
+.favorite-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.wine-card small,
+.favorite-card p,
+.wine-card em {
+  color: var(--text-subtle);
+  font-style: normal;
+  line-height: 21px;
+}
+
+.placeholder-page,
+.profile-page {
+  min-height: 560px;
+}
+
+.sommelier-card,
+.auth-required {
+  display: grid;
+  max-width: 680px;
+  place-items: center;
+  gap: 16px;
+  margin: 0 auto;
+  padding: 48px;
+  text-align: center;
+}
+
+.sommelier-card svg {
+  color: var(--primary);
+}
+
+.profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.profile-tabs button {
+  display: inline-flex;
+  gap: 8px;
+  min-height: 32px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--primary);
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-tabs .active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.profile-list {
+  display: grid;
+  gap: 16px;
+}
+
+.history-item,
+.notification-item,
+.reminder-wine {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 24px;
+  background: var(--bg-card);
+}
+
+.history-item img,
+.reminder-wine img {
+  width: 72px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.history-item span,
+.notification-item span,
+.reminder-wine span {
+  display: block;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(1329px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-meta);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(44, 42, 40, 0.35);
+}
+
+.auth-modal,
+.notification-modal {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 32px;
+  box-shadow: var(--shadow-filter);
+}
+
+.notification-modal {
+  width: min(760px, 100%);
+}
+
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.auth-modal {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-modal label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.auth-modal input {
+  height: 44px;
+  border: 1px solid #c2bfbc;
+  border-radius: 12px;
+  background: white;
+  color: var(--text-primary);
+  padding: 0 12px;
+}
+
+.reminder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1023px) {
+  .site-header {
+    align-items: flex-start;
+    border-radius: 32px;
+    flex-wrap: wrap;
+  }
+
+  .main-nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .scanner-layout,
+  .wine-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .wine-info,
+  .wine-visual {
+    border-radius: 32px;
+  }
+
+  .wine-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .diagnostics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-header,
+  main,
+  .site-footer {
+    width: min(100% - 24px, 1329px);
+  }
+
+  .site-header {
+    top: 8px;
+    margin-top: 8px;
+    padding: 10px 12px;
+  }
+
+  .brand small,
+  .pill-user span {
+    display: none;
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+
+  main {
+    padding-top: 48px;
+  }
+
+  .page-heading {
+    margin-bottom: 32px;
+  }
+
+  .page-heading h1,
+  .section-title h2 {
+    font-size: 38px;
+    line-height: 48px;
+  }
+
+  .scan-card,
+  .side-panel,
+  .wine-info,
+  .wine-visual,
+  .auth-required,
+  .sommelier-card {
+    padding: 24px;
+  }
+
+  .facts-grid,
+  .glass-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .glass-tiles .wide {
+    grid-column: auto;
+  }
+
+  .wine-grid {
+    gap: 12px;
+  }
+
+  .wine-card,
+  .favorite-card {
+    min-height: 360px;
+    padding: 12px;
+  }
+
+  .wine-card img,
+  .favorite-card img {
+    height: 200px;
+  }
+
+  .history-item,
+  .notification-item,
+  .reminder-wine {
+    grid-template-columns: 56px 1fr;
+  }
+
+  .notification-item .ui-button,
+  .reminder-actions {
+    grid-column: 1 / -1;
+  }
+
+  .site-footer {
+    display: grid;
+  }
+}

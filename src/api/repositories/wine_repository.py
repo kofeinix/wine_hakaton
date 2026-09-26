@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from src.connections.database.models import ColorAlias, Grape, Producer, Wine, WineGrape, WineImage
+from src.connections.database.models import ColorAlias, Grape, Producer, Wine, WineFood, WineGrape, WineImage
 from src.connections.database.postgres import DatabaseClient
 
 logger = logging.getLogger(__name__)
@@ -135,6 +135,7 @@ class WineRepository:
             selectinload(Wine.producer),
             selectinload(Wine.region),
             selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
+            selectinload(Wine.food_links).selectinload(WineFood.food),
             selectinload(Wine.images),
         )
 

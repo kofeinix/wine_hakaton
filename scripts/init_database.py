@@ -12,15 +12,28 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.connections.database.models import ColorAlias, Grape, GrapeAlias, Producer, Region, Wine, WineGrape, WineImage
+from src.connections.database.models import (
+    ColorAlias,
+    Food,
+    Grape,
+    GrapeAlias,
+    Producer,
+    Region,
+    Wine,
+    WineFood,
+    WineGrape,
+    WineImage,
+)
 from src.connections.database.postgres import DatabaseClient
 from src.connections.database.schemas import (
     ColorAliasCreate,
+    FoodCreate,
     GrapeAliasCreate,
     GrapeCreate,
     ProducerCreate,
     RegionCreate,
     WineCreate,
+    WineFoodCreate,
     WineGrapeCreate,
     WineImageCreate,
 )
@@ -119,6 +132,14 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             WineGrapeCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "wine_grapes.json")
         ]
+        food = [
+            FoodCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "food.json")
+        ]
+        wine_food = [
+            WineFoodCreate.model_validate(row).model_dump()
+            for row in load_json(db_dir / "wine_food.json")
+        ]
         wine_images = [
             WineImageCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "wine_images.json")
@@ -132,15 +153,19 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             await upsert_rows(session, ColorAlias, color_aliases)
             await upsert_rows(session, Wine, wines)
             await upsert_rows(session, WineGrape, wine_grapes)
+            await upsert_rows(session, Food, food)
+            await upsert_rows(session, WineFood, wine_food)
             await upsert_rows(session, WineImage, wine_images)
             if prune:
                 # от дочерних таблиц к родительским; таблицы пользователей не трогаем
                 for model, rows in (
                     (WineImage, wine_images),
+                    (WineFood, wine_food),
                     (WineGrape, wine_grapes),
                     (GrapeAlias, grape_aliases),
                     (ColorAlias, color_aliases),
                     (Wine, wines),
+                    (Food, food),
                     (Grape, grapes),
                     (Region, regions),
                     (Producer, producers),
@@ -153,7 +178,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
         logger.info(
             (
                 "Imported %s producers, %s regions, %s grapes, %s grape_aliases, %s color_aliases, "
-                "%s wines, %s wine_grapes, %s wine_images."
+                "%s wines, %s wine_grapes, %s food, %s wine_food, %s wine_images."
             ),
             len(producers),
             len(regions),
@@ -162,6 +187,8 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             len(color_aliases),
             len(wines),
             len(wine_grapes),
+            len(food),
+            len(wine_food),
             len(wine_images),
         )
     finally:

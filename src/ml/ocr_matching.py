@@ -66,6 +66,7 @@ ALCOHOL_MISMATCH_TOLERANCE = 1.0
 
 _WORD_RE = re.compile(r"\w+")
 _ALCOHOL_RE = re.compile(r"(\d{1,2}(?:[.,]\d{1,2})?)\s*%")
+_NUMBER_RE = re.compile(r"\d{1,2}(?:[.,]\d{1,2})?")
 
 # Признаки для CatBoost (этап 2). Сырые скоры — без порогов и нижних границ.
 OCR_FEATURE_NAMES = (
@@ -278,11 +279,6 @@ class OcrQuery:
     @classmethod
     def build(cls, raw_text: str, catalog: OcrCatalog) -> OcrQuery:
         views = ocr_views(raw_text)
-        alcohol: list[float] = []
-        for match in _ALCOHOL_RE.finditer(raw_text):
-            value = float(match.group(1).replace(",", "."))
-            if 5.0 <= value <= 25.0:
-                alcohol.append(value)
         return cls(
             raw_text=raw_text,
             views=views,
@@ -304,7 +300,7 @@ class OcrQuery:
                 key: window_match(_variants_of(values), views)
                 for key, values in catalog.sugar_variants.items()
             },
-            alcohol_values=tuple(alcohol),
+            alcohol_values=_alcohol_numbers(raw_text),
         )
 
 
@@ -316,7 +312,7 @@ class OcrCandidate:
     grapes: dict[str, tuple[str, ...]]  # ключ сорта -> название и синонимы
     color: str | None
     sugar: str | None
-    alcohol: float | None
+    alcohol: str | None
 
 
 @dataclass(frozen=True)
@@ -344,6 +340,23 @@ def _category(scores: dict[str, float], value: str | None) -> tuple[float, float
     match = own >= CATEGORY_MATCH_THRESHOLD
     contradiction = 0.0 <= own < CATEGORY_MATCH_THRESHOLD and other >= CATEGORY_MATCH_THRESHOLD
     return own, other, match, contradiction
+
+
+def _alcohol_numbers(value: object) -> tuple[float, ...]:
+    if not value:
+        return ()
+    if isinstance(value, int | float):
+        number = float(value)
+        return (number,) if 5.0 <= number <= 25.0 else ()
+    text = str(value)
+    if "%" not in text:
+        return ()
+    result: list[float] = []
+    for match in _NUMBER_RE.finditer(text):
+        number = float(match.group(0).replace(",", "."))
+        if 5.0 <= number <= 25.0:
+            result.append(number)
+    return tuple(result)
 
 
 def _unique_evidence(query: OcrQuery, candidates: list[OcrCandidate]) -> list[tuple[float, float]]:
@@ -421,8 +434,13 @@ def score_candidates(
         producer_contra = bool(query.detected_producers - {producer_key}) and not producer_detected
 
         alcohol_match = alcohol_miss = False
-        if candidate.alcohol and query.alcohol_values:
-            delta = min(abs(value - candidate.alcohol) for value in query.alcohol_values)
+        candidate_alcohol_values = _alcohol_numbers(candidate.alcohol)
+        if candidate_alcohol_values and query.alcohol_values:
+            delta = min(
+                abs(query_value - candidate_value)
+                for query_value in query.alcohol_values
+                for candidate_value in candidate_alcohol_values
+            )
             alcohol_match = delta <= ALCOHOL_MATCH_TOLERANCE
             alcohol_miss = delta > ALCOHOL_MISMATCH_TOLERANCE
 
