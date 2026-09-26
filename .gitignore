@@ -23,3 +23,8 @@ data/embeddings/
 data/ocr_lab_cache/
 data/eval_responses_*.json
 data/catboost/
+
+# служебные снимки Playwright MCP
+.playwright-mcp/
+
+docs/
