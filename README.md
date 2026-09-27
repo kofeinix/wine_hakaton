@@ -86,8 +86,8 @@ docker compose up -d app
 
 - **Порт занят.** Поменяйте нужный порт в `.env` (`APP_PORT`, `FRONTEND_PORT`, `DATABASE__PORT`,
   `QDRANT__PORT`, `MINIO__PORT`, `REDIS__PORT`) и выполните `docker compose up -d`.
-- **Данные не скачались** (нет доступа к Яндекс Диску). Скачайте вручную по ссылкам из
-  `scripts/download_data.py` и положите: три файла `*.npz` — в `data/embeddings/`,
+- **Данные не скачались.** Скачайте вручную из [папки на Яндекс Диске](https://disk.yandex.ru/d/TW3su5DtKTNtfQ)
+  и положите: `original.npz`, `bottle_crop.npz`, `label_crop.npz` — в `data/embeddings/`,
   `photos.tar.gz` — в `data/`. Затем `docker compose up -d`.
 - **Модели не скачались.** Повторите `docker compose up models-init` и посмотрите его лог.
 - **Текст этикетки не распознаётся** (в диагностике «OCR не применён»). Проверьте, что LLM запущена
