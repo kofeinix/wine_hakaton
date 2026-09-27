@@ -22,6 +22,7 @@ from src.api.schemas import (
     NotificationDetail,
     NotificationsResponse,
     ProfileUpdateRequest,
+    ReviewPhoto,
     ReviewReactionRequest,
     ReviewRequest,
     ReviewResponse,
@@ -32,7 +33,7 @@ from src.api.schemas import (
     ViewedWinesResponse,
     WineReviewsResponse,
 )
-from src.api.services.user_service import EmailTakenError, Owner, UserService, parse_uuid
+from src.api.services.user_service import MAX_REVIEW_PHOTOS, EmailTakenError, Owner, UserService, parse_uuid
 
 router = APIRouter()
 
@@ -58,17 +59,33 @@ AVATAR_MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 AVATAR_SIZE = 256
 
 
-def _avatar_data_url(data: bytes) -> str:
-    """Квадратная миниатюра 256×256 в JPEG: аватар приходит в каждом отзыве, поэтому держим его маленьким."""
+REVIEW_PHOTO_MAX_SIDE = 1600
+PHOTO_CACHE_SECONDS = 7 * 24 * 3600
+
+
+async def _read_upload(image: UploadFile) -> bytes:
+    data = await image.read()
+    if not data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Файл пустой")
+    if len(data) > AVATAR_MAX_UPLOAD_BYTES:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Файл больше 10 МБ")
+    return data
+
+
+def _to_jpeg(data: bytes, *, square: int | None = None, max_side: int | None = None) -> bytes:
+    """Перекодировать загрузку в JPEG: учесть поворот из EXIF, убрать метаданные, уменьшить."""
     try:
         with Image.open(io.BytesIO(data)) as source:
             image = ImageOps.exif_transpose(source).convert("RGB")
     except Exception as exc:  # ultralytics подменяет Image.open, и ошибки бывают не только PIL-овые
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Не удалось прочитать изображение") from exc
-    image = ImageOps.fit(image, (AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS)
+    if square:
+        image = ImageOps.fit(image, (square, square), Image.Resampling.LANCZOS)
+    elif max_side:
+        image.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG", quality=85)
-    return f"data:image/jpeg;base64,{base64.b64encode(buffer.getvalue()).decode('ascii')}"
+    return buffer.getvalue()
 
 
 def _token_response(request: Request, user) -> TokenResponse:
@@ -147,12 +164,9 @@ async def upload_avatar(
     users: UserServiceDep,
     image: UploadFile = File(description="Изображение аватара"),
 ) -> UserResponse:
-    data = await image.read()
-    if not data:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Файл пустой")
-    if len(data) > AVATAR_MAX_UPLOAD_BYTES:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Файл больше 10 МБ")
-    avatar_url = _avatar_data_url(data)
+    # аватар приходит в каждом отзыве, поэтому это маленькая миниатюра прямо в data URL
+    jpeg = _to_jpeg(await _read_upload(image), square=AVATAR_SIZE)
+    avatar_url = f"data:image/jpeg;base64,{base64.b64encode(jpeg).decode('ascii')}"
     user = await users.update_profile(user_id, avatar_url=avatar_url)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
@@ -326,6 +340,64 @@ async def delete_review(wine_id: str, user_id: CurrentUserId, users: UserService
     if not await users.delete_review(user_id, _require_uuid(wine_id, "Review")):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/reviews/{wine_id}/photos",
+    response_model=ReviewPhoto,
+    status_code=status.HTTP_201_CREATED,
+    tags=["reviews"],
+    summary="Прикрепить фото к своему отзыву",
+    description=f"До {MAX_REVIEW_PHOTOS} фото; сначала нужно сохранить отзыв (`PUT /reviews/{{wine_id}}`).",
+    responses={404: {"description": "Отзыва нет"}, 409: {"description": "Лимит фото"}},
+)
+async def add_review_photo(
+    wine_id: str,
+    user_id: CurrentUserId,
+    users: UserServiceDep,
+    image: UploadFile = File(description="Фото"),
+) -> ReviewPhoto:
+    jpeg = _to_jpeg(await _read_upload(image), max_side=REVIEW_PHOTO_MAX_SIDE)
+    try:
+        photo = await users.add_review_photo(user_id, _require_uuid(wine_id, "Wine"), jpeg)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    if photo is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
+    return photo
+
+
+@router.delete(
+    "/reviews/{wine_id}/photos/{photo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["reviews"],
+    summary="Удалить фото из своего отзыва",
+)
+async def delete_review_photo(wine_id: str, photo_id: str, user_id: CurrentUserId, users: UserServiceDep) -> Response:
+    if not await users.delete_review_photo(
+        user_id, _require_uuid(wine_id, "Wine"), _require_uuid(photo_id, "Photo")
+    ):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Photo not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/review-photos/{photo_id}",
+    tags=["reviews"],
+    summary="Фото из отзыва",
+    response_class=Response,
+    responses={200: {"content": {"image/jpeg": {}}}, 404: {"description": "Photo not found"}},
+)
+async def get_review_photo(photo_id: str, users: UserServiceDep) -> Response:
+    photo = await users.get_review_photo(_require_uuid(photo_id, "Photo"))
+    if photo is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Photo not found")
+    file_data, content_type = photo
+    return Response(
+        content=file_data.getvalue(),
+        media_type=content_type,
+        headers={"Cache-Control": f"public, max-age={PHOTO_CACHE_SECONDS}, immutable"},
+    )
 
 
 @router.put(

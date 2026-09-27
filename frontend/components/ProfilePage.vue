@@ -11,7 +11,7 @@
         <UserAvatar class="profile-avatar" :src="app.user.value.avatar_url" :name="app.user.value.email" :frame="profileFrame" />
         <div>
           <strong>{{ app.user.value.email }}</strong>
-          <span>{{ commentsCount }} {{ reviewsWord(commentsCount) }}</span>
+          <span>{{ reviewsTotal }} {{ reviewsWord(reviewsTotal) }}</span>
           <small v-if="avatarError" class="profile-settings-message error">{{ avatarError }}</small>
         </div>
         <input ref="avatarInput" class="visually-hidden" type="file" accept="image/*" @change="uploadAvatar" />
@@ -134,6 +134,11 @@
             <WineGlass v-for="value in 5" :key="value" :filled="value <= (item.rating || 0)" :size="20" />
           </span>
           <q v-if="item.comment">{{ item.comment }}</q>
+          <ReviewPhotos :photos="item.photos" />
+          <div v-if="item.comment" class="review-reactions own" aria-label="Реакции на ваш комментарий">
+            <span><ThumbsUp :size="16" />{{ item.likes || 0 }}</span>
+            <span><ThumbsDown :size="16" />{{ item.dislikes || 0 }}</span>
+          </div>
           <small>{{ formatDate(item.updated_at || item.created_at) }}</small>
         </div>
         <button
@@ -180,7 +185,7 @@
 </template>
 
 <script setup>
-import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save } from "@lucide/vue";
+import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save, ThumbsDown, ThumbsUp } from "@lucide/vue";
 
 const app = useWineApp();
 const avatarInput = ref(null);
@@ -203,6 +208,7 @@ const avatarError = ref("");
 // рамка и счётчик — по комментариям (оценка без текста не считается), как на бэкенде
 const commentsCount = computed(() => app.reviews.value.items.filter((item) => item.comment).length);
 const profileFrame = computed(() => frameForCount(commentsCount.value));
+const reviewsTotal = computed(() => app.reviews.value.items.length);
 const periodOptions = computed(() => {
   if (basePeriodOptions.some((option) => option.value === periodMinutes.value)) return basePeriodOptions;
   return [{ label: formatPeriod(periodMinutes.value), value: periodMinutes.value }, ...basePeriodOptions];
@@ -227,9 +233,9 @@ function winesWord(count) {
 function reviewsWord(count) {
   const mod10 = count % 10;
   const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return "комментарий";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "комментария";
-  return "комментариев";
+  if (mod10 === 1 && mod100 !== 11) return "отзыв";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "отзыва";
+  return "отзывов";
 }
 
 function frameForCount(count) {
@@ -267,6 +273,7 @@ async function openNotification(item) {
   // сводка по реакциям: отмечаем прочитанной и показываем свои отзывы
   if (!item.read_at) await app.markNotificationRead(item.id);
   app.profileTab.value = "reviews";
+  await app.loadReviews();
 }
 
 async function savePeriod() {

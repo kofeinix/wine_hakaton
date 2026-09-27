@@ -18,7 +18,12 @@ logger = logging.getLogger(__name__)
 
 def create_app(connection_manager: ConnectionManager) -> FastAPI:
     settings = connection_manager.settings
-    user_service = UserService(connection_manager.database, settings.auth, settings.notifications)
+    user_service = UserService(
+        connection_manager.database,
+        settings.auth,
+        settings.notifications,
+        storage=lambda: connection_manager.minio,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

@@ -47,6 +47,29 @@
         <small class="rating-counter">{{ (dialog.comment || "").length }} / 2000</small>
       </label>
 
+      <div class="rating-photos">
+        <span>Фото <small>— до {{ MAX_PHOTOS }}, по желанию</small></span>
+        <div class="rating-photo-grid">
+          <figure v-for="photo in dialog.photos" :key="photo.id" class="rating-photo">
+            <img :src="photo.url" alt="" />
+            <button type="button" aria-label="Убрать фото" :disabled="saving" @click="removeSaved(photo)">
+              <X :size="14" />
+            </button>
+          </figure>
+          <figure v-for="(item, index) in dialog.newPhotos" :key="item.preview" class="rating-photo">
+            <img :src="item.preview" alt="" />
+            <button type="button" aria-label="Убрать фото" :disabled="saving" @click="removeNew(index)">
+              <X :size="14" />
+            </button>
+          </figure>
+          <label v-if="photoCount < MAX_PHOTOS" class="rating-photo-add" :class="{ disabled: saving }">
+            <ImagePlus :size="22" />
+            <span>Добавить</span>
+            <input class="visually-hidden" type="file" accept="image/*" multiple :disabled="saving" @change="addPhotos" />
+          </label>
+        </div>
+      </div>
+
       <p v-if="error" class="error-message">{{ error }}</p>
 
       <div class="rating-modal-actions">
@@ -64,8 +87,9 @@
 </template>
 
 <script setup>
-import { LoaderCircle, X } from "@lucide/vue";
+import { ImagePlus, LoaderCircle, X } from "@lucide/vue";
 
+const MAX_PHOTOS = 5;
 const LABELS = { 1: "Не понравилось", 2: "Так себе", 3: "Неплохо", 4: "Хорошее вино", 5: "Отлично" };
 
 const app = useWineApp();
@@ -77,8 +101,29 @@ const error = ref("");
 
 const shown = computed(() => hover.value || dialog.value?.rating || 0);
 const canSave = computed(() => Boolean(dialog.value?.rating || dialog.value?.comment?.trim()));
+const photoCount = computed(() => (dialog.value?.photos.length || 0) + (dialog.value?.newPhotos.length || 0));
 
-watch(dialog, () => {
+function addPhotos(event) {
+  const files = [...(event.target.files || [])].filter((file) => file.type.startsWith("image/"));
+  event.target.value = "";
+  for (const file of files.slice(0, MAX_PHOTOS - photoCount.value)) {
+    dialog.value.newPhotos.push({ file, preview: URL.createObjectURL(file) });
+  }
+}
+
+function removeNew(index) {
+  const [item] = dialog.value.newPhotos.splice(index, 1);
+  if (item) URL.revokeObjectURL(item.preview);
+}
+
+function removeSaved(photo) {
+  dialog.value.photos = dialog.value.photos.filter((item) => item.id !== photo.id);
+  dialog.value.removedPhotoIds.push(photo.id);
+}
+
+// превью живут, пока открыт диалог
+watch(dialog, (_, previous) => {
+  previous?.newPhotos?.forEach((item) => URL.revokeObjectURL(item.preview));
   hover.value = 0;
   error.value = "";
 });

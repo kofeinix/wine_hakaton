@@ -375,3 +375,25 @@ class WineReviewReaction(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+
+class WineReviewPhoto(Base):
+    """Фото, прикреплённое к отзыву; файл лежит в MinIO."""
+
+    __tablename__ = "wine_review_photos"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id", "wine_id"],
+            ["wine_reviews.user_id", "wine_reviews.wine_id"],
+            ondelete="CASCADE",
+        ),
+        Index("ix_wine_review_photos_review", "wine_id", "user_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    wine_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    minio_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import io
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -19,6 +21,7 @@ from src.api.schemas import (
     NotificationDetail,
     NotificationItem,
     ReviewItem,
+    ReviewPhoto,
     ReviewResponse,
     SearchHistoryItem,
     SearchResultRef,
@@ -36,8 +39,10 @@ from src.connections.database.models import (
     User,
     Wine,
     WineReview,
+    WineReviewPhoto,
     WineReviewReaction,
 )
+from src.connections.minio import MinioClient
 from src.connections.database.postgres import DatabaseClient
 from src.settings.settings import AuthSettings, NotificationSettings
 
@@ -92,8 +97,10 @@ class UserService:
         database: DatabaseClient,
         auth_settings: AuthSettings,
         notification_settings: NotificationSettings,
+        storage: Callable[[], MinioClient | None] = lambda: None,
     ) -> None:
         self.database = database
+        self._storage = storage  # MinIO стартует позже сервиса, поэтому берём его лениво
         self.wines = WineRepository(database)
         self.auth = auth_settings
         self.notifications = notification_settings
@@ -329,15 +336,78 @@ class UserService:
                 .returning(WineReview)
             )
             await session.commit()
-        return _review_response(review)
+            photos = await _review_photos(session, WineReview.user_id == user_id, WineReview.wine_id == wine_id)
+        return _review_response(review, photos.get((user_id, wine_id), []))
 
     async def delete_review(self, user_id: UUID, wine_id: UUID) -> bool:
         async with self.database.session() as session:
+            paths = (
+                await session.scalars(
+                    select(WineReviewPhoto.minio_path).where(
+                        WineReviewPhoto.user_id == user_id, WineReviewPhoto.wine_id == wine_id
+                    )
+                )
+            ).all()
             result = await session.execute(
                 delete(WineReview).where(WineReview.user_id == user_id, WineReview.wine_id == wine_id)
             )
             await session.commit()
+        for path in paths:
+            await self._remove_file(path)
         return bool(result.rowcount)
+
+    # --- фото к отзывам ---------------------------------------------------------------
+
+    async def add_review_photo(self, user_id: UUID, wine_id: UUID, jpeg: bytes) -> ReviewPhoto | None:
+        """Прикрепить фото к своему отзыву. None — отзыва нет; ValueError — лимит фото."""
+        storage = self._storage()
+        if storage is None:
+            raise RuntimeError("MinIO is not started")
+        async with self.database.session() as session:
+            if await session.get(WineReview, (user_id, wine_id)) is None:
+                return None
+            count = await session.scalar(
+                select(func.count())
+                .select_from(WineReviewPhoto)
+                .where(WineReviewPhoto.user_id == user_id, WineReviewPhoto.wine_id == wine_id)
+            )
+            if count >= MAX_REVIEW_PHOTOS:
+                raise ValueError(f"Не больше {MAX_REVIEW_PHOTOS} фото к отзыву")
+            photo = WineReviewPhoto(id=uuid4(), user_id=user_id, wine_id=wine_id, minio_path="")
+            photo.minio_path = f"reviews/{wine_id}/{user_id}/{photo.id}.jpg"
+            await storage.put_file(photo.minio_path, io.BytesIO(jpeg))
+            session.add(photo)
+            await session.commit()
+        return _review_photo(photo)
+
+    async def delete_review_photo(self, user_id: UUID, wine_id: UUID, photo_id: UUID) -> bool:
+        async with self.database.session() as session:
+            photo = await session.get(WineReviewPhoto, photo_id)
+            if photo is None or photo.user_id != user_id or photo.wine_id != wine_id:
+                return False
+            path = photo.minio_path
+            await session.delete(photo)
+            await session.commit()
+        await self._remove_file(path)
+        return True
+
+    async def get_review_photo(self, photo_id: UUID):
+        """(BytesIO, content_type) фото отзыва или None."""
+        async with self.database.session() as session:
+            photo = await session.get(WineReviewPhoto, photo_id)
+        storage = self._storage()
+        if photo is None or storage is None:
+            return None
+        return await storage.get_file_with_content_type(photo.minio_path)
+
+    async def _remove_file(self, path: str) -> None:
+        storage = self._storage()
+        if storage is None:
+            return
+        try:
+            await storage.delete_file(path)
+        except Exception:  # файл-сирота в MinIO не повод ронять удаление отзыва
+            logger.warning("Failed to delete review photo %s", path)
 
     async def wine_reviews(
         self, wine_id: UUID, viewer_id: UUID | None = None, limit: int = 50
@@ -364,6 +434,16 @@ class UserService:
                     )
                 ).all()
             ) if author_ids else {}
+            reviews_total = dict(
+                (
+                    await session.execute(
+                        select(WineReview.user_id, func.count())
+                        .where(WineReview.user_id.in_(author_ids))
+                        .group_by(WineReview.user_id)
+                    )
+                ).all()
+            ) if author_ids else {}
+            photos = await _review_photos(session, WineReview.wine_id == wine_id)
             reaction_rows = (
                 await session.execute(
                     select(
@@ -398,6 +478,8 @@ class UserService:
                 avatar_url=avatar_url,
                 author_review_count=int(review_counts.get(review.user_id, 0)),
                 author_frame=_review_frame(int(review_counts.get(review.user_id, 0))),
+                author_reviews_total=int(reviews_total.get(review.user_id, 0)),
+                photos=photos.get((review.user_id, wine_id), []),
                 is_mine=review.user_id == viewer_id,
                 rating=review.rating,
                 comment=review.comment,
@@ -430,9 +512,24 @@ class UserService:
                     )
                 ).all()
             )
+            photos = await _review_photos(session, WineReview.user_id == user_id)
+            reactions: dict[UUID, dict[int, int]] = {}
+            for wine_id, value, count in (
+                await session.execute(
+                    select(WineReviewReaction.wine_id, WineReviewReaction.value, func.count())
+                    .where(WineReviewReaction.review_user_id == user_id)
+                    .group_by(WineReviewReaction.wine_id, WineReviewReaction.value)
+                )
+            ).all():
+                reactions.setdefault(wine_id, {})[value] = int(count)
         cards = await self._wine_cards([row.wine_id for row in rows])
         return [
-            ReviewItem(**_review_response(row).model_dump(), wine=cards[row.wine_id])
+            ReviewItem(
+                **_review_response(row, photos.get((user_id, row.wine_id), [])).model_dump(),
+                wine=cards[row.wine_id],
+                likes=reactions.get(row.wine_id, {}).get(1, 0),
+                dislikes=reactions.get(row.wine_id, {}).get(-1, 0),
+            )
             for row in rows
             if row.wine_id in cards
         ]
@@ -693,6 +790,7 @@ class UserService:
                     )
                 ).all()
             }
+            photos = await _review_photos(session, WineReview.user_id == user_id, WineReview.wine_id.in_(wine_ids))
         cards = await self._wine_cards(wine_ids)
         return [
             ViewedWine(
@@ -700,7 +798,11 @@ class UserService:
                 viewed_at=ref.viewed_at,
                 search_id=str(ref.search_id) if ref.search_id else None,
                 is_favorite=ref.wine_id in favorites,
-                review=_review_response(reviews[ref.wine_id]) if ref.wine_id in reviews else None,
+                review=(
+                    _review_response(reviews[ref.wine_id], photos.get((user_id, ref.wine_id), []))
+                    if ref.wine_id in reviews
+                    else None
+                ),
             )
             for ref in refs
             if ref.wine_id in cards
@@ -764,11 +866,38 @@ def _people_word(count: int) -> str:
     return "человека" if mod10 in (2, 3, 4) and not 12 <= mod100 <= 14 else "человек"
 
 
-def _review_response(review: WineReview) -> ReviewResponse:
+MAX_REVIEW_PHOTOS = 5
+
+
+def _review_photo(photo: WineReviewPhoto) -> ReviewPhoto:
+    return ReviewPhoto(id=str(photo.id), url=f"/api/v1/review-photos/{photo.id}")
+
+
+async def _review_photos(session, *conditions) -> dict[tuple[UUID, UUID], list[ReviewPhoto]]:
+    """Фото отзывов, подходящих под условия на WineReview: (user_id, wine_id) -> фото по порядку загрузки."""
+    rows = (
+        await session.scalars(
+            select(WineReviewPhoto)
+            .join(
+                WineReview,
+                (WineReview.user_id == WineReviewPhoto.user_id) & (WineReview.wine_id == WineReviewPhoto.wine_id),
+            )
+            .where(*conditions)
+            .order_by(WineReviewPhoto.created_at)
+        )
+    ).all()
+    result: dict[tuple[UUID, UUID], list[ReviewPhoto]] = {}
+    for photo in rows:
+        result.setdefault((photo.user_id, photo.wine_id), []).append(_review_photo(photo))
+    return result
+
+
+def _review_response(review: WineReview, photos: list[ReviewPhoto] | None = None) -> ReviewResponse:
     return ReviewResponse(
         wine_id=str(review.wine_id),
         rating=review.rating,
         comment=review.comment,
+        photos=photos or [],
         created_at=review.created_at,
         updated_at=review.updated_at,
     )

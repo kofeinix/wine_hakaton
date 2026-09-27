@@ -181,16 +181,24 @@ class ReviewRequest(BaseModel):
     notification_id: str | None = Field(default=None, description="Напоминание, из которого оставлен отзыв")
 
 
+class ReviewPhoto(BaseModel):
+    id: str
+    url: str
+
+
 class ReviewResponse(BaseModel):
     wine_id: str
     rating: int | None = None
     comment: str | None = None
     created_at: datetime
     updated_at: datetime
+    photos: list[ReviewPhoto] = Field(default_factory=list)
 
 
 class ReviewItem(ReviewResponse):
     wine: WineResponse
+    likes: int = 0
+    dislikes: int = 0
 
 
 class ReviewsResponse(BaseModel):
@@ -203,12 +211,14 @@ class PublicReview(BaseModel):
     avatar_url: str | None = None
     author_review_count: int = Field(default=0, description="Сколько комментариев оставил автор")
     author_frame: str = Field(default="none", description="none / bronze / silver / gold / diamond")
+    author_reviews_total: int = Field(default=0, description="Сколько всего отзывов оставил автор")
     is_mine: bool = False
     rating: int | None = None
     comment: str | None = None
     likes: int = 0
     dislikes: int = 0
     my_reaction: int | None = Field(default=None, description="1 — лайк, -1 — дизлайк")
+    photos: list[ReviewPhoto] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

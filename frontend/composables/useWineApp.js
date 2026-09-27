@@ -289,6 +289,9 @@ export function useWineApp() {
       rating: rating ?? existing?.rating ?? null,
       comment: existing?.comment || "",
       existing: Boolean(existing),
+      photos: [...(existing?.photos || [])],
+      newPhotos: [],
+      removedPhotoIds: [],
     };
   }
 
@@ -306,6 +309,18 @@ export function useWineApp() {
       method: "PUT",
       body: { rating: dialog.rating || null, comment: dialog.comment?.trim() || null, notification_id: dialog.notificationId },
     });
+    // фото — после отзыва (без отзыва их некуда прикрепить); выполненное сразу убираем из очереди,
+    // чтобы при ошибке повторное «Сохранить» не повторяло его
+    while (dialog.removedPhotoIds.length) {
+      await apiFetch(`/api/v1/reviews/${dialog.wineId}/photos/${dialog.removedPhotoIds[0]}`, { method: "DELETE" });
+      dialog.removedPhotoIds.shift();
+    }
+    while (dialog.newPhotos.length) {
+      const form = new FormData();
+      form.append("image", dialog.newPhotos[0].file);
+      dialog.photos.push(await apiFetch(`/api/v1/reviews/${dialog.wineId}/photos`, { method: "POST", body: form }));
+      URL.revokeObjectURL(dialog.newPhotos.shift().preview);
+    }
     await afterReviewChange();
   }
 
@@ -399,6 +414,7 @@ export function useWineApp() {
     isDragging,
     isSearching,
     loadNotifications,
+    loadReviews,
     markNotificationRead,
     notificationDetail,
     notifications,

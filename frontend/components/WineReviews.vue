@@ -32,7 +32,7 @@
         <UserAvatar :src="mine.avatar_url" :name="app.user.value?.email" :frame="mine.author_frame" />
         <div>
           <strong>Ваш отзыв</strong>
-          <small>{{ formatDate(mine.updated_at) }}</small>
+          <small>{{ formatDate(mine.updated_at) }} · <span class="nowrap">{{ reviewsLabel(mine.author_reviews_total) }}</span></small>
         </div>
         <button class="ui-button tertiary small review-edit" type="button" aria-label="Изменить отзыв" @click="edit">
           <Pencil :size="16" />
@@ -43,6 +43,7 @@
         <WineGlass v-for="value in 5" :key="value" :filled="value <= (mine.rating || 0)" :size="22" />
       </span>
       <p v-if="mine.comment">{{ mine.comment }}</p>
+      <ReviewPhotos :photos="mine.photos" />
       <div v-if="mine.comment" class="review-reactions own" title="Свой комментарий оценить нельзя" aria-label="Реакции на ваш комментарий">
         <span><ThumbsUp :size="16" />{{ mine.likes }}</span>
         <span><ThumbsDown :size="16" />{{ mine.dislikes }}</span>
@@ -74,13 +75,14 @@
           <UserAvatar :src="item.avatar_url" :name="item.author" :frame="item.author_frame" />
           <div>
             <strong>{{ item.author }}</strong>
-            <small>{{ formatDate(item.updated_at) }}</small>
+            <small>{{ formatDate(item.updated_at) }} · <span class="nowrap">{{ reviewsLabel(item.author_reviews_total) }}</span></small>
           </div>
         </div>
         <span v-if="item.rating" class="glass-row" :aria-label="`Оценка ${item.rating} из 5`">
           <WineGlass v-for="value in 5" :key="value" :filled="value <= item.rating" :size="20" />
         </span>
         <p v-if="item.comment">{{ item.comment }}</p>
+        <ReviewPhotos :photos="item.photos" />
         <div v-if="item.comment" class="review-reactions" role="group" aria-label="Оценить комментарий">
           <button
             type="button"
@@ -136,6 +138,10 @@ function plural(count, [one, few, many]) {
   if (mod10 === 1 && mod100 !== 11) return one;
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
   return many;
+}
+
+function reviewsLabel(count) {
+  return `${count} ${plural(count, ["отзыв", "отзыва", "отзывов"])}`;
 }
 
 function share(value) {
