@@ -29,6 +29,13 @@ export default defineNuxtConfig({
         },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       ],
+      // иконка вкладки — логотип команды ASD
+      link: [
+        { rel: "icon", href: "/favicon.ico", sizes: "any" },
+        { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
+        { rel: "icon", type: "image/png", sizes: "256x256", href: "/favicon.png" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      ],
     },
   },
   nitro: {

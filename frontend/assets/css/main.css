@@ -82,15 +82,17 @@ a {
   min-width: max-content;
 }
 
-.brand-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--primary-deep);
-  color: white;
-  font-family: "Playfair Display", serif;
+.brand-logo {
+  display: block;
+  flex: none;
+  width: auto;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(123, 53, 40, 0.15);
+}
+
+.brand .brand-team {
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -3684,13 +3686,13 @@ main {
     gap: 10px;
   }
 
-  .brand-mark {
-    width: 40px;
+  .brand-logo {
     height: 40px;
-    flex: none;
+    border-radius: 10px;
   }
 
-  .brand small {
+  /* на телефоне остаётся только команда */
+  .brand small:not(.brand-team) {
     display: none;
   }
 

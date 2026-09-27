@@ -1,9 +1,10 @@
 <template>
   <header ref="header" class="site-header" :class="{ 'menu-open': menuOpen }">
     <a class="brand" href="/" aria-label="Сканер вин" @click.prevent="go('scanner')">
-      <span class="brand-mark">СВ</span>
+      <img class="brand-logo" src="/logo-asd.png" alt="ASD Hackathon Team" width="58" height="48" />
       <span>
         <strong>Сканер вин</strong>
+        <small class="brand-team">by ASD team</small>
         <small>по мотивам Своё Вино</small>
       </span>
     </a>
