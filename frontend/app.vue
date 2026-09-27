@@ -15,6 +15,7 @@
     <WineDetailModal />
     <RatingModal />
     <AchievementToast />
+    <WineChat />
   </div>
 </template>
 

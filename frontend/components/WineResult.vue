@@ -8,7 +8,7 @@
     <article class="wine-hero">
       <div class="wine-info">
         <p class="match-label">Лучшее совпадение · {{ formatPercent(match.final_score) }}</p>
-        <h3>{{ match.wine?.name }}</h3>
+        <h3><TermText :text="match.wine?.name" /></h3>
         <a v-if="match.wine?.producer" class="producer-link" :href="match.wine?.source_url || '#'" target="_blank">
           {{ match.wine.producer }}
         </a>
@@ -23,7 +23,7 @@
           <WineFact label="Оттенок" :value="shadeLine(match.wine)" />
           <WineFact label="Цена" :value="formatPrice(match.wine)" />
         </div>
-        <p v-if="match.wine?.description" class="description">{{ match.wine.description }}</p>
+        <p v-if="match.wine?.description" class="description"><TermText :text="match.wine.description" /></p>
         <div class="hero-actions">
           <button
             class="ui-button"

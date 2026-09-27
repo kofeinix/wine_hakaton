@@ -128,3 +128,11 @@ class WineImageCreate(BaseModel):
     @classmethod
     def normalize_empty_strings(cls, value: object) -> object:
         return _empty_to_none(value)
+
+
+class WineTermCreate(BaseModel):
+    id: UUID
+    term: str = Field(min_length=1)
+    letter: str = Field(min_length=1)
+    definition: str = Field(min_length=1)
+    source_url: str | None = None

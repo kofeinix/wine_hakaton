@@ -3133,6 +3133,299 @@ main {
   color: var(--text-subtle);
 }
 
+/* --- винный словарь: термины в тексте и чат ----------------------------------------------- */
+
+/* термин заметен в любом тексте: бордовый, пунктир и лёгкая подложка */
+.term-link {
+  padding: 0 2px;
+  border-radius: 4px;
+  background: rgba(143, 61, 66, 0.08);
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline dashed var(--primary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: help;
+  transition: background-color 0.2s ease-in;
+}
+
+.term-link:hover,
+.term-link:focus-visible {
+  background: var(--primary-soft-hover);
+  outline: none;
+}
+
+.wine-chat {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 58; /* над карточкой вина, под просмотром фото и уведомлениями */
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+  pointer-events: none;
+}
+
+.wine-chat > * {
+  pointer-events: auto;
+}
+
+.wine-chat-launcher {
+  display: grid;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 10px 24px rgba(44, 42, 40, 0.25);
+  color: white;
+  transition: transform 0.2s ease-out;
+}
+
+.wine-chat-launcher:hover {
+  transform: scale(1.05);
+}
+
+.wine-chat-launcher img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wine-chat-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: min(380px, calc(100vw - 40px));
+  height: min(560px, calc(100vh - 120px));
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--bg-page);
+  box-shadow: 0 20px 48px rgba(44, 42, 40, 0.28);
+}
+
+.wine-chat-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 12px 12px 16px;
+  background: var(--primary);
+  color: white;
+}
+
+.wine-chat-head img {
+  flex: none;
+  border-radius: 10px;
+}
+
+.wine-chat-head div {
+  flex: 1;
+  min-width: 0;
+}
+
+.wine-chat-head h2 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.wine-chat-head small {
+  display: block;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.wine-chat-icon-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.wine-chat-search {
+  position: relative;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-page);
+}
+
+.wine-chat-search label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #c2bfbc;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  color: var(--primary);
+}
+
+.wine-chat-search label:focus-within {
+  border-color: var(--primary);
+}
+
+.wine-chat-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 16px; /* меньше 16px — iOS приближает страницу при вводе */
+}
+
+.wine-chat-results {
+  position: absolute;
+  top: calc(100% - 4px);
+  right: 12px;
+  left: 12px;
+  z-index: 2;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--bg-surface);
+  box-shadow: 0 12px 28px rgba(44, 42, 40, 0.18);
+  list-style: none;
+}
+
+.wine-chat-results button {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.wine-chat-results button.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.wine-chat-empty {
+  padding: 8px 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.wine-chat-feed {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 14px 12px;
+  overscroll-behavior: contain;
+}
+
+.wine-chat-message {
+  display: grid;
+  gap: 6px;
+  max-width: 92%;
+  padding: 12px 14px;
+  border-radius: 18px 18px 18px 6px;
+  background: var(--bg-card);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.wine-chat-message p {
+  margin: 0;
+}
+
+.wine-chat-message strong {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+.wine-chat-message a {
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.wine-chat-word {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.wine-chat-typing {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.wine-chat-typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.35;
+  animation: chat-typing 1s infinite ease-in-out;
+}
+
+.wine-chat-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.wine-chat-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes chat-typing {
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.wine-chat-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 767px) {
+  .wine-chat {
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .wine-chat-launcher {
+    width: 54px;
+    height: 54px;
+  }
+
+  /* на телефоне окно — лист снизу почти во весь экран */
+  .wine-chat.open {
+    inset: auto 0 0 0;
+    justify-items: stretch;
+    gap: 0;
+  }
+
+  .wine-chat.open .wine-chat-launcher {
+    display: none;
+  }
+
+  .wine-chat-panel {
+    width: 100%;
+    height: min(78vh, calc(100dvh - 60px));
+    border-radius: 24px 24px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 .site-footer {
   display: flex;
   justify-content: space-between;

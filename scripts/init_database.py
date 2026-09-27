@@ -23,6 +23,7 @@ from src.connections.database.models import (
     WineFood,
     WineGrape,
     WineImage,
+    WineTerm,
 )
 from src.connections.database.postgres import DatabaseClient
 from src.connections.database.schemas import (
@@ -36,6 +37,7 @@ from src.connections.database.schemas import (
     WineFoodCreate,
     WineGrapeCreate,
     WineImageCreate,
+    WineTermCreate,
 )
 from src.settings.settings import all_settings
 
@@ -144,6 +146,13 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             WineImageCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "wine_images.json")
         ]
+        # словарь терминов необязателен: без файла чат-справочник просто пуст
+        terms_path = db_dir / "wine_terms.json"
+        wine_terms = (
+            [WineTermCreate.model_validate(row).model_dump() for row in load_json(terms_path)]
+            if terms_path.is_file()
+            else []
+        )
 
         async with database.session() as session:
             await upsert_rows(session, Producer, producers)
@@ -156,6 +165,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             await upsert_rows(session, Food, food)
             await upsert_rows(session, WineFood, wine_food)
             await upsert_rows(session, WineImage, wine_images)
+            await upsert_rows(session, WineTerm, wine_terms)
             if prune:
                 # от дочерних таблиц к родительским; таблицы пользователей не трогаем
                 for model, rows in (
@@ -169,6 +179,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
                     (Grape, grapes),
                     (Region, regions),
                     (Producer, producers),
+                    (WineTerm, wine_terms),
                 ):
                     removed = await prune_rows(session, model, rows)
                     if removed:
@@ -178,7 +189,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
         logger.info(
             (
                 "Imported %s producers, %s regions, %s grapes, %s grape_aliases, %s color_aliases, "
-                "%s wines, %s wine_grapes, %s food, %s wine_food, %s wine_images."
+                "%s wines, %s wine_grapes, %s food, %s wine_food, %s wine_images, %s wine_terms."
             ),
             len(producers),
             len(regions),
@@ -190,6 +201,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             len(food),
             len(wine_food),
             len(wine_images),
+            len(wine_terms),
         )
     finally:
         await database.close()

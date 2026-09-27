@@ -21,7 +21,7 @@
         </button>
         <div class="wine-detail-main">
           <p v-if="detail.context" class="wine-detail-context">{{ detail.context }}</p>
-          <h2 id="wine-detail-title">{{ wine.name }}</h2>
+          <h2 id="wine-detail-title"><TermText :text="wine.name" /></h2>
           <a v-if="wine.producer" class="producer-link" :href="wine.source_url || '#'" target="_blank" rel="noreferrer">
             {{ wine.producer }}
           </a>
@@ -52,7 +52,7 @@
         <WineFact class="wide" label="Сочетание с блюдами" :value="foodPairing(wine).join(', ') || '—'" />
       </div>
 
-      <p v-if="wine.description" class="wine-detail-description">{{ wine.description }}</p>
+      <p v-if="wine.description" class="wine-detail-description"><TermText :text="wine.description" /></p>
 
       <section v-if="photos.length > 1 || scenes.length" class="wine-gallery" aria-labelledby="wine-gallery-title">
         <div class="wine-gallery-head">

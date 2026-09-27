@@ -4,10 +4,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 
 from src.api.auth import OptionalUserId, ensure_anon_id
-from src.api.schemas import SearchResponse, SlugResponse, SommelierSearchResponse, WineResponse
+from src.api.schemas import (
+    SearchResponse,
+    SlugResponse,
+    SommelierSearchResponse,
+    WineResponse,
+    WineTermDetail,
+    WineTermsResponse,
+)
 from src.api.services import WineService
 from src.api.services.sommelier_service import SORTS, SommelierQuery, SommelierService
-from src.api.services.user_service import Owner
+from src.api.services.term_service import TermService
+from src.api.services.user_service import Owner, parse_uuid
 from src.api.services.wine_service import SearchOutcome
 from src.api.utils import _read_image_upload
 
@@ -202,3 +210,39 @@ async def sommelier_search(
             offset=offset,
         )
     )
+
+
+# --- словарь терминов ------------------------------------------------------------------------
+
+
+def get_term_service(request: Request) -> TermService:
+    return request.app.state.term_service
+
+
+TermServiceDep = Annotated[TermService, Depends(get_term_service)]
+
+
+@router.get(
+    "/terms",
+    response_model=WineTermsResponse,
+    tags=["terms"],
+    summary="Словарь винных терминов (для подсветки и поиска)",
+    description="Все термины с основами слов и допустимыми окончаниями; определение — в GET /terms/{id}.",
+)
+async def list_terms(terms: TermServiceDep) -> WineTermsResponse:
+    return await terms.index()
+
+
+@router.get(
+    "/terms/{term_id}",
+    response_model=WineTermDetail,
+    tags=["terms"],
+    summary="Справка по термину",
+    responses={404: {"description": "Термин не найден"}},
+)
+async def get_term(term_id: str, terms: TermServiceDep) -> WineTermDetail:
+    parsed = parse_uuid(term_id)
+    term = await terms.get(parsed) if parsed else None
+    if term is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Term not found")
+    return term

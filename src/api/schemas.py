@@ -355,3 +355,24 @@ class LeaderboardEntry(BaseModel):
 class LeaderboardResponse(BaseModel):
     items: list[LeaderboardEntry]
     me: LeaderboardEntry | None = None
+
+
+class WineTermIndex(BaseModel):
+    id: str
+    term: str
+    letter: str
+    stems: list[str] = Field(description="Основы слов термина; фраза — несколько основ подряд")
+    exact: bool = Field(default=False, description="Только точное слово, без окончаний")
+
+
+class WineTermsResponse(BaseModel):
+    endings: list[str] = Field(description="Допустимые окончания: слово = основа + окончание")
+    items: list[WineTermIndex]
+
+
+class WineTermDetail(BaseModel):
+    id: str
+    term: str
+    letter: str
+    definition: str
+    source_url: str | None = None

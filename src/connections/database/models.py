@@ -432,3 +432,15 @@ class UserAchievementState(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+
+class WineTerm(Base):
+    """Словарь винных терминов (источник — data/db/wine_terms.json, см. scripts/import_wine_terms.py)."""
+
+    __tablename__ = "wine_terms"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    term: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    letter: Mapped[str] = mapped_column(String(8), nullable=False)
+    definition: Mapped[str] = mapped_column(Text, nullable=False)
+    source_url: Mapped[str | None] = mapped_column(String(1000))
