@@ -96,7 +96,8 @@ docker compose up -d app
   `QDRANT__PORT`, `MINIO__PORT`, `REDIS__PORT`) и выполните `docker compose up -d`.
 - **Данные не скачались.** Скачайте вручную из [папки на Яндекс Диске](https://disk.yandex.ru/d/TW3su5DtKTNtfQ)
   и положите: `original.npz`, `bottle_crop.npz`, `label_crop.npz` — в `data/embeddings/`,
-  `photos.tar.gz` — в `data/`. Затем `docker compose up -d`.
+  `photos.tar.gz` и `photos_webp.tar.gz` (главные фото в webp, необязательный) — в `data/`.
+  Затем `docker compose up -d`.
 - **Модели не скачались.** Повторите `docker compose up models-init` и посмотрите его лог.
 - **Текст этикетки не распознаётся** (в диагностике «OCR не применён»). Проверьте, что LLM запущена
   и её адрес в `.env` верный; без LLM поиск продолжает работать по изображению.
@@ -121,7 +122,8 @@ run_llm.sh / .ps1  запуск локальной vision-LLM
 | `prepare_image_views.py` | вырезает бутылку и этикетку на фото каталога |
 | `generate_qwen_image_edit_views.py`, `generate_flux2_klein_views.py` | генерируют дополнительные ракурсы бутылок |
 | `generate_wine_embeddings.py`, `index_siglip2_views_qdrant.py` | считают эмбеддинги и индексируют их в Qdrant |
-| `build_photos_archive.py` | собирает архив фото для MinIO |
+| `download_main_webp.py` | скачивает главные фото вин в webp (прозрачный фон) с сайта портала |
+| `build_photos_archive.py` | собирает архив фото для MinIO (`--webp` — отдельный архив webp) |
 | `enrich_wines_from_site.py` и др. `enrich_*` | дополняют карточки вин данными портала |
 | `import_wine_terms.py` | собирает словарь винных терминов в `data/db/wine_terms.json` |
 | `eval_search.py` | оценка качества поиска на отложенной выборке фото |

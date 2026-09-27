@@ -1,4 +1,5 @@
 const CAMERA_FRESH_MS = 2 * 60 * 1000;
+const TOP_LEADERS = 5; // в кабинете — топ-5, полный рейтинг — в отдельном окне
 // последний поиск в sessionStorage: мобильный браузер выгружает свёрнутую вкладку и при возврате
 // перезагружает страницу — без этого результат скана пропадал
 const LAST_SEARCH_KEY = "wine.lastSearch";
@@ -176,11 +177,15 @@ export function useWineApp() {
     achievementToasts.value = achievementToasts.value.filter((toast) => toast.id !== id);
   }
 
+  async function fetchLeaderboard({ limit = 20, offset = 0 } = {}) {
+    return await apiFetch(`/api/v1/achievements/leaderboard?limit=${limit}&offset=${offset}`);
+  }
+
   async function loadAchievements() {
     if (!user.value) return;
     const [list, top] = await Promise.all([
       apiFetch("/api/v1/achievements"),
-      apiFetch("/api/v1/achievements/leaderboard"),
+      fetchLeaderboard({ limit: TOP_LEADERS }),
     ]);
     achievements.value = list;
     leaderboard.value = top;
@@ -581,6 +586,7 @@ export function useWineApp() {
     checkAchievements,
     dismissToast,
     leaderboard,
+    fetchLeaderboard,
     loadAchievements,
     activeView,
     addFavorite,

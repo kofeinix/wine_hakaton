@@ -30,6 +30,7 @@ models/yolo/*
 
 # данные: большие артефакты скачиваются отдельно (см. README), в репозитории — только data/db
 data/photos.tar.gz
+data/photos_webp.tar.gz
 data/embeddings/
 data/images/
 data/images_w_vivino/

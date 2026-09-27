@@ -29,7 +29,7 @@
     <!-- свой отзыв или приглашение оценить -->
     <article v-if="mine" class="review-card mine">
       <div class="review-card-head">
-        <UserAvatar :src="mine.avatar_url" :name="app.user.value?.email" :frame="mine.author_frame" />
+        <UserAvatar :src="mine.avatar_url" :name="app.user.value?.nickname" :frame="mine.author_frame" />
         <div>
           <strong>Ваш отзыв</strong>
           <small>{{ formatDate(mine.updated_at) }} · <span class="nowrap">{{ reviewsLabel(mine.author_reviews_total) }}</span></small>

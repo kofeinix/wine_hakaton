@@ -20,6 +20,24 @@
         </p>
       </section>
 
+      <section v-if="app.leaderboard.value?.items?.length" class="achievements-leaders" aria-labelledby="leaders-title">
+        <div class="achievements-leaders-head">
+          <h3 id="leaders-title"><Medal :size="20" /> Топ пользователей</h3>
+          <button class="ui-button transparent small" type="button" @click="leaderboardOpen = true">
+            Весь рейтинг
+            <ChevronRight :size="16" />
+          </button>
+        </div>
+        <ol class="achievements-leaders-list">
+          <LeaderRow v-for="entry in app.leaderboard.value.items" :key="entry.rank" :entry="entry" />
+          <!-- себя показываем и вне топа -->
+          <template v-if="me && !app.leaderboard.value.items.some((entry) => entry.is_me)">
+            <li class="leaders-gap" aria-hidden="true">…</li>
+            <LeaderRow :entry="me" />
+          </template>
+        </ol>
+      </section>
+
       <section v-for="group in groups" :key="group.category" class="achievements-group">
         <h3>
           <component :is="categoryIcon(group.category)" :size="20" />
@@ -48,31 +66,17 @@
         </div>
       </section>
 
-      <section v-if="app.leaderboard.value?.items?.length" class="achievements-leaders" aria-labelledby="leaders-title">
-        <h3 id="leaders-title"><Medal :size="20" /> Топ пользователей</h3>
-        <ol>
-          <li v-for="entry in app.leaderboard.value.items" :key="entry.rank" :class="{ me: entry.is_me }">
-            <span class="leader-rank">{{ entry.rank }}</span>
-            <UserAvatar :src="entry.avatar_url" :name="entry.display_name" />
-            <span class="leader-name">{{ entry.display_name }}</span>
-            <span class="leader-count"><Trophy :size="16" /> {{ entry.earned_count }}</span>
-          </li>
-          <li v-if="me && !app.leaderboard.value.items.some((entry) => entry.is_me)" class="me">
-            <span class="leader-rank">{{ me.rank }}</span>
-            <UserAvatar :src="me.avatar_url" :name="me.display_name" />
-            <span class="leader-name">{{ me.display_name }}</span>
-            <span class="leader-count"><Trophy :size="16" /> {{ me.earned_count }}</span>
-          </li>
-        </ol>
-      </section>
     </template>
+
+    <LeaderboardModal :open="leaderboardOpen" @close="leaderboardOpen = false" />
   </div>
 </template>
 
 <script setup>
-import { LoaderCircle, Medal, Trophy } from "@lucide/vue";
+import { ChevronRight, LoaderCircle, Medal, Trophy } from "@lucide/vue";
 
 const app = useWineApp();
+const leaderboardOpen = ref(false);
 const { formatDate } = useWineFormat();
 const { categoryIcon, formatShare } = useAchievementFormat();
 

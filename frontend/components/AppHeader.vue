@@ -24,7 +24,7 @@
         type="button"
         @click="go('profile')"
       >
-        Кабинет · {{ app.user.value.email }}
+        Кабинет · {{ app.user.value.nickname || app.user.value.email }}
       </button>
       <button v-else class="ui-button secondary mobile-only" type="button" @click="login">Войти</button>
     </nav>
@@ -37,7 +37,7 @@
       <button v-if="app.user.value" class="pill-user desktop-only" type="button" @click="go('profile')">
         <span v-if="app.user.value.avatar_url" class="header-avatar"><img :src="app.user.value.avatar_url" alt="" /></span>
         <UserRound v-else :size="18" />
-        <span>{{ app.user.value.email }}</span>
+        <span>{{ app.user.value.nickname || app.user.value.email }}</span>
       </button>
       <button v-else class="ui-button secondary small desktop-only" type="button" @click="login">Войти</button>
       <button

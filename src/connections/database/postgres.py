@@ -27,6 +27,9 @@ SCHEMA_PATCHES = (
     "ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS review_reactions_notified_at TIMESTAMPTZ",
     "ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS timezone VARCHAR(64)",
     "ALTER TABLE IF EXISTS search_history ADD COLUMN IF NOT EXISTS from_camera BOOLEAN NOT NULL DEFAULT false",
+    "ALTER TABLE IF EXISTS wine_images ADD COLUMN IF NOT EXISTS webp_minio_path VARCHAR(1000)",
+    "ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS nickname VARCHAR(32)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_users_nickname_lower ON users (lower(nickname))",
 )
 
 

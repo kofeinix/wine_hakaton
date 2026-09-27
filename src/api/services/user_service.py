@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import io
 import logging
+import random
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -53,6 +55,19 @@ HISTORY_RESULTS_LIMIT = 10  # сколько кандидатов поиска �
 
 class EmailTakenError(Exception):
     pass
+
+
+class NicknameTakenError(Exception):
+    pass
+
+
+NICKNAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9_.\- ]{1,22}[A-Za-zА-Яа-яЁё0-9_]$")
+NICKNAME_PREFIX = "Сомелье"
+
+
+def valid_nickname(nickname: str) -> bool:
+    """3–24 символа: буквы, цифры, «_ . - » и пробел внутри; начинается с буквы или цифры."""
+    return bool(NICKNAME_RE.match(nickname)) and "  " not in nickname
 
 
 @dataclass(frozen=True)
@@ -115,6 +130,7 @@ class UserService:
                 await session.flush()
             except IntegrityError as exc:
                 raise EmailTakenError(email) from exc
+            await self._ensure_nickname(session, user)
             await self._claim_anonymous_history(session, user.id, anon_id)
             await session.commit()
         return user
@@ -124,13 +140,44 @@ class UserService:
             user = await session.scalar(select(User).where(User.email == normalize_email(email)))
             if user is None or not verify_password(password, user.password_hash):
                 return None
+            await self._ensure_nickname(session, user)
             await self._claim_anonymous_history(session, user.id, anon_id)
             await session.commit()
         return user
 
     async def get_user(self, user_id: UUID) -> User | None:
         async with self.database.session() as session:
-            return await session.get(User, user_id)
+            user = await session.get(User, user_id)
+            if user is not None and not user.nickname:
+                await self._ensure_nickname(session, user)  # аккаунты, созданные до ников
+                await session.commit()
+            return user
+
+    async def backfill_nicknames(self) -> int:
+        """Ники аккаунтам, созданным до их появления, — при старте приложения."""
+        async with self.database.session() as session:
+            users = list((await session.scalars(select(User).where(User.nickname.is_(None)))).all())
+            for user in users:
+                await self._ensure_nickname(session, user)
+                await session.flush()  # следующий кандидат видит уже выданные ники
+            await session.commit()
+        return len(users)
+
+    async def _ensure_nickname(self, session, user: User) -> None:
+        """Выдать ник вида «Сомелье-4821», если его нет. Не из email — чтобы не раскрывать адрес."""
+        if user.nickname:
+            return
+        for digits in (4, 4, 4, 5, 5, 6, 6, 6):
+            candidate = f"{NICKNAME_PREFIX}-{random.randint(10 ** (digits - 1), 10**digits - 1)}"
+            if not await self._nickname_taken(session, candidate, user.id):
+                user.nickname = candidate
+                return
+        user.nickname = f"{NICKNAME_PREFIX}-{user.id.hex[:8]}"
+
+    @staticmethod
+    async def _nickname_taken(session, nickname: str, user_id: UUID) -> bool:
+        owner = await session.scalar(select(User.id).where(func.lower(User.nickname) == nickname.lower()))
+        return owner is not None and owner != user_id
 
     async def update_profile(
         self,
@@ -138,16 +185,25 @@ class UserService:
         *,
         avatar_url: str | None = None,
         review_notification_period_minutes: int | None = None,
+        nickname: str | None = None,
     ) -> User | None:
+        """NicknameTakenError — ник занят другим пользователем."""
         async with self.database.session() as session:
             user = await session.get(User, user_id)
             if user is None:
                 return None
+            if nickname is not None and nickname != user.nickname:
+                if await self._nickname_taken(session, nickname, user_id):
+                    raise NicknameTakenError(nickname)
+                user.nickname = nickname
             if avatar_url is not None:
                 user.avatar_url = avatar_url
             if review_notification_period_minutes is not None:
                 user.review_notification_period_minutes = review_notification_period_minutes
-            await session.commit()
+            try:
+                await session.commit()
+            except IntegrityError as exc:  # одновременно заняли тот же ник
+                raise NicknameTakenError(nickname or "") from exc
             return user
 
     async def _claim_anonymous_history(self, session, user_id: UUID, anon_id: str | None) -> None:
@@ -420,7 +476,7 @@ class UserService:
                 return None
             rows = (
                 await session.execute(
-                    select(WineReview, User.email, User.avatar_url)
+                    select(WineReview, User.nickname, User.avatar_url)
                     .join(User, User.id == WineReview.user_id)
                     .where(WineReview.wine_id == wine_id)
                     .order_by(WineReview.updated_at.desc())
@@ -476,7 +532,7 @@ class UserService:
         items = [
             PublicReview(
                 user_id=str(review.user_id),
-                author="Вы" if review.user_id == viewer_id else _mask_email(email),
+                author=nickname or "Пользователь",
                 avatar_url=avatar_url,
                 author_review_count=int(review_counts.get(review.user_id, 0)),
                 author_frame=_review_frame(int(review_counts.get(review.user_id, 0))),
@@ -491,7 +547,7 @@ class UserService:
                 created_at=review.created_at,
                 updated_at=review.updated_at,
             )
-            for review, email, avatar_url in rows
+            for review, nickname, avatar_url in rows
         ]
         items.sort(key=lambda item: not item.is_mine)  # стабильно: свой первым, остальные по дате
         return WineReviewsResponse(
@@ -841,10 +897,6 @@ def _latest_views(searches: list[SearchHistory]) -> list[ViewedRef]:
     return sorted(latest.values(), key=lambda ref: ref.viewed_at, reverse=True)
 
 
-def _mask_email(email: str) -> str:
-    """Публичное имя автора: первая буква логина, остальное скрыто."""
-    local = email.split("@", 1)[0]
-    return f"{local[:1].upper()}•••" if local else "Пользователь"
 
 
 def _review_frame(count: int) -> str:

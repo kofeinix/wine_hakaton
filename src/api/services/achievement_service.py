@@ -258,13 +258,14 @@ class AchievementService:
             items=items,
         )
 
-    async def leaderboard(self, user_id: UUID | None) -> LeaderboardResponse:
+    async def leaderboard(self, user_id: UUID | None, limit: int = LEADERBOARD_SIZE, offset: int = 0) -> LeaderboardResponse:
+        """Страница рейтинга и место текущего пользователя (где бы он ни был)."""
         async with self.database.session() as session:
             rows = (
                 await session.execute(
                     select(
                         User.id,
-                        User.email,
+                        User.nickname,
                         User.avatar_url,
                         func.count(UserAchievement.code).label("earned"),
                         func.max(UserAchievement.earned_at).label("last"),
@@ -278,7 +279,7 @@ class AchievementService:
         entries = [
             LeaderboardEntry(
                 rank=rank,
-                display_name="Вы" if row.id == user_id else _mask(row.email),
+                display_name=row.nickname or "Пользователь",
                 avatar_url=row.avatar_url,
                 earned_count=row.earned,
                 is_me=row.id == user_id,
@@ -286,7 +287,8 @@ class AchievementService:
             for rank, row in enumerate(rows, start=1)
         ]
         return LeaderboardResponse(
-            items=entries[:LEADERBOARD_SIZE],
+            items=entries[offset : offset + limit],
+            total=len(entries),
             me=next((entry for entry in entries if entry.is_me), None),
         )
 
@@ -414,8 +416,3 @@ def _zone(name: str | None) -> ZoneInfo | None:
         return ZoneInfo(name)
     except (ZoneInfoNotFoundError, ValueError):
         return None
-
-
-def _mask(email: str) -> str:
-    local = email.split("@", 1)[0]
-    return f"{local[:1].upper()}•••" if local else "Пользователь"

@@ -8,9 +8,33 @@
 
     <section v-if="app.user.value" class="profile-settings" aria-label="Настройки профиля">
       <div class="profile-avatar-block">
-        <UserAvatar class="profile-avatar" :src="app.user.value.avatar_url" :name="app.user.value.email" :frame="profileFrame" />
+        <UserAvatar class="profile-avatar" :src="app.user.value.avatar_url" :name="app.user.value.nickname" :frame="profileFrame" />
         <div>
-          <strong>{{ app.user.value.email }}</strong>
+          <form v-if="nicknameEditing" class="nickname-form" @submit.prevent="saveNickname">
+            <input
+              ref="nicknameInput"
+              v-model="nicknameDraft"
+              maxlength="24"
+              aria-label="Публичный ник"
+              placeholder="Ваш ник"
+              @keydown.esc="cancelNickname"
+            />
+            <button class="icon-button small" type="submit" :disabled="nicknameSaving" aria-label="Сохранить ник">
+              <LoaderCircle v-if="nicknameSaving" :size="16" class="spin" />
+              <Check v-else :size="16" />
+            </button>
+            <button class="icon-button small" type="button" aria-label="Отменить" @click="cancelNickname">
+              <X :size="16" />
+            </button>
+          </form>
+          <strong v-else class="nickname-line">
+            {{ app.user.value.nickname || app.user.value.email }}
+            <button class="nickname-edit" type="button" aria-label="Изменить ник" title="Изменить ник" @click="editNickname">
+              <Pencil :size="14" />
+            </button>
+          </strong>
+          <small v-if="nicknameError" class="profile-settings-message error">{{ nicknameError }}</small>
+          <span>{{ app.user.value.email }} · виден только вам</span>
           <span>{{ reviewsTotal }} {{ reviewsWord(reviewsTotal) }}</span>
           <small v-if="avatarError" class="profile-settings-message error">{{ avatarError }}</small>
         </div>
@@ -210,7 +234,7 @@
 </template>
 
 <script setup>
-import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save, ThumbsDown, ThumbsUp, Trash2, Trophy } from "@lucide/vue";
+import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save, ThumbsDown, ThumbsUp, Trash2, Trophy, X } from "@lucide/vue";
 
 const app = useWineApp();
 const avatarInput = ref(null);
@@ -276,6 +300,44 @@ function formatPeriod(minutes) {
   if (minutes % 1440 === 0) return `${minutes / 1440} дн.`;
   if (minutes % 60 === 0) return `${minutes / 60} ч`;
   return `${minutes} мин`;
+}
+
+// --- публичный ник ------------------------------------------------------------------
+
+const nicknameEditing = ref(false);
+const nicknameDraft = ref("");
+const nicknameSaving = ref(false);
+const nicknameError = ref("");
+const nicknameInput = ref(null);
+
+async function editNickname() {
+  nicknameDraft.value = app.user.value?.nickname || "";
+  nicknameError.value = "";
+  nicknameEditing.value = true;
+  await nextTick();
+  nicknameInput.value?.select();
+}
+
+function cancelNickname() {
+  nicknameEditing.value = false;
+  nicknameError.value = "";
+}
+
+async function saveNickname() {
+  const nickname = nicknameDraft.value.trim();
+  if (nickname === app.user.value?.nickname) return cancelNickname();
+  nicknameSaving.value = true;
+  nicknameError.value = "";
+  try {
+    await app.updateProfileSettings({ nickname });
+    nicknameEditing.value = false;
+    app.reviewsVersion.value += 1; // ник в отзывах
+    app.loadAchievements().catch(() => {}); // и в рейтинге
+  } catch (error) {
+    nicknameError.value = error?.data?.detail || "Не удалось сохранить ник";
+  } finally {
+    nicknameSaving.value = false;
+  }
 }
 
 async function uploadAvatar(event) {

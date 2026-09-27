@@ -33,6 +33,8 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
         # users / search_history / favorites / notifications: create_all создаёт только
         # отсутствующие таблицы, каталог не трогает
         await connection_manager.database.create_tables()
+        if assigned := await user_service.backfill_nicknames():
+            logger.info("Assigned nicknames to %s existing users", assigned)
         if settings.auth.jwt_secret == DEFAULT_JWT_SECRET:
             logger.warning("AUTH__JWT_SECRET is not set: using the insecure default secret")
         worker_task = None

@@ -38,7 +38,15 @@ from src.api.schemas import (
     WineReviewsResponse,
 )
 from src.api.services.achievement_service import AchievementService
-from src.api.services.user_service import MAX_REVIEW_PHOTOS, EmailTakenError, Owner, UserService, parse_uuid
+from src.api.services.user_service import (
+    MAX_REVIEW_PHOTOS,
+    EmailTakenError,
+    NicknameTakenError,
+    Owner,
+    UserService,
+    parse_uuid,
+    valid_nickname,
+)
 
 router = APIRouter()
 
@@ -61,6 +69,7 @@ def _user_response(user) -> UserResponse:
     return UserResponse(
         id=str(user.id),
         email=user.email,
+        nickname=user.nickname,
         avatar_url=user.avatar_url,
         review_notification_period_minutes=user.review_notification_period_minutes,
         created_at=user.created_at,
@@ -161,10 +170,20 @@ async def me(user_id: CurrentUserId, users: UserServiceDep) -> UserResponse:
 
 @router.patch("/profile", response_model=UserResponse, tags=["auth"], summary="Настройки профиля")
 async def update_profile(body: ProfileUpdateRequest, user_id: CurrentUserId, users: UserServiceDep) -> UserResponse:
-    user = await users.update_profile(
-        user_id,
-        review_notification_period_minutes=body.review_notification_period_minutes,
-    )
+    nickname = " ".join(body.nickname.split()) if body.nickname is not None else None
+    if nickname is not None and not valid_nickname(nickname):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Ник: 3–24 символа — буквы, цифры, пробел, «_», «.», «-»; начинается с буквы или цифры",
+        )
+    try:
+        user = await users.update_profile(
+            user_id,
+            review_notification_period_minutes=body.review_notification_period_minutes,
+            nickname=nickname,
+        )
+    except NicknameTakenError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Этот ник уже занят") from exc
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
     return _user_response(user)
@@ -495,8 +514,13 @@ async def list_achievements(user_id: CurrentUserId, achievements: AchievementSer
     tags=["achievements"],
     summary="Топ пользователей по достижениям",
 )
-async def achievements_leaderboard(user_id: CurrentUserId, achievements: AchievementServiceDep) -> LeaderboardResponse:
-    return await achievements.leaderboard(user_id)
+async def achievements_leaderboard(
+    user_id: CurrentUserId,
+    achievements: AchievementServiceDep,
+    limit: Annotated[int, Query(ge=1, le=100, description="Размер страницы")] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> LeaderboardResponse:
+    return await achievements.leaderboard(user_id, limit=limit, offset=offset)
 
 
 # --- уведомления -----------------------------------------------------------------------

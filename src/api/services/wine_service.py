@@ -158,11 +158,20 @@ class WineService:
         return wine_to_response(wine)
 
     async def get_photo(self, photo_id: str):
-        """(BytesIO, content_type) фото из MinIO или None."""
+        """(BytesIO, content_type) фото из MinIO или None.
+
+        Для главного фото сначала webp (прозрачный фон, в 2–3 раза легче); jpg — если webp нет
+        в БД или в MinIO (например, архив webp не загружен).
+        """
         image = await self.repository.get_image(photo_id)
         if image is None:
             return None
-        return await self.connection_manager.minio.get_file_with_content_type(image.minio_path)
+        minio = self.connection_manager.minio
+        if image.webp_minio_path:
+            photo = await minio.get_file_with_content_type(image.webp_minio_path, missing_ok=True)
+            if photo is not None:
+                return photo
+        return await minio.get_file_with_content_type(image.minio_path)
 
     # --- основной поиск ---------------------------------------------------------
 

@@ -226,7 +226,10 @@ class MinioClient:
             )
             return None
 
-    async def get_file_with_content_type(self, filename: str) -> tuple[io.BytesIO, str] | None:
+    async def get_file_with_content_type(
+        self, filename: str, missing_ok: bool = False
+    ) -> tuple[io.BytesIO, str] | None:
+        """(данные, content-type) или None. missing_ok — отсутствие объекта ожидаемо, не пишем traceback."""
         if self.storage is None:
             raise RuntimeError("MinioClient not started. Call start() first.")
 
@@ -249,11 +252,14 @@ class MinioClient:
             response.release()
             return file_data, content_type
         except Exception:
-            logger.exception(
-                "Exception occurred during downloading file %s from bucket %s.",
-                object_name,
-                bucket,
-            )
+            if missing_ok:
+                logger.debug("Optional object %s is missing in bucket %s", object_name, bucket)
+            else:
+                logger.exception(
+                    "Exception occurred during downloading file %s from bucket %s.",
+                    object_name,
+                    bucket,
+                )
             return None
 
     async def list_files(self, prefix: str, recursive: bool = True) -> list[MinioObjectInfo]:

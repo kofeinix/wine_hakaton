@@ -131,6 +131,7 @@ class Credentials(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: str
+    nickname: str | None = Field(default=None, description="Публичное имя: шапка, отзывы, рейтинг")
     avatar_url: str | None = None
     review_notification_period_minutes: int = Field(default=24 * 60, ge=1)
     created_at: datetime
@@ -207,7 +208,7 @@ class ReviewsResponse(BaseModel):
 
 class PublicReview(BaseModel):
     user_id: str = Field(description="ID автора отзыва для реакций")
-    author: str = Field(description="Замаскированный автор (email не раскрываем)")
+    author: str = Field(description="Ник автора (email не раскрываем)")
     avatar_url: str | None = None
     author_review_count: int = Field(default=0, description="Сколько комментариев оставил автор")
     author_frame: str = Field(default="none", description="none / bronze / silver / gold / diamond")
@@ -268,6 +269,7 @@ class NotificationsResponse(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     review_notification_period_minutes: int | None = Field(default=None, ge=1, le=60 * 24 * 30)
+    nickname: str | None = Field(default=None, description="Публичный ник: 3–24 символа, уникальный")
 
 
 class ReviewReactionRequest(BaseModel):
@@ -346,7 +348,7 @@ class AchievementsResponse(BaseModel):
 
 class LeaderboardEntry(BaseModel):
     rank: int
-    display_name: str = Field(description="Маска вида «A•••»: email не раскрываем")
+    display_name: str = Field(description="Ник пользователя (email не раскрываем)")
     avatar_url: str | None = None
     earned_count: int
     is_me: bool = False
@@ -354,6 +356,7 @@ class LeaderboardEntry(BaseModel):
 
 class LeaderboardResponse(BaseModel):
     items: list[LeaderboardEntry]
+    total: int = Field(default=0, description="Сколько пользователей в рейтинге (есть хоть одно достижение)")
     me: LeaderboardEntry | None = None
 
 

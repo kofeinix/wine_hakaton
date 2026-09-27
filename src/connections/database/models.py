@@ -6,20 +6,21 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
-    JSON,
     Boolean,
     DateTime,
+    false,
     Float,
-    ForeignKeyConstraint,
     ForeignKey,
+    ForeignKeyConstraint,
+    func,
     Index,
     Integer,
+    JSON,
     Numeric,
     String,
+    text,
     Text,
     UniqueConstraint,
-    false,
-    func,
 )
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 from sqlalchemy.types import Uuid
@@ -215,6 +216,8 @@ class WineImage(Base):
         Boolean, nullable=False, default=False, server_default=false()
     )
     minio_path: Mapped[str] = mapped_column(String(1000), nullable=False, index=True)
+    # webp с прозрачным фоном для показа (только у главного фото); jpg остаётся для поиска
+    webp_minio_path: Mapped[str | None] = mapped_column(String(1000))
 
     wine: Mapped[Wine] = relationship(back_populates="images")
 
@@ -224,9 +227,13 @@ class WineImage(Base):
 
 class User(Base):
     __tablename__ = "users"
+    # ник уникален без учёта регистра: «Vino» и «vino» — один ник
+    __table_args__ = (Index("ux_users_nickname_lower", func.lower(text("nickname")), unique=True),)
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
+    # публичное имя в шапке, отзывах и рейтинге (email никому не показываем)
+    nickname: Mapped[str | None] = mapped_column(String(32))
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(Text)
     review_notification_period_minutes: Mapped[int] = mapped_column(

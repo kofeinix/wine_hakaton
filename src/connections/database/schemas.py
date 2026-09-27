@@ -123,6 +123,7 @@ class WineImageCreate(BaseModel):
     is_main: bool
     is_generated: bool = False
     minio_path: str = Field(min_length=1)
+    webp_minio_path: str | None = None
 
     @field_validator("source_url", mode="before")
     @classmethod

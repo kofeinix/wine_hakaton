@@ -1,7 +1,8 @@
 """Скачать большие данные, которых нет в репозитории, из публичной папки Яндекс Диска.
 
 - data/embeddings/*.npz  — эмбеддинги фото каталога для Qdrant (~200 МБ);
-- data/photos.tar.gz     — фото вин для MinIO (~5,4 ГБ).
+- data/photos.tar.gz     — фото вин для MinIO (~5,4 ГБ);
+- data/photos_webp.tar.gz — главные фото в webp для показа (~75 МБ, необязательный: без него — jpg).
 
 Уже скачанное пропускается, целостность проверяется по md5. Только стандартная библиотека Python:
 запускается и в контейнере (сервис data-init в docker-compose.yml), и на хосте:
@@ -24,6 +25,7 @@ DATA_URL = "https://disk.yandex.ru/d/TW3su5DtKTNtfQ"
 
 NPZ_FILES = ("original.npz", "bottle_crop.npz", "label_crop.npz")
 PHOTOS_FILE = "photos.tar.gz"
+WEBP_FILE = "photos_webp.tar.gz"  # необязательный
 API = "https://cloud-api.yandex.net/v1/disk/public/resources"
 
 
@@ -78,15 +80,21 @@ def main() -> None:
 
     embeddings_dir = args.data_dir / "embeddings"
     photos = args.data_dir / PHOTOS_FILE
+    webp = args.data_dir / WEBP_FILE
     need_embeddings = not all((embeddings_dir / name).is_file() for name in NPZ_FILES)
     need_photos = not args.skip_photos and not photos.is_file()
-    if not need_embeddings and not need_photos:
+    need_webp = not args.skip_photos and not webp.is_file()
+    if not need_embeddings and not need_photos and not need_webp:
         print("Данные уже на месте:", args.data_dir)
         return
 
     try:
         files = remote_files()
     except OSError as exc:
+        if not need_embeddings and not need_photos:
+            # не хватает только необязательного webp — запуск не блокируем
+            print(f"{WEBP_FILE}: не удалось открыть {DATA_URL} ({exc}) — главные фото будут в jpg", flush=True)
+            return
         sys.exit(f"Не удалось открыть {DATA_URL}: {exc}. Скачайте файлы вручную (см. README).")
 
     wanted = [(name, embeddings_dir / name) for name in NPZ_FILES] if need_embeddings else []
@@ -97,6 +105,11 @@ def main() -> None:
         sys.exit(f"В папке {DATA_URL} нет файлов: {', '.join(missing)}")
     for name, target in wanted:
         download(name, files[name], target)
+    if need_webp:
+        if WEBP_FILE in files:
+            download(WEBP_FILE, files[WEBP_FILE], webp)
+        else:
+            print(f"{WEBP_FILE}: нет в папке — главные фото будут в jpg", flush=True)
 
 
 if __name__ == "__main__":
