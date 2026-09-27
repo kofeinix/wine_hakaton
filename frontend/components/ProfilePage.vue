@@ -152,6 +152,8 @@
       </article>
     </div>
 
+    <ProfileAchievements v-else-if="app.profileTab.value === 'achievements'" />
+
     <div v-else class="profile-list">
       <div v-if="app.notifications.value.unread" class="profile-list-toolbar">
         <span>Новых: {{ app.notifications.value.unread }}</span>

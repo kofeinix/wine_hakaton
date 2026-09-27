@@ -345,6 +345,10 @@ class SommelierService:
                     self._entries = entries
         return self._entries
 
+    async def entries(self) -> list[Entry]:
+        """Весь каталог в памяти (им же пользуются достижения)."""
+        return await self._catalog()
+
     async def search(self, query: SommelierQuery) -> SommelierSearchResponse:
         entries = await self._catalog()
         text = normalize(query.text)

@@ -172,6 +172,7 @@ class UserService:
         owner: Owner,
         results: list[tuple[str, float]],
         confidence: float | None,
+        from_camera: bool = False,
     ) -> str | None:
         """Сохранить поиск в историю. Ошибка записи не должна ломать поиск -> None."""
         if owner.user_id is None and owner.anon_id is None:
@@ -187,6 +188,7 @@ class UserService:
                     anon_id=None if owner.user_id else owner.anon_id,
                     top_wine_id=top_wine_id,
                     confidence=confidence,
+                    from_camera=from_camera,
                     results=refs[:HISTORY_RESULTS_LIMIT],
                 )
                 session.add(entry)

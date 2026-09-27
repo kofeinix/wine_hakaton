@@ -26,6 +26,15 @@ def get_wine_service(request: Request) -> WineService:
 
 WineServiceDep = Annotated[WineService, Depends(get_wine_service)]
 ImageUpload = Annotated[UploadFile, File(description="Фото бутылки или этикетки")]
+PhotoSource = Annotated[
+    str,
+    Query(
+        description=(
+            "Откуда фото: camera — только что снято кнопкой «Камера», file — галерея, файл, перетаскивание. "
+            "Достижения засчитывают только сканы с камеры."
+        )
+    ),
+]
 SaveHistory = Annotated[
     bool,
     Query(description="Сохранить поиск в историю (аккаунт по токену или временная история по cookie)"),
@@ -37,6 +46,7 @@ async def _record_search(
     response: Response,
     user_id: UUID | None,
     outcome: SearchOutcome,
+    source: str = "file",
 ) -> str | None:
     owner = Owner(user_id=user_id, anon_id=None if user_id else ensure_anon_id(request, response))
     candidates = outcome.candidates
@@ -44,6 +54,7 @@ async def _record_search(
         owner,
         [(candidate.wine_id, candidate.score) for candidate in candidates],
         candidates[0].score if candidates else None,
+        from_camera=source == "camera",
     )
 
 
@@ -62,10 +73,11 @@ async def search_by_image(
     user_id: OptionalUserId,
     image: ImageUpload,
     save_history: SaveHistory = True,
+    source: PhotoSource = "file",
 ) -> SlugResponse:
     outcome = await wine_service.search(await _read_image_upload(image))
     if save_history:
-        await _record_search(request, response, user_id, outcome)
+        await _record_search(request, response, user_id, outcome, source)
     return SlugResponse(slug=outcome.candidates[0].slug if outcome.candidates else None)
 
 
@@ -95,6 +107,7 @@ async def search_by_image_extended(
     ),
     save_history: SaveHistory = True,
     debug: bool = Query(default=False, description="Добавить полную диагностику"),
+    source: PhotoSource = "file",
 ) -> SearchResponse:
     outcome = await wine_service.search(
         await _read_image_upload(image),
@@ -102,7 +115,7 @@ async def search_by_image_extended(
         views=views or None,
         main_photos_only=main_photos_only,
     )
-    search_id = await _record_search(request, response, user_id, outcome) if save_history else None
+    search_id = await _record_search(request, response, user_id, outcome, source) if save_history else None
     return await wine_service.build_response(outcome, search_id=search_id, debug=debug)
 
 

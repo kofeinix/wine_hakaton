@@ -16,6 +16,10 @@ from src.api.auth import (
     read_anon_id,
 )
 from src.api.schemas import (
+    AchievementCheckRequest,
+    AchievementCheckResponse,
+    AchievementsResponse,
+    LeaderboardResponse,
     Credentials,
     FavoriteRequest,
     FavoritesResponse,
@@ -33,6 +37,7 @@ from src.api.schemas import (
     ViewedWinesResponse,
     WineReviewsResponse,
 )
+from src.api.services.achievement_service import AchievementService
 from src.api.services.user_service import MAX_REVIEW_PHOTOS, EmailTakenError, Owner, UserService, parse_uuid
 
 router = APIRouter()
@@ -43,6 +48,13 @@ def get_user_service(request: Request) -> UserService:
 
 
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
+
+
+def get_achievement_service(request: Request) -> AchievementService:
+    return request.app.state.achievement_service
+
+
+AchievementServiceDep = Annotated[AchievementService, Depends(get_achievement_service)]
 
 
 def _user_response(user) -> UserResponse:
@@ -444,6 +456,47 @@ async def delete_review_reaction(
         _require_uuid(review_user_id, "Review"),
     )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# --- достижения ------------------------------------------------------------------------
+
+
+@router.post(
+    "/achievements/check",
+    response_model=AchievementCheckResponse,
+    tags=["achievements"],
+    summary="Пересчитать достижения после действия",
+    description=(
+        "Фронтенд вызывает после скана, отзыва, реакции, избранного и при входе. Прогресс считается по данным "
+        "пользователя, поэтому здесь же подхватываются достижения, полученные без его участия (лайки под "
+        "комментарием). В ответе — что показать во всплывающих уведомлениях: полученные и заметный прогресс."
+    ),
+)
+async def check_achievements(
+    body: AchievementCheckRequest, user_id: CurrentUserId, achievements: AchievementServiceDep
+) -> AchievementCheckResponse:
+    return AchievementCheckResponse(updates=await achievements.check(user_id, body.timezone))
+
+
+@router.get(
+    "/achievements",
+    response_model=AchievementsResponse,
+    tags=["achievements"],
+    summary="Мои достижения",
+    description="Полученные и открытые достижения; скрытые неоткрытые не возвращаются вовсе.",
+)
+async def list_achievements(user_id: CurrentUserId, achievements: AchievementServiceDep) -> AchievementsResponse:
+    return await achievements.list(user_id)
+
+
+@router.get(
+    "/achievements/leaderboard",
+    response_model=LeaderboardResponse,
+    tags=["achievements"],
+    summary="Топ пользователей по достижениям",
+)
+async def achievements_leaderboard(user_id: CurrentUserId, achievements: AchievementServiceDep) -> LeaderboardResponse:
+    return await achievements.leaderboard(user_id)
 
 
 # --- уведомления -----------------------------------------------------------------------

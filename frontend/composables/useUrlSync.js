@@ -1,6 +1,6 @@
 // Разделы и окна приложения в истории браузера: «Назад» ходит по сайту, а не уводит с него.
 // Роутера нет (одна страница), поэтому синхронизируем адрес вручную через History API.
-const PROFILE_TABS = ["history", "favorites", "reviews", "notifications"];
+const PROFILE_TABS = ["history", "favorites", "reviews", "notifications", "achievements"];
 // окна, которые закрываются кнопкой «Назад»; порядок — снизу вверх (карточка вина открывается поверх напоминания)
 const MODALS = ["notification", "wine"];
 

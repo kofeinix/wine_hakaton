@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 
 from src.api.routes import router
 from src.api.services import WineService
+from src.api.services.achievement_service import AchievementService
 from src.api.services.notification_worker import ReminderWorker
 from src.api.services.sommelier_service import SommelierService
 from src.api.services.user_service import UserService
@@ -87,6 +88,7 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
     app.state.connection_manager = connection_manager
     app.state.wine_service = WineService(connection_manager)
     app.state.sommelier_service = SommelierService(connection_manager.database)
+    app.state.achievement_service = AchievementService(connection_manager.database, app.state.sommelier_service)
     app.state.user_service = user_service
 
     @app.get(

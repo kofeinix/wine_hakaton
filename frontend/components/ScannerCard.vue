@@ -14,8 +14,8 @@
     <h2>Сканировать этикетку</h2>
     <p>Для телефона откройте камеру. На компьютере перетащите фото сюда или выберите файл.</p>
 
-    <input ref="cameraInput" hidden type="file" accept="image/*" capture="environment" @change="onFileInput" />
-    <input ref="galleryInput" hidden type="file" accept="image/*" @change="onFileInput" />
+    <input ref="cameraInput" hidden type="file" accept="image/*" capture="environment" @change="onFileInput($event, true)" />
+    <input ref="galleryInput" hidden type="file" accept="image/*" @change="onFileInput($event, false)" />
 
     <button class="ui-button primary scan-action" type="button" @click="cameraInput?.click()">
       <Camera :size="18" />
@@ -58,8 +58,8 @@ const { prettyBytes } = useWineFormat();
 const cameraInput = ref(null);
 const galleryInput = ref(null);
 
-function onFileInput(event) {
-  app.setSelectedFile(event.target.files?.[0]);
+function onFileInput(event, camera) {
+  app.setSelectedFile(event.target.files?.[0], { camera });
   event.target.value = "";
 }
 </script>

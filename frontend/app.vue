@@ -13,6 +13,7 @@
     <NotificationModal />
     <WineDetailModal />
     <RatingModal />
+    <AchievementToast />
   </div>
 </template>
 

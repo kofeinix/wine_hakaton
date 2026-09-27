@@ -1,3 +1,5 @@
+const CAMERA_FRESH_MS = 2 * 60 * 1000;
+
 export function useWineApp() {
   const activeView = useState("wine.activeView", () => "scanner");
   const profileTab = useState("wine.profileTab", () => "history");
@@ -11,6 +13,8 @@ export function useWineApp() {
   const user = useState("wine.user", () => null);
 
   const selectedFile = useState("wine.selectedFile", () => null);
+  // фото только что снято кнопкой «Камера» — только такие сканы идут в достижения
+  const selectedFromCamera = useState("wine.selectedFromCamera", () => false);
   const previewUrl = useState("wine.previewUrl", () => "");
   const isDragging = useState("wine.isDragging", () => false);
   const isSearching = useState("wine.isSearching", () => false);
@@ -38,6 +42,9 @@ export function useWineApp() {
   // окно с информацией о вине (из истории, избранного, отзывов): { wine, searchId, context }
   const wineDetail = useState("wine.wineDetail", () => null);
   const initialized = useState("wine.initialized", () => false);
+  const achievements = useState("wine.achievements", () => null);
+  const leaderboard = useState("wine.leaderboard", () => null);
+  const achievementToasts = useState("wine.achievementToasts", () => []);
 
   const bestMatch = computed(() => searchResponse.value?.results?.[0] || null);
   const similarMatches = computed(() =>
@@ -48,6 +55,7 @@ export function useWineApp() {
     { id: "favorites", label: "Избранное", count: favorites.value.items.length },
     { id: "reviews", label: "Отзывы", count: reviews.value.items.length },
     { id: "notifications", label: "Уведомления", count: notifications.value.items.length },
+    { id: "achievements", label: "Достижения", count: achievements.value?.earned_count || 0 },
   ]);
 
   function authHeaders() {
@@ -105,6 +113,68 @@ export function useWineApp() {
 
   async function refreshPrivateData() {
     await Promise.allSettled([loadPublicHistory(), loadFavorites(), loadReviews(), loadNotifications()]);
+    // при входе подхватываем то, что получено без нас (лайки под комментарием) и за перенесённую историю
+    await checkAchievements();
+    await loadAchievements().catch(() => {});
+  }
+
+  // --- достижения ---------------------------------------------------------------------
+
+  let toastSeq = 0;
+
+  // прогресс считается на сервере по данным пользователя; вызываем после каждого действия
+  async function checkAchievements() {
+    if (!user.value) return;
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const response = await apiFetch("/api/v1/achievements/check", { method: "POST", body: { timezone } });
+      const updates = response.updates || [];
+      const earned = updates.filter((update) => update.type === "earned");
+      // несколько полученных за одно действие — одним уведомлением, а не лентой
+      const toasts =
+        earned.length > 1
+          ? [
+              {
+                type: "earned",
+                code: "several",
+                category: "meta",
+                title: `Получено ${earned.length} ${plural(earned.length, ["достижение", "достижения", "достижений"])}`,
+                description: earned.map((update) => `«${update.title}»`).join(", "),
+                progress: earned.length,
+                target: earned.length,
+              },
+              ...updates.filter((update) => update.type !== "earned"),
+            ]
+          : updates;
+      achievementToasts.value = [...achievementToasts.value, ...toasts.map((toast) => ({ ...toast, id: ++toastSeq }))];
+      if (response.updates?.length && (achievements.value || profileTab.value === "achievements")) {
+        await loadAchievements();
+      }
+    } catch {
+      // достижения не должны ломать основное действие
+    }
+  }
+
+  function plural(count, [one, few, many]) {
+    const mod10 = count % 10;
+    const mod100 = count % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+    return many;
+  }
+
+  function dismissToast(id) {
+    achievementToasts.value = achievementToasts.value.filter((toast) => toast.id !== id);
+  }
+
+  async function loadAchievements() {
+    if (!user.value) return;
+    const [list, top] = await Promise.all([
+      apiFetch("/api/v1/achievements"),
+      apiFetch("/api/v1/achievements/leaderboard"),
+    ]);
+    achievements.value = list;
+    leaderboard.value = top;
   }
 
   async function loadPublicHistory() {
@@ -134,13 +204,16 @@ export function useWineApp() {
     notifications.value = { items: response.items || [], unread: response.unread || 0 };
   }
 
-  function setSelectedFile(file) {
+  // camera — выбрано кнопкой «Камера». На компьютере она открывает обычный выбор файла, поэтому
+  // дополнительно требуем свежий файл: у снимка с камеры lastModified ≈ сейчас, у старого фото — нет
+  function setSelectedFile(file, { camera = false } = {}) {
     if (!file) return;
     if (!file.type?.startsWith("image/")) {
       errorMessage.value = "Выберите изображение";
       return;
     }
     selectedFile.value = file;
+    selectedFromCamera.value = camera && Date.now() - file.lastModified < CAMERA_FRESH_MS;
     errorMessage.value = "";
     const previous = previewUrl.value;
     previewUrl.value = URL.createObjectURL(file);
@@ -166,7 +239,8 @@ export function useWineApp() {
     try {
       const form = new FormData();
       form.append("image", file);
-      searchResponse.value = await apiFetch("/api/v1/search/image/extended?limit=12&debug=true", {
+      const source = selectedFromCamera.value ? "camera" : "file";
+      searchResponse.value = await apiFetch(`/api/v1/search/image/extended?limit=12&debug=true&source=${source}`, {
         method: "POST",
         body: form,
       });
@@ -174,6 +248,7 @@ export function useWineApp() {
         errorMessage.value = "Вино не найдено. Попробуйте фото этикетки крупнее и без бликов.";
       }
       await loadPublicHistory();
+      checkAchievements();
       return true;
     } catch (error) {
       errorMessage.value = error?.data?.detail || "Не удалось выполнить поиск";
@@ -268,6 +343,7 @@ export function useWineApp() {
       body: { wine_id: match.wine_id || match.wine?.id, search_id: searchId || null },
     });
     await loadFavorites();
+    checkAchievements();
     if (notificationDetail.value) await openNotificationDetail(notificationDetail.value.id);
   }
 
@@ -299,6 +375,7 @@ export function useWineApp() {
     ratingDialog.value = null;
     reviewsVersion.value += 1;
     await loadReviews();
+    checkAchievements();
     if (notificationDetail.value) await openNotificationDetail(notificationDetail.value.id);
   }
 
@@ -346,6 +423,7 @@ export function useWineApp() {
       body: { value },
     });
     reviewsVersion.value += 1;
+    checkAchievements();
   }
 
   async function clearReviewReaction(wineId, reviewUserId) {
@@ -398,6 +476,12 @@ export function useWineApp() {
   }
 
   return {
+    achievements,
+    achievementToasts,
+    checkAchievements,
+    dismissToast,
+    leaderboard,
+    loadAchievements,
     activeView,
     addFavorite,
     authDialog,

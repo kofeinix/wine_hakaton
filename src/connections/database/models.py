@@ -233,6 +233,7 @@ class User(Base):
         Integer, nullable=False, default=24 * 60, server_default="1440"
     )
     review_reactions_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    timezone: Mapped[str | None] = mapped_column(String(64))  # из браузера: время сканов для достижений
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -259,6 +260,8 @@ class SearchHistory(Base):
         Uuid(as_uuid=True), ForeignKey("wines.id", ondelete="SET NULL")
     )
     confidence: Mapped[float | None] = mapped_column(Float)
+    # снято кнопкой «Камера» только что (а не выбрано из галереи/файлов) — для достижений
+    from_camera: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     results: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
     # когда фоновая задача обработала поиск (напомнила или решила не напоминать)
     notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -396,4 +399,36 @@ class WineReviewPhoto(Base):
     minio_path: Mapped[str] = mapped_column(String(512), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class UserAchievement(Base):
+    """Полученное достижение. Каталог достижений — в коде (src/api/services/achievement_catalog.py)."""
+
+    __tablename__ = "user_achievements"
+    __table_args__ = (Index("ix_user_achievements_code", "code"),)
+
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    code: Mapped[str] = mapped_column(String(100), primary_key=True)
+    earned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class UserAchievementState(Base):
+    """Последний посчитанный прогресс — чтобы понять, что изменилось, и не спамить уведомлениями."""
+
+    __tablename__ = "user_achievement_state"
+
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    code: Mapped[str] = mapped_column(String(100), primary_key=True)
+    progress: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    notified_progress: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )

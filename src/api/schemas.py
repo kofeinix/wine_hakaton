@@ -304,3 +304,54 @@ class SommelierSearchResponse(BaseModel):
         default=None, description="Исправленный запрос, если по исходному ничего не нашлось (опечатка)"
     )
     facets: SommelierFacets
+
+
+class AchievementUpdate(BaseModel):
+    type: str = Field(description="earned — получено, progress — продвинулся, summary — сводка при первой проверке")
+    code: str
+    title: str
+    description: str
+    category: str
+    progress: int
+    target: int
+
+
+class AchievementCheckRequest(BaseModel):
+    timezone: str | None = Field(default=None, max_length=64, description="Часовой пояс браузера, например Europe/Moscow")
+
+
+class AchievementCheckResponse(BaseModel):
+    updates: list[AchievementUpdate]
+
+
+class AchievementItem(BaseModel):
+    code: str
+    title: str
+    description: str
+    category: str
+    category_label: str
+    progress: int
+    target: int
+    secret: bool = Field(description="Скрытое: показывается только тем, кто его открыл")
+    earned: bool
+    earned_at: datetime | None = None
+    earned_by_percent: float = Field(description="Доля пользователей с хотя бы одним достижением, получивших это")
+
+
+class AchievementsResponse(BaseModel):
+    earned_count: int
+    total_count: int = Field(description="Все достижения, включая скрытые (их самих в items нет)")
+    items: list[AchievementItem]
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    display_name: str = Field(description="Маска вида «A•••»: email не раскрываем")
+    avatar_url: str | None = None
+    earned_count: int
+    is_me: bool = False
+
+
+class LeaderboardResponse(BaseModel):
+    items: list[LeaderboardEntry]
+    me: LeaderboardEntry | None = None
