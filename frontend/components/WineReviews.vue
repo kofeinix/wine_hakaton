@@ -43,7 +43,7 @@
         <WineGlass v-for="value in 5" :key="value" :filled="value <= (mine.rating || 0)" :size="22" />
       </span>
       <p v-if="mine.comment">{{ mine.comment }}</p>
-      <div v-if="mine.comment && (mine.likes || mine.dislikes)" class="review-reactions" aria-label="Реакции на ваш комментарий">
+      <div v-if="mine.comment" class="review-reactions own" title="Свой комментарий оценить нельзя" aria-label="Реакции на ваш комментарий">
         <span><ThumbsUp :size="16" />{{ mine.likes }}</span>
         <span><ThumbsDown :size="16" />{{ mine.dislikes }}</span>
       </div>
