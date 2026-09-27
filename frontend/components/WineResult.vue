@@ -25,9 +25,18 @@
         </div>
         <p v-if="match.wine?.description" class="description">{{ match.wine.description }}</p>
         <div class="hero-actions">
-          <button class="ui-button primary" type="button" @click="app.addFavorite(match)">
-            <Heart :size="18" />
-            В избранное
+          <button
+            class="ui-button"
+            :class="isFavorite ? 'secondary' : 'primary'"
+            type="button"
+            :disabled="favoriteBusy"
+            :aria-pressed="isFavorite"
+            :title="isFavorite ? 'Убрать из избранного' : ''"
+            @click="toggleFavorite"
+          >
+            <LoaderCircle v-if="favoriteBusy" :size="18" class="spin" />
+            <Heart v-else :size="18" :fill="isFavorite ? 'currentColor' : 'none'" />
+            {{ isFavorite ? "В избранном" : "В избранное" }}
           </button>
           <a v-if="match.wine?.source_url" class="ui-button secondary as-link" :href="match.wine.source_url" target="_blank" rel="noreferrer">
             Открыть на портале
@@ -88,7 +97,7 @@
 </template>
 
 <script setup>
-import { Heart, Images, Percent, Thermometer, Utensils, Wine } from "@lucide/vue";
+import { Heart, Images, LoaderCircle, Percent, Thermometer, Utensils, Wine } from "@lucide/vue";
 
 const props = defineProps({
   match: {
@@ -112,6 +121,22 @@ const {
   servingTemperature,
   shadeLine,
 } = useWineFormat();
+
+const favoriteBusy = ref(false);
+const isFavorite = computed(() =>
+  app.favorites.value.items.some((item) => item.wine?.id === props.match?.wine_id),
+);
+
+// кнопка-переключатель: видно, что вино добавилось, повторное нажатие убирает
+async function toggleFavorite() {
+  favoriteBusy.value = true;
+  try {
+    if (isFavorite.value) await app.removeFavorite(props.match.wine_id);
+    else await app.addFavorite(props.match);
+  } finally {
+    favoriteBusy.value = false;
+  }
+}
 
 const activePhoto = computed(() => {
   if (!props.match?.wine) return "";

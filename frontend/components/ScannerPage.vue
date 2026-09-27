@@ -24,7 +24,7 @@
           v-for="match in app.similarMatches.value"
           :key="match.wine_id"
           :match="match"
-          @select="app.selectMatch(match)"
+          @select="openSimilar(match)"
         />
       </div>
     </section>
@@ -33,4 +33,13 @@
 
 <script setup>
 const app = useWineApp();
+const { formatPercent } = useWineFormat();
+
+// похожее вино — отдельным окном, основной результат не трогаем
+function openSimilar(match) {
+  app.openWine(match.wine, {
+    searchId: app.searchResponse.value?.search_id,
+    context: `Похожий вариант · совпадение ${formatPercent(match.final_score)}`,
+  });
+}
 </script>

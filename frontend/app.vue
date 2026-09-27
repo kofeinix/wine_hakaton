@@ -18,8 +18,12 @@
 
 <script setup>
 const app = useWineApp();
+const urlSync = useUrlSync();
 
 onMounted(() => {
+  urlSync.start();
   app.initialize();
 });
+
+onBeforeUnmount(() => urlSync.stop());
 </script>

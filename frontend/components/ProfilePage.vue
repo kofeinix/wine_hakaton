@@ -18,13 +18,22 @@
       </button>
     </div>
 
-    <div v-if="!app.user.value" class="auth-required">
-      <h2>Войдите, чтобы открыть личные разделы</h2>
-      <p>Анонимная история поиска сохраняется временно и перенесётся в аккаунт после входа.</p>
+    <!-- история доступна и без входа (временная, по cookie); остальные разделы — только с аккаунтом -->
+    <div v-if="!app.user.value && app.profileTab.value !== 'history'" class="auth-required">
+      <h2>Войдите, чтобы открыть этот раздел</h2>
+      <p>Избранное, отзывы и напоминания хранятся в аккаунте. История поиска доступна и без входа.</p>
       <button class="ui-button primary" type="button" @click="app.authDialog.value = true">Войти или зарегистрироваться</button>
     </div>
 
     <div v-else-if="app.profileTab.value === 'history'" class="profile-list">
+      <div v-if="!app.user.value" class="guest-banner">
+        <Clock3 :size="20" />
+        <div>
+          <strong>Это временная история</strong>
+          <span>Она хранится только в этом браузере и через несколько дней исчезнет. Войдите — и она сохранится в аккаунт.</span>
+        </div>
+        <button class="ui-button primary small" type="button" @click="app.authDialog.value = true">Войти</button>
+      </div>
       <p v-if="!app.history.value.items.length" class="profile-empty">
         История пуста. Отсканируйте этикетку — найденные вина появятся здесь.
       </p>
@@ -124,7 +133,7 @@
 </template>
 
 <script setup>
-import { Bell, CheckCheck, ChevronRight, Pencil } from "@lucide/vue";
+import { Bell, CheckCheck, ChevronRight, Clock3, Pencil } from "@lucide/vue";
 
 const app = useWineApp();
 

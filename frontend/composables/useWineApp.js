@@ -20,7 +20,6 @@ export function useWineApp() {
   const photoSource = useState("wine.photoSource", () => null);
   // выбор пользователя на исходном фото: { box, kind: "label" | "manual" }; null — автовыбор бэкенда
   const pick = useState("wine.pick", () => null);
-  const selectedMatch = useState("wine.selectedMatch", () => null);
   const selectedPhotos = useState("wine.selectedPhotos", () => ({}));
   const showGenerated = useState("wine.showGenerated", () => false);
   const showDiagnostics = useState("wine.showDiagnostics", () => false);
@@ -38,7 +37,7 @@ export function useWineApp() {
   const wineDetail = useState("wine.wineDetail", () => null);
   const initialized = useState("wine.initialized", () => false);
 
-  const bestMatch = computed(() => selectedMatch.value || searchResponse.value?.results?.[0] || null);
+  const bestMatch = computed(() => searchResponse.value?.results?.[0] || null);
   const similarMatches = computed(() =>
     (searchResponse.value?.results || []).filter((item) => item.wine_id !== bestMatch.value?.wine_id).slice(0, 12),
   );
@@ -158,7 +157,6 @@ export function useWineApp() {
   async function runSearch(file) {
     isSearching.value = true;
     errorMessage.value = "";
-    selectedMatch.value = null;
     showGenerated.value = false;
     try {
       const form = new FormData();
@@ -248,11 +246,6 @@ export function useWineApp() {
     }
     pick.value = { box, kind, ...extra };
     setSearchedImage(url);
-  }
-
-  function selectMatch(match) {
-    selectedMatch.value = match;
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function addFavorite(match, searchId = searchResponse.value?.search_id) {
@@ -376,7 +369,6 @@ export function useWineApp() {
     searchArea,
     selectedFile,
     selectedPhotos,
-    selectMatch,
     openRating,
     openWine,
     wineDetail,
