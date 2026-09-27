@@ -10,6 +10,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Float,
+    ForeignKeyConstraint,
     ForeignKey,
     Index,
     Integer,
@@ -227,6 +228,11 @@ class User(Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(Text)
+    review_notification_period_minutes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=24 * 60, server_default="1440"
+    )
+    review_reactions_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -335,6 +341,34 @@ class WineReview(Base):
     notification_id: Mapped[UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("notifications.id", ondelete="SET NULL")
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class WineReviewReaction(Base):
+    """Лайк или дизлайк авторизованного пользователя к отзыву."""
+
+    __tablename__ = "wine_review_reactions"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["review_user_id", "wine_id"],
+            ["wine_reviews.user_id", "wine_reviews.wine_id"],
+            ondelete="CASCADE",
+        ),
+        Index("ix_wine_review_reactions_review", "wine_id", "review_user_id"),
+        Index("ix_wine_review_reactions_owner_updated", "review_user_id", "updated_at"),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    review_user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    wine_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    value: Mapped[int] = mapped_column(Integer, nullable=False)  # 1 — лайк, -1 — дизлайк
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

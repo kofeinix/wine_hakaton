@@ -6,6 +6,52 @@
       <p>История сканирований, избранное, отзывы и напоминания.</p>
     </div>
 
+    <section v-if="app.user.value" class="profile-settings" aria-label="Настройки профиля">
+      <div class="profile-avatar-block">
+        <UserAvatar class="profile-avatar" :src="app.user.value.avatar_url" :name="app.user.value.email" :frame="profileFrame" />
+        <div>
+          <strong>{{ app.user.value.email }}</strong>
+          <span>{{ commentsCount }} {{ reviewsWord(commentsCount) }}</span>
+          <small v-if="avatarError" class="profile-settings-message error">{{ avatarError }}</small>
+        </div>
+        <input ref="avatarInput" class="visually-hidden" type="file" accept="image/*" @change="uploadAvatar" />
+        <button class="ui-button secondary small" type="button" :disabled="avatarUploading" @click="avatarInput?.click()">
+          <LoaderCircle v-if="avatarUploading" :size="16" class="spin" />
+          <Camera v-else :size="16" />
+          Аватар
+        </button>
+      </div>
+
+      <form class="profile-period-form" @submit.prevent="savePeriod">
+        <div class="profile-period-field">
+          <span>Период уведомлений по оценкам комментариев</span>
+          <div class="profile-period-chips" role="radiogroup" aria-label="Период уведомлений по оценкам комментариев">
+            <button
+              v-for="option in periodOptions"
+              :key="option.value"
+              type="button"
+              class="profile-period-chip"
+              :class="{ selected: periodMinutes === option.value }"
+              :aria-checked="periodMinutes === option.value"
+              role="radio"
+              @click="periodMinutes = option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+        <button class="ui-button primary small" type="submit" :disabled="settingsSaving">
+          <LoaderCircle v-if="settingsSaving" :size="16" class="spin" />
+          <Check v-else-if="settingsSaved" :size="16" />
+          <Save v-else :size="16" />
+          {{ settingsSaving ? "Сохраняем" : settingsSaved ? "Сохранено" : "Сохранить" }}
+        </button>
+        <p v-if="settingsMessage" class="profile-settings-message" :class="{ error: settingsError }">
+          {{ settingsMessage }}
+        </p>
+      </form>
+    </section>
+
     <div class="profile-tabs">
       <button
         v-for="tab in app.profileTabs.value"
@@ -118,12 +164,13 @@
         class="notification-card"
         :class="{ unread: !item.read_at }"
         type="button"
-        @click="app.openNotificationDetail(item.id)"
+        @click="openNotification(item)"
       >
         <span class="notification-icon"><Bell :size="20" /></span>
         <span class="notification-card-body">
           <strong>{{ item.message }}</strong>
-          <span>{{ formatDate(item.created_at) }} · {{ item.wines_count }} {{ winesWord(item.wines_count) }}</span>
+          <span v-if="item.kind === 'review_reactions'">{{ formatDate(item.created_at) }} · отзывы</span>
+          <span v-else>{{ formatDate(item.created_at) }} · {{ item.wines_count }} {{ winesWord(item.wines_count) }}</span>
         </span>
         <span v-if="!item.read_at" class="new-badge">Новое</span>
         <ChevronRight :size="20" class="notification-card-chevron" />
@@ -133,9 +180,41 @@
 </template>
 
 <script setup>
-import { Bell, CheckCheck, ChevronRight, Clock3, Pencil } from "@lucide/vue";
+import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save } from "@lucide/vue";
 
 const app = useWineApp();
+const avatarInput = ref(null);
+const periodMinutes = ref(24 * 60);
+const basePeriodOptions = [
+  { label: "1 мин", value: 1 },
+  { label: "1 час", value: 60 },
+  { label: "24 часа", value: 24 * 60 },
+  { label: "7 дней", value: 7 * 24 * 60 },
+  { label: "30 дней", value: 30 * 24 * 60 },
+];
+const settingsSaving = ref(false);
+const settingsSaved = ref(false);
+const settingsError = ref(false);
+const settingsMessage = ref("");
+let settingsMessageTimer = null;
+
+const avatarUploading = ref(false);
+const avatarError = ref("");
+// рамка и счётчик — по комментариям (оценка без текста не считается), как на бэкенде
+const commentsCount = computed(() => app.reviews.value.items.filter((item) => item.comment).length);
+const profileFrame = computed(() => frameForCount(commentsCount.value));
+const periodOptions = computed(() => {
+  if (basePeriodOptions.some((option) => option.value === periodMinutes.value)) return basePeriodOptions;
+  return [{ label: formatPeriod(periodMinutes.value), value: periodMinutes.value }, ...basePeriodOptions];
+});
+
+watch(
+  () => app.user.value?.review_notification_period_minutes,
+  (value) => {
+    periodMinutes.value = value || 24 * 60;
+  },
+  { immediate: true },
+);
 
 function winesWord(count) {
   const mod10 = count % 10;
@@ -144,9 +223,86 @@ function winesWord(count) {
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "вина";
   return "вин";
 }
+
+function reviewsWord(count) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return "комментарий";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "комментария";
+  return "комментариев";
+}
+
+function frameForCount(count) {
+  if (count > 100) return "diamond";
+  if (count >= 50) return "gold";
+  if (count >= 10) return "silver";
+  if (count >= 1) return "bronze";
+  return "none";
+}
+
+function formatPeriod(minutes) {
+  if (minutes < 60) return `${minutes} мин`;
+  if (minutes % 1440 === 0) return `${minutes / 1440} дн.`;
+  if (minutes % 60 === 0) return `${minutes / 60} ч`;
+  return `${minutes} мин`;
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  avatarUploading.value = true;
+  avatarError.value = "";
+  try {
+    await app.uploadAvatar(file);
+  } catch (error) {
+    avatarError.value = error?.data?.detail || "Не удалось загрузить аватар";
+  } finally {
+    avatarUploading.value = false;
+  }
+}
+
+async function openNotification(item) {
+  if (item.kind !== "review_reactions") return app.openNotificationDetail(item.id);
+  // сводка по реакциям: отмечаем прочитанной и показываем свои отзывы
+  if (!item.read_at) await app.markNotificationRead(item.id);
+  app.profileTab.value = "reviews";
+}
+
+async function savePeriod() {
+  settingsSaving.value = true;
+  settingsSaved.value = false;
+  settingsError.value = false;
+  settingsMessage.value = "";
+  try {
+    await app.updateProfileSettings({ review_notification_period_minutes: periodMinutes.value || 1 });
+    settingsSaved.value = true;
+    settingsMessage.value = "Настройки сохранены";
+    resetSettingsMessageLater();
+  } catch {
+    settingsError.value = true;
+    settingsMessage.value = "Не удалось сохранить настройки";
+  } finally {
+    settingsSaving.value = false;
+  }
+}
+
 const { categoryLine, formatDate, formatPercent, mainPhoto } = useWineFormat();
 
 function reviewOf(wine) {
   return wine ? app.reviews.value.items.find((item) => item.wine_id === wine.id) : null;
 }
+
+function resetSettingsMessageLater() {
+  if (settingsMessageTimer) clearTimeout(settingsMessageTimer);
+  settingsMessageTimer = setTimeout(() => {
+    settingsSaved.value = false;
+    settingsMessage.value = "";
+    settingsMessageTimer = null;
+  }, 2200);
+}
+
+onBeforeUnmount(() => {
+  if (settingsMessageTimer) clearTimeout(settingsMessageTimer);
+});
 </script>

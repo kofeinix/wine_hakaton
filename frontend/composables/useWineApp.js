@@ -320,6 +320,38 @@ export function useWineApp() {
     return await apiFetch(`/api/v1/wines/${wineId}/reviews`);
   }
 
+  async function reactToReview(wineId, reviewUserId, value) {
+    if (!user.value) {
+      // после входа отзыв может оказаться своим — на него реакцию не ставят (404), это не ошибка входа
+      requireAuth(() => reactToReview(wineId, reviewUserId, value).catch(() => {}));
+      return;
+    }
+    await apiFetch(`/api/v1/wines/${wineId}/reviews/${reviewUserId}/reaction`, {
+      method: "PUT",
+      body: { value },
+    });
+    reviewsVersion.value += 1;
+  }
+
+  async function clearReviewReaction(wineId, reviewUserId) {
+    if (!user.value) return;
+    await apiFetch(`/api/v1/wines/${wineId}/reviews/${reviewUserId}/reaction`, { method: "DELETE" });
+    reviewsVersion.value += 1;
+  }
+
+  async function updateProfileSettings(settings) {
+    if (!user.value) return;
+    user.value = await apiFetch("/api/v1/profile", { method: "PATCH", body: settings });
+  }
+
+  async function uploadAvatar(file) {
+    if (!user.value || !file) return;
+    const form = new FormData();
+    form.append("image", file);
+    user.value = await apiFetch("/api/v1/profile/avatar", { method: "POST", body: form });
+    reviewsVersion.value += 1;
+  }
+
   function openWine(wine, { searchId = null, context = "" } = {}) {
     if (!wine) return;
     wineDetail.value = { wine, searchId, context };
@@ -337,6 +369,11 @@ export function useWineApp() {
     }
     activeView.value = "profile";
     profileTab.value = "notifications";
+    await loadNotifications();
+  }
+
+  async function markNotificationRead(id) {
+    await apiFetch(`/api/v1/notifications/${id}/read`, { method: "POST" });
     await loadNotifications();
   }
 
@@ -362,6 +399,7 @@ export function useWineApp() {
     isDragging,
     isSearching,
     loadNotifications,
+    markNotificationRead,
     notificationDetail,
     notifications,
     openNotificationDetail,
@@ -385,6 +423,8 @@ export function useWineApp() {
     wineDetail,
     reviewsVersion,
     fetchWineReviews,
+    reactToReview,
+    clearReviewReaction,
     ratingDialog,
     saveReview,
     deleteReview,
@@ -394,6 +434,8 @@ export function useWineApp() {
     showGenerated,
     similarMatches,
     submitAuth,
+    updateProfileSettings,
+    uploadAvatar,
     user,
   };
 }

@@ -423,15 +423,6 @@
     "minio_path": "00915729-973d-54f0-b572-d40be45153c3/main.jpg"
   },
   {
-    "id": "ffc56274-1390-4cc4-8541-1f5a72dfb8d5",
-    "wine_id": "00915729-973d-54f0-b572-d40be45153c3",
-    "source_url": null,
-    "source_path": "data/images_extended/00915729-973d-54f0-b572-d40be45153c3/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "00915729-973d-54f0-b572-d40be45153c3/vivino_1.jpg"
-  },
-  {
     "id": "1db2339f-af9e-4303-951c-7a74fe24164d",
     "wine_id": "00915729-973d-54f0-b572-d40be45153c3",
     "source_url": null,
@@ -1546,24 +1537,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "02358117-2ff3-585c-ac0b-e184cceef57c/main.jpg"
-  },
-  {
-    "id": "7ed56e1c-0efe-47c0-a5d3-8eeed5d7e812",
-    "wine_id": "02358117-2ff3-585c-ac0b-e184cceef57c",
-    "source_url": null,
-    "source_path": "data/images_extended/02358117-2ff3-585c-ac0b-e184cceef57c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "02358117-2ff3-585c-ac0b-e184cceef57c/vivino_1.jpg"
-  },
-  {
-    "id": "33c9829d-3d7a-4d19-b138-5b1b4036a186",
-    "wine_id": "02358117-2ff3-585c-ac0b-e184cceef57c",
-    "source_url": null,
-    "source_path": "data/images_extended/02358117-2ff3-585c-ac0b-e184cceef57c/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "02358117-2ff3-585c-ac0b-e184cceef57c/vivino_2.jpg"
   },
   {
     "id": "8027da9b-8015-5ae3-9819-92890530286b",
@@ -3778,15 +3751,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "04c25d24-29f9-5d15-96a7-2933ed1d9360/main.jpg"
-  },
-  {
-    "id": "a029e564-6b4e-59f5-b271-fedc6a70b779",
-    "wine_id": "04c25d24-29f9-5d15-96a7-2933ed1d9360",
-    "source_url": null,
-    "source_path": "data/images_extended/04c25d24-29f9-5d15-96a7-2933ed1d9360/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "04c25d24-29f9-5d15-96a7-2933ed1d9360/vivino_1.jpg"
   },
   {
     "id": "a3b81713-6b00-45e2-a069-eff5b99976a0",
@@ -6255,15 +6219,6 @@
     "minio_path": "0761a062-964c-5c48-8166-922b7d3ee3dd/vivino_1.jpg"
   },
   {
-    "id": "233ddbf6-0709-420a-995a-3caa4ab0fa2a",
-    "wine_id": "0761a062-964c-5c48-8166-922b7d3ee3dd",
-    "source_url": null,
-    "source_path": "data/images_extended/0761a062-964c-5c48-8166-922b7d3ee3dd/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "0761a062-964c-5c48-8166-922b7d3ee3dd/vivino_2.jpg"
-  },
-  {
     "id": "59aa4396-f6f9-4f24-9284-7b77c07731a5",
     "wine_id": "0761a062-964c-5c48-8166-922b7d3ee3dd",
     "source_url": null,
@@ -7227,15 +7182,6 @@
     "minio_path": "083e90fd-2ba0-5640-8652-cf9404139d95/main.jpg"
   },
   {
-    "id": "eac7da2d-1247-4f53-a9f4-9fde176b2f1c",
-    "wine_id": "083e90fd-2ba0-5640-8652-cf9404139d95",
-    "source_url": null,
-    "source_path": "data/images_extended/083e90fd-2ba0-5640-8652-cf9404139d95/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "083e90fd-2ba0-5640-8652-cf9404139d95/vivino_3.jpg"
-  },
-  {
     "id": "e3a7653f-3499-5b63-9017-b36d51341ffe",
     "wine_id": "08487100-dbc8-5e86-a5e7-7afdb1662534",
     "source_url": null,
@@ -7513,15 +7459,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "085fc023-851e-58e0-80fd-075c211d8ec0/main.jpg"
-  },
-  {
-    "id": "c5ae2666-9367-4165-9b15-84bf7c54a305",
-    "wine_id": "085fc023-851e-58e0-80fd-075c211d8ec0",
-    "source_url": null,
-    "source_path": "data/images_extended/085fc023-851e-58e0-80fd-075c211d8ec0/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "085fc023-851e-58e0-80fd-075c211d8ec0/vivino_2.jpg"
   },
   {
     "id": "65baa7f7-a166-5c60-9a9f-5258b83b2c73",
@@ -8008,15 +7945,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "08a46f7e-28f2-521c-be3e-c042fb80f20f/main.jpg"
-  },
-  {
-    "id": "8a4e4443-21dd-4aaf-bb30-d03eb2b55acd",
-    "wine_id": "08a46f7e-28f2-521c-be3e-c042fb80f20f",
-    "source_url": null,
-    "source_path": "data/images_extended/08a46f7e-28f2-521c-be3e-c042fb80f20f/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "08a46f7e-28f2-521c-be3e-c042fb80f20f/vivino_1.jpg"
   },
   {
     "id": "513559cf-f009-4b02-970a-d0a003f8fc14",
@@ -8766,24 +8694,6 @@
     "minio_path": "098d9dee-498a-5e48-bde6-1b74427c137b/main.jpg"
   },
   {
-    "id": "70f97f9c-47d8-4f9b-b567-3fc173b30e3b",
-    "wine_id": "098d9dee-498a-5e48-bde6-1b74427c137b",
-    "source_url": null,
-    "source_path": "data/images_extended/098d9dee-498a-5e48-bde6-1b74427c137b/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "098d9dee-498a-5e48-bde6-1b74427c137b/vivino_1.jpg"
-  },
-  {
-    "id": "dedda4d7-9f9d-446a-9457-a7f3b319ebe0",
-    "wine_id": "098d9dee-498a-5e48-bde6-1b74427c137b",
-    "source_url": null,
-    "source_path": "data/images_extended/098d9dee-498a-5e48-bde6-1b74427c137b/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "098d9dee-498a-5e48-bde6-1b74427c137b/vivino_2.jpg"
-  },
-  {
     "id": "8e732c67-810e-4ed6-9949-d757b4b6ebba",
     "wine_id": "098d9dee-498a-5e48-bde6-1b74427c137b",
     "source_url": null,
@@ -8881,15 +8791,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "099d9947-0069-5472-b375-67b3119edc54/main.jpg"
-  },
-  {
-    "id": "4f6ce541-0f84-4232-97b2-c3a760435491",
-    "wine_id": "099d9947-0069-5472-b375-67b3119edc54",
-    "source_url": null,
-    "source_path": "data/images_extended/099d9947-0069-5472-b375-67b3119edc54/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "099d9947-0069-5472-b375-67b3119edc54/vivino_1.jpg"
   },
   {
     "id": "db3c94d2-5312-45c6-ac08-0240e13c3edc",
@@ -13788,15 +13689,6 @@
     "minio_path": "0ef54f60-4a1b-556f-819c-4bb59a4d2daf/main.jpg"
   },
   {
-    "id": "84fd37cc-03f5-57e9-9aa3-3ecfbdd4e4a0",
-    "wine_id": "0ef54f60-4a1b-556f-819c-4bb59a4d2daf",
-    "source_url": null,
-    "source_path": "data/images_extended/0ef54f60-4a1b-556f-819c-4bb59a4d2daf/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "0ef54f60-4a1b-556f-819c-4bb59a4d2daf/vivino_1.jpg"
-  },
-  {
     "id": "49369220-618d-589e-ad8a-456bd129f34d",
     "wine_id": "0f06673f-18ca-5449-8609-6a469dde83be",
     "source_url": null,
@@ -18207,15 +18099,6 @@
     "minio_path": "14cd3913-9da8-5cd0-9bc4-aeef01b2871c/main.jpg"
   },
   {
-    "id": "1d08a50b-1724-47c8-a730-55d00e808a22",
-    "wine_id": "14cd3913-9da8-5cd0-9bc4-aeef01b2871c",
-    "source_url": null,
-    "source_path": "data/images_extended/14cd3913-9da8-5cd0-9bc4-aeef01b2871c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "14cd3913-9da8-5cd0-9bc4-aeef01b2871c/vivino_1.jpg"
-  },
-  {
     "id": "6a56183f-b6fb-58be-80bf-b71cf27acf6b",
     "wine_id": "14da221c-c2f6-5829-ac7f-40faae6b78af",
     "source_url": null,
@@ -19323,24 +19206,6 @@
     "minio_path": "1634c233-1b1f-5bc3-a642-88474eba6986/main.jpg"
   },
   {
-    "id": "c8959e53-b936-4c3f-8de0-b8ca1a2ad0fd",
-    "wine_id": "1634c233-1b1f-5bc3-a642-88474eba6986",
-    "source_url": null,
-    "source_path": "data/images_extended/1634c233-1b1f-5bc3-a642-88474eba6986/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1634c233-1b1f-5bc3-a642-88474eba6986/vivino_1.jpg"
-  },
-  {
-    "id": "efcf499c-df22-41d9-9b1b-573fb78eab6c",
-    "wine_id": "1634c233-1b1f-5bc3-a642-88474eba6986",
-    "source_url": null,
-    "source_path": "data/images_extended/1634c233-1b1f-5bc3-a642-88474eba6986/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1634c233-1b1f-5bc3-a642-88474eba6986/vivino_2.jpg"
-  },
-  {
     "id": "aabb4835-1a90-450d-8439-557ff7bdc7f6",
     "wine_id": "1634c233-1b1f-5bc3-a642-88474eba6986",
     "source_url": null,
@@ -19674,24 +19539,6 @@
     "minio_path": "166bb0b7-c942-5223-903a-e8906ae1abd6/main.jpg"
   },
   {
-    "id": "474b8edf-9657-55cb-a89a-026e2a6e9e8f",
-    "wine_id": "166bb0b7-c942-5223-903a-e8906ae1abd6",
-    "source_url": null,
-    "source_path": "data/images_extended/166bb0b7-c942-5223-903a-e8906ae1abd6/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "166bb0b7-c942-5223-903a-e8906ae1abd6/vivino_1.jpg"
-  },
-  {
-    "id": "d081483f-7360-520b-9bb0-2d33cb29d6ae",
-    "wine_id": "166bb0b7-c942-5223-903a-e8906ae1abd6",
-    "source_url": null,
-    "source_path": "data/images_extended/166bb0b7-c942-5223-903a-e8906ae1abd6/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "166bb0b7-c942-5223-903a-e8906ae1abd6/vivino_2.jpg"
-  },
-  {
     "id": "ed38f932-8541-4393-a6e7-ec56a8595217",
     "wine_id": "166bb0b7-c942-5223-903a-e8906ae1abd6",
     "source_url": null,
@@ -19807,15 +19654,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "169b9d85-95c5-5e27-aac6-1fc54dff98f9/main.jpg"
-  },
-  {
-    "id": "d315c5f9-d007-4502-aba4-7a58af174a5a",
-    "wine_id": "169b9d85-95c5-5e27-aac6-1fc54dff98f9",
-    "source_url": null,
-    "source_path": "data/images_extended/169b9d85-95c5-5e27-aac6-1fc54dff98f9/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "169b9d85-95c5-5e27-aac6-1fc54dff98f9/vivino_1.jpg"
   },
   {
     "id": "ddc0f0d3-c9e6-4735-b864-af404d8fdd76",
@@ -21051,15 +20889,6 @@
     "minio_path": "17de5909-2014-5af1-8b5b-0a0001c2a116/vivino_1.jpg"
   },
   {
-    "id": "7cf06a0e-faa3-5a61-b503-88f2cc3891d3",
-    "wine_id": "17de5909-2014-5af1-8b5b-0a0001c2a116",
-    "source_url": null,
-    "source_path": "data/images_extended/17de5909-2014-5af1-8b5b-0a0001c2a116/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "17de5909-2014-5af1-8b5b-0a0001c2a116/vivino_2.jpg"
-  },
-  {
     "id": "d40d466a-4599-57c3-a3ec-00aa45738038",
     "wine_id": "17f784b5-7d5c-5032-9ed3-1340896a93e3",
     "source_url": null,
@@ -21924,15 +21753,6 @@
     "minio_path": "184708b6-bae5-553d-9292-be831c164fbe/main.jpg"
   },
   {
-    "id": "247d4c12-2dd5-432b-b06e-b0ccf545bc8d",
-    "wine_id": "184708b6-bae5-553d-9292-be831c164fbe",
-    "source_url": null,
-    "source_path": "data/images_extended/184708b6-bae5-553d-9292-be831c164fbe/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "184708b6-bae5-553d-9292-be831c164fbe/vivino_1.jpg"
-  },
-  {
     "id": "248a0590-6c76-5b5c-b586-faa442e3fd20",
     "wine_id": "189d18c2-0254-54e1-8e57-7767781e7e09",
     "source_url": null,
@@ -22021,15 +21841,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "189d18c2-0254-54e1-8e57-7767781e7e09/main.jpg"
-  },
-  {
-    "id": "07d4070d-d2f5-4a25-b46a-b6dac8810dfa",
-    "wine_id": "189d18c2-0254-54e1-8e57-7767781e7e09",
-    "source_url": null,
-    "source_path": "data/images_extended/189d18c2-0254-54e1-8e57-7767781e7e09/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "189d18c2-0254-54e1-8e57-7767781e7e09/vivino_1.jpg"
   },
   {
     "id": "0a54e0e6-1c80-499b-b51d-b91b10e952ad",
@@ -22939,15 +22750,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "195ada9d-87c9-5cc5-8609-92efd4808f45/main.jpg"
-  },
-  {
-    "id": "e2494687-4149-5b16-99fe-723f152387ea",
-    "wine_id": "195ada9d-87c9-5cc5-8609-92efd4808f45",
-    "source_url": null,
-    "source_path": "data/images_extended/195ada9d-87c9-5cc5-8609-92efd4808f45/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "195ada9d-87c9-5cc5-8609-92efd4808f45/vivino_1.jpg"
   },
   {
     "id": "98b9af6a-fdf6-4b09-b407-a7a9d04dc60e",
@@ -24183,15 +23985,6 @@
     "minio_path": "1a869a35-6105-513b-b836-b28528ac8c72/main.jpg"
   },
   {
-    "id": "26479b7c-b4b0-4f81-ab70-39122bdeedf3",
-    "wine_id": "1a869a35-6105-513b-b836-b28528ac8c72",
-    "source_url": null,
-    "source_path": "data/images_extended/1a869a35-6105-513b-b836-b28528ac8c72/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1a869a35-6105-513b-b836-b28528ac8c72/vivino_1.jpg"
-  },
-  {
     "id": "f91eb2c5-1619-551b-9ba6-f157ac8ef6a4",
     "wine_id": "1a87f62b-60f5-5ac8-bbbc-78c03275b85c",
     "source_url": null,
@@ -25398,15 +25191,6 @@
     "minio_path": "1bef2608-a862-566d-81f9-59742e6998ea/main.jpg"
   },
   {
-    "id": "c343efcb-9371-4f85-9c46-1275428baf5e",
-    "wine_id": "1bef2608-a862-566d-81f9-59742e6998ea",
-    "source_url": null,
-    "source_path": "data/images_extended/1bef2608-a862-566d-81f9-59742e6998ea/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1bef2608-a862-566d-81f9-59742e6998ea/vivino_1.jpg"
-  },
-  {
     "id": "d7c21e00-2ce0-402f-bc9a-f82ad105fb7f",
     "wine_id": "1bef2608-a862-566d-81f9-59742e6998ea",
     "source_url": null,
@@ -25621,15 +25405,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "1c032a98-30fd-5239-ade7-ba0384d05132/main.jpg"
-  },
-  {
-    "id": "8059aeac-a415-4f2a-bf36-5e0df14781c3",
-    "wine_id": "1c032a98-30fd-5239-ade7-ba0384d05132",
-    "source_url": null,
-    "source_path": "data/images_extended/1c032a98-30fd-5239-ade7-ba0384d05132/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1c032a98-30fd-5239-ade7-ba0384d05132/vivino_1.jpg"
   },
   {
     "id": "d589e058-208e-488e-8a01-0d487574ef33",
@@ -26991,15 +26766,6 @@
     "minio_path": "1d5bbc3d-d8de-5657-a259-3c27c329d81b/main.jpg"
   },
   {
-    "id": "465e4d77-e012-4509-b9e2-830e908cb8c8",
-    "wine_id": "1d5bbc3d-d8de-5657-a259-3c27c329d81b",
-    "source_url": null,
-    "source_path": "data/images_extended/1d5bbc3d-d8de-5657-a259-3c27c329d81b/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1d5bbc3d-d8de-5657-a259-3c27c329d81b/vivino_2.jpg"
-  },
-  {
     "id": "4ea4681f-a2b5-4d0c-8016-43b34142bc2e",
     "wine_id": "1d5bbc3d-d8de-5657-a259-3c27c329d81b",
     "source_url": null,
@@ -27556,15 +27322,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "1dc78c36-dda3-52f9-9849-51f2221cdc21/main.jpg"
-  },
-  {
-    "id": "dc6f2531-6c4a-476f-811a-50b4f36cef9e",
-    "wine_id": "1dc78c36-dda3-52f9-9849-51f2221cdc21",
-    "source_url": null,
-    "source_path": "data/images_extended/1dc78c36-dda3-52f9-9849-51f2221cdc21/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1dc78c36-dda3-52f9-9849-51f2221cdc21/vivino_1.jpg"
   },
   {
     "id": "cb70281a-8ce4-4fad-be10-90a265e0daff",
@@ -29232,24 +28989,6 @@
     "minio_path": "1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4/main.jpg"
   },
   {
-    "id": "418078dc-f1a8-4fcf-ac3b-51ad277e419b",
-    "wine_id": "1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4",
-    "source_url": null,
-    "source_path": "data/images_extended/1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4/vivino_1.jpg"
-  },
-  {
-    "id": "0915c8b0-46fe-4e71-b7bf-17117bf595c3",
-    "wine_id": "1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4",
-    "source_url": null,
-    "source_path": "data/images_extended/1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "1fb51b88-d0ce-58cd-bfd3-a62cfc240cb4/vivino_2.jpg"
-  },
-  {
     "id": "435a7536-d572-555c-bfc7-94791c2f3255",
     "wine_id": "1ff8cf53-0390-54ef-8dd8-0cfc7f387137",
     "source_url": null,
@@ -30870,24 +30609,6 @@
     "minio_path": "21c486a2-1db0-56d2-8093-657df2d6265b/main.jpg"
   },
   {
-    "id": "7c05ae88-e5c5-4b08-b1ca-588a9b45b66d",
-    "wine_id": "21c486a2-1db0-56d2-8093-657df2d6265b",
-    "source_url": null,
-    "source_path": "data/images_extended/21c486a2-1db0-56d2-8093-657df2d6265b/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "21c486a2-1db0-56d2-8093-657df2d6265b/vivino_1.jpg"
-  },
-  {
-    "id": "1e766490-db73-42a1-bc99-de45df1ceb00",
-    "wine_id": "21c486a2-1db0-56d2-8093-657df2d6265b",
-    "source_url": null,
-    "source_path": "data/images_extended/21c486a2-1db0-56d2-8093-657df2d6265b/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "21c486a2-1db0-56d2-8093-657df2d6265b/vivino_2.jpg"
-  },
-  {
     "id": "41c20690-a4b0-4bc3-96fe-2c9a600d94e0",
     "wine_id": "21c486a2-1db0-56d2-8093-657df2d6265b",
     "source_url": null,
@@ -31084,15 +30805,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "21de7732-0db0-5594-beb7-9d82f473fc31/main.jpg"
-  },
-  {
-    "id": "67bb8ae4-3f70-454e-a6cf-f457d53a1912",
-    "wine_id": "21de7732-0db0-5594-beb7-9d82f473fc31",
-    "source_url": null,
-    "source_path": "data/images_extended/21de7732-0db0-5594-beb7-9d82f473fc31/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "21de7732-0db0-5594-beb7-9d82f473fc31/vivino_1.jpg"
   },
   {
     "id": "1a38c285-32fa-5fdd-81ae-15252886b64a",
@@ -32398,15 +32110,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "23bac44b-6d08-54e9-87f3-6d6650fe9b32/main.jpg"
-  },
-  {
-    "id": "b15aeb73-d5df-4d59-af80-7da12ac27208",
-    "wine_id": "23bac44b-6d08-54e9-87f3-6d6650fe9b32",
-    "source_url": null,
-    "source_path": "data/images_extended/23bac44b-6d08-54e9-87f3-6d6650fe9b32/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "23bac44b-6d08-54e9-87f3-6d6650fe9b32/vivino_1.jpg"
   },
   {
     "id": "008a66b6-4e7e-5889-9eb3-a4f1434fae06",
@@ -34668,15 +34371,6 @@
     "minio_path": "269f1384-10e2-5ce3-a769-14c269dd1924/main.jpg"
   },
   {
-    "id": "161de684-8ce5-4294-ac82-8443d8b83177",
-    "wine_id": "269f1384-10e2-5ce3-a769-14c269dd1924",
-    "source_url": null,
-    "source_path": "data/images_extended/269f1384-10e2-5ce3-a769-14c269dd1924/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "269f1384-10e2-5ce3-a769-14c269dd1924/vivino_1.jpg"
-  },
-  {
     "id": "8c6f06d3-d6a0-5649-9af2-09e8ed2bc436",
     "wine_id": "26fa0adf-567b-55da-9d8c-56445f4e9831",
     "source_url": null,
@@ -34765,24 +34459,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "26fa0adf-567b-55da-9d8c-56445f4e9831/main.jpg"
-  },
-  {
-    "id": "b9dee22d-9862-4bec-b96a-2bd08bfa8fb3",
-    "wine_id": "26fa0adf-567b-55da-9d8c-56445f4e9831",
-    "source_url": null,
-    "source_path": "data/images_extended/26fa0adf-567b-55da-9d8c-56445f4e9831/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "26fa0adf-567b-55da-9d8c-56445f4e9831/vivino_1.jpg"
-  },
-  {
-    "id": "72c7a546-db27-4687-9ce0-0225db8d08fd",
-    "wine_id": "26fa0adf-567b-55da-9d8c-56445f4e9831",
-    "source_url": null,
-    "source_path": "data/images_extended/26fa0adf-567b-55da-9d8c-56445f4e9831/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "26fa0adf-567b-55da-9d8c-56445f4e9831/vivino_3.jpg"
   },
   {
     "id": "1d40008d-104b-418b-b320-d7ba79dae57a",
@@ -34918,15 +34594,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "273167b1-5d34-5b20-ba36-393259d837ae/main.jpg"
-  },
-  {
-    "id": "7e4a5f8a-f4d8-4815-adaa-9c0d5618ead6",
-    "wine_id": "273167b1-5d34-5b20-ba36-393259d837ae",
-    "source_url": null,
-    "source_path": "data/images_extended/273167b1-5d34-5b20-ba36-393259d837ae/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "273167b1-5d34-5b20-ba36-393259d837ae/vivino_1.jpg"
   },
   {
     "id": "8224235e-c124-4d46-9cdd-d634c87d1dbb",
@@ -36486,15 +36153,6 @@
     "minio_path": "296b821e-23ec-5aee-9986-ea8c5e80aa02/main.jpg"
   },
   {
-    "id": "ea53f245-8335-4867-aaa5-ff5c5360390f",
-    "wine_id": "296b821e-23ec-5aee-9986-ea8c5e80aa02",
-    "source_url": null,
-    "source_path": "data/images_extended/296b821e-23ec-5aee-9986-ea8c5e80aa02/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "296b821e-23ec-5aee-9986-ea8c5e80aa02/vivino_1.jpg"
-  },
-  {
     "id": "9cbc2e4e-745f-5678-bc4a-78c89b740ee8",
     "wine_id": "29759bcc-7fda-5d74-b481-7e75f46c5f5c",
     "source_url": null,
@@ -37197,15 +36855,6 @@
     "minio_path": "29d452ad-593f-55f9-9b9b-302ebde585b6/main.jpg"
   },
   {
-    "id": "6535107a-9bb8-4648-a74a-d9a9a50b036c",
-    "wine_id": "29d452ad-593f-55f9-9b9b-302ebde585b6",
-    "source_url": null,
-    "source_path": "data/images_extended/29d452ad-593f-55f9-9b9b-302ebde585b6/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "29d452ad-593f-55f9-9b9b-302ebde585b6/vivino_1.jpg"
-  },
-  {
     "id": "b9902ce5-b47e-5fbd-9512-f459ed00a419",
     "wine_id": "29f3d7aa-604e-5798-8f75-76bc9e1b9908",
     "source_url": null,
@@ -37294,15 +36943,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "29f3d7aa-604e-5798-8f75-76bc9e1b9908/main.jpg"
-  },
-  {
-    "id": "52e62845-ab0a-4cbb-adc0-d059c9a8445e",
-    "wine_id": "29f3d7aa-604e-5798-8f75-76bc9e1b9908",
-    "source_url": null,
-    "source_path": "data/images_extended/29f3d7aa-604e-5798-8f75-76bc9e1b9908/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "29f3d7aa-604e-5798-8f75-76bc9e1b9908/vivino_1.jpg"
   },
   {
     "id": "f65c6f7a-af87-4ef3-bf3e-b1b664648db9",
@@ -37953,24 +37593,6 @@
     "minio_path": "2a7ba325-6392-559d-8f84-a625ef410bb8/main.jpg"
   },
   {
-    "id": "27b7f0b3-9b98-475d-b8f7-b5726ae28135",
-    "wine_id": "2a7ba325-6392-559d-8f84-a625ef410bb8",
-    "source_url": null,
-    "source_path": "data/images_extended/2a7ba325-6392-559d-8f84-a625ef410bb8/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2a7ba325-6392-559d-8f84-a625ef410bb8/vivino_1.jpg"
-  },
-  {
-    "id": "71ed392e-29b1-497a-9b60-177a895a0e97",
-    "wine_id": "2a7ba325-6392-559d-8f84-a625ef410bb8",
-    "source_url": null,
-    "source_path": "data/images_extended/2a7ba325-6392-559d-8f84-a625ef410bb8/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2a7ba325-6392-559d-8f84-a625ef410bb8/vivino_2.jpg"
-  },
-  {
     "id": "182260fc-a8b7-4197-acd6-a1f3205367ab",
     "wine_id": "2a7ba325-6392-559d-8f84-a625ef410bb8",
     "source_url": null,
@@ -38556,15 +38178,6 @@
     "minio_path": "2b3dbc96-3e1f-57f0-b5ef-11a4cd679f70/main.jpg"
   },
   {
-    "id": "80d0e00e-618b-53cf-8a6f-297536cf265c",
-    "wine_id": "2b3dbc96-3e1f-57f0-b5ef-11a4cd679f70",
-    "source_url": null,
-    "source_path": "data/images_extended/2b3dbc96-3e1f-57f0-b5ef-11a4cd679f70/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2b3dbc96-3e1f-57f0-b5ef-11a4cd679f70/vivino_3.jpg"
-  },
-  {
     "id": "f6387749-50b0-4065-bb91-c90492bbbb03",
     "wine_id": "2b3dbc96-3e1f-57f0-b5ef-11a4cd679f70",
     "source_url": null,
@@ -39049,15 +38662,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "2b9c0bb7-ebba-5ac4-ae01-83ae313ccf43/main.jpg"
-  },
-  {
-    "id": "3aa80e46-d022-5de8-8ea9-d37733e38d10",
-    "wine_id": "2b9c0bb7-ebba-5ac4-ae01-83ae313ccf43",
-    "source_url": null,
-    "source_path": "data/images_extended/2b9c0bb7-ebba-5ac4-ae01-83ae313ccf43/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2b9c0bb7-ebba-5ac4-ae01-83ae313ccf43/vivino_1.jpg"
   },
   {
     "id": "abb59152-fb61-40c3-97bf-7ff2a61ca5fc",
@@ -40086,15 +39690,6 @@
     "minio_path": "2cb98bcf-8f78-51eb-8a44-08b81715932f/main.jpg"
   },
   {
-    "id": "040b9c9a-49f2-4823-8f73-3817090b3639",
-    "wine_id": "2cb98bcf-8f78-51eb-8a44-08b81715932f",
-    "source_url": null,
-    "source_path": "data/images_extended/2cb98bcf-8f78-51eb-8a44-08b81715932f/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2cb98bcf-8f78-51eb-8a44-08b81715932f/vivino_1.jpg"
-  },
-  {
     "id": "9b6a2e78-334e-4500-ae22-2ac838dfdf94",
     "wine_id": "2cb98bcf-8f78-51eb-8a44-08b81715932f",
     "source_url": null,
@@ -40302,15 +39897,6 @@
     "minio_path": "2cd75473-6865-51f3-8d34-34ea28740ce2/main.jpg"
   },
   {
-    "id": "bd50ed5d-2607-429a-a0a0-53428725c712",
-    "wine_id": "2cd75473-6865-51f3-8d34-34ea28740ce2",
-    "source_url": null,
-    "source_path": "data/images_extended/2cd75473-6865-51f3-8d34-34ea28740ce2/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2cd75473-6865-51f3-8d34-34ea28740ce2/vivino_1.jpg"
-  },
-  {
     "id": "0f811388-c182-5641-9611-4f7c96623067",
     "wine_id": "2d1da487-ba3b-5b89-a4d1-5111df16aa93",
     "source_url": null,
@@ -40399,24 +39985,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "2d1da487-ba3b-5b89-a4d1-5111df16aa93/main.jpg"
-  },
-  {
-    "id": "c9a48796-9fe3-44c2-90f0-353745659f07",
-    "wine_id": "2d1da487-ba3b-5b89-a4d1-5111df16aa93",
-    "source_url": null,
-    "source_path": "data/images_extended/2d1da487-ba3b-5b89-a4d1-5111df16aa93/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2d1da487-ba3b-5b89-a4d1-5111df16aa93/vivino_1.jpg"
-  },
-  {
-    "id": "7f8de6e8-1146-4841-8147-1d25ca28a0c1",
-    "wine_id": "2d1da487-ba3b-5b89-a4d1-5111df16aa93",
-    "source_url": null,
-    "source_path": "data/images_extended/2d1da487-ba3b-5b89-a4d1-5111df16aa93/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2d1da487-ba3b-5b89-a4d1-5111df16aa93/vivino_2.jpg"
   },
   {
     "id": "ed426bb3-ed94-4908-b31a-4f389e2ac9c6",
@@ -41535,24 +41103,6 @@
     "minio_path": "2e6efd99-692e-53a9-9b8b-aca8c1d4434a/main.jpg"
   },
   {
-    "id": "639bca53-f404-49d3-a20a-b61670051129",
-    "wine_id": "2e6efd99-692e-53a9-9b8b-aca8c1d4434a",
-    "source_url": null,
-    "source_path": "data/images_extended/2e6efd99-692e-53a9-9b8b-aca8c1d4434a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2e6efd99-692e-53a9-9b8b-aca8c1d4434a/vivino_1.jpg"
-  },
-  {
-    "id": "2e45ffc9-fbf0-4adc-8c0b-6f7398698042",
-    "wine_id": "2e6efd99-692e-53a9-9b8b-aca8c1d4434a",
-    "source_url": null,
-    "source_path": "data/images_extended/2e6efd99-692e-53a9-9b8b-aca8c1d4434a/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2e6efd99-692e-53a9-9b8b-aca8c1d4434a/vivino_2.jpg"
-  },
-  {
     "id": "98814ba1-ee18-40de-bd2a-9e70ce9368e9",
     "wine_id": "2e6efd99-692e-53a9-9b8b-aca8c1d4434a",
     "source_url": null,
@@ -41983,24 +41533,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "2ea3f597-d156-5aeb-a3f2-98beef96f2b9/main.jpg"
-  },
-  {
-    "id": "ac464f59-8315-5e32-8f28-963e136192e8",
-    "wine_id": "2ea3f597-d156-5aeb-a3f2-98beef96f2b9",
-    "source_url": null,
-    "source_path": "data/images_extended/2ea3f597-d156-5aeb-a3f2-98beef96f2b9/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2ea3f597-d156-5aeb-a3f2-98beef96f2b9/vivino_1.jpg"
-  },
-  {
-    "id": "060879f1-78f4-5817-ae9a-51bff81614f1",
-    "wine_id": "2ea3f597-d156-5aeb-a3f2-98beef96f2b9",
-    "source_url": null,
-    "source_path": "data/images_extended/2ea3f597-d156-5aeb-a3f2-98beef96f2b9/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2ea3f597-d156-5aeb-a3f2-98beef96f2b9/vivino_2.jpg"
   },
   {
     "id": "c71e6ed0-b586-577c-a40a-7edea121f347",
@@ -42721,24 +42253,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "2f904cd6-3697-5152-83ff-dd93d77ee660/main.jpg"
-  },
-  {
-    "id": "a2ad64c0-9bdf-5806-a111-67f3646f8ff3",
-    "wine_id": "2f904cd6-3697-5152-83ff-dd93d77ee660",
-    "source_url": null,
-    "source_path": "data/images_extended/2f904cd6-3697-5152-83ff-dd93d77ee660/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2f904cd6-3697-5152-83ff-dd93d77ee660/vivino_1.jpg"
-  },
-  {
-    "id": "dc69de7d-d720-418f-ab18-e6c62b936cb5",
-    "wine_id": "2f904cd6-3697-5152-83ff-dd93d77ee660",
-    "source_url": null,
-    "source_path": "data/images_extended/2f904cd6-3697-5152-83ff-dd93d77ee660/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "2f904cd6-3697-5152-83ff-dd93d77ee660/vivino_2.jpg"
   },
   {
     "id": "14de09b2-feb4-58b6-8a8d-ce91d4599cf6",
@@ -43522,24 +43036,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "3074065f-065b-584d-b9fb-cf4f694c896e/main.jpg"
-  },
-  {
-    "id": "caa46b8d-ef78-47df-80b9-074b3b54bfa2",
-    "wine_id": "3074065f-065b-584d-b9fb-cf4f694c896e",
-    "source_url": null,
-    "source_path": "data/images_extended/3074065f-065b-584d-b9fb-cf4f694c896e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3074065f-065b-584d-b9fb-cf4f694c896e/vivino_1.jpg"
-  },
-  {
-    "id": "3711297e-d675-4c18-a7bd-38d7e55e09c7",
-    "wine_id": "3074065f-065b-584d-b9fb-cf4f694c896e",
-    "source_url": null,
-    "source_path": "data/images_extended/3074065f-065b-584d-b9fb-cf4f694c896e/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3074065f-065b-584d-b9fb-cf4f694c896e/vivino_2.jpg"
   },
   {
     "id": "37a1d51d-d6bd-4c1e-ae4f-c26a0ec0b34a",
@@ -44631,24 +44127,6 @@
     "minio_path": "317be534-a4eb-5a41-a2e7-5c58771722ac/main.jpg"
   },
   {
-    "id": "9643d0ac-cdc4-4b80-9a33-bdbe4706ce6a",
-    "wine_id": "317be534-a4eb-5a41-a2e7-5c58771722ac",
-    "source_url": null,
-    "source_path": "data/images_extended/317be534-a4eb-5a41-a2e7-5c58771722ac/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "317be534-a4eb-5a41-a2e7-5c58771722ac/vivino_1.jpg"
-  },
-  {
-    "id": "af6fb8c7-ee5d-4db9-b54d-c67afa50911c",
-    "wine_id": "317be534-a4eb-5a41-a2e7-5c58771722ac",
-    "source_url": null,
-    "source_path": "data/images_extended/317be534-a4eb-5a41-a2e7-5c58771722ac/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "317be534-a4eb-5a41-a2e7-5c58771722ac/vivino_2.jpg"
-  },
-  {
     "id": "40511395-04ca-4924-a1d8-6982c1fd8647",
     "wine_id": "317be534-a4eb-5a41-a2e7-5c58771722ac",
     "source_url": null,
@@ -45358,15 +44836,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "326d7219-9d7b-593d-bc97-95000405f6e3/main.jpg"
-  },
-  {
-    "id": "4038c803-6fcd-4c55-94ca-31b1431f38dc",
-    "wine_id": "326d7219-9d7b-593d-bc97-95000405f6e3",
-    "source_url": null,
-    "source_path": "data/images_extended/326d7219-9d7b-593d-bc97-95000405f6e3/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "326d7219-9d7b-593d-bc97-95000405f6e3/vivino_1.jpg"
   },
   {
     "id": "9eb23e9b-8f06-555e-80d5-6c080bfe840c",
@@ -47574,15 +47043,6 @@
     "minio_path": "33b84089-2346-5d93-9721-3638170e42d7/main.jpg"
   },
   {
-    "id": "51866a83-4e04-4b43-8105-a357ce365997",
-    "wine_id": "33b84089-2346-5d93-9721-3638170e42d7",
-    "source_url": null,
-    "source_path": "data/images_extended/33b84089-2346-5d93-9721-3638170e42d7/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "33b84089-2346-5d93-9721-3638170e42d7/vivino_1.jpg"
-  },
-  {
     "id": "1afc906e-6980-53a5-a646-47695b1a270e",
     "wine_id": "33d6e178-11ac-5a8b-be13-9e15b8ab5b5d",
     "source_url": null,
@@ -47806,15 +47266,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "33e51caf-8418-55bc-a7a4-1137b9735b1d/main.jpg"
-  },
-  {
-    "id": "b150651d-31fc-484e-b3c0-a8b77d7587d7",
-    "wine_id": "33e51caf-8418-55bc-a7a4-1137b9735b1d",
-    "source_url": null,
-    "source_path": "data/images_extended/33e51caf-8418-55bc-a7a4-1137b9735b1d/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "33e51caf-8418-55bc-a7a4-1137b9735b1d/vivino_1.jpg"
   },
   {
     "id": "142e9541-72eb-550c-b3b4-fc12c6e0d76a",
@@ -49536,24 +48987,6 @@
     "minio_path": "36184307-3697-500a-bdaa-d264da7077c5/main.jpg"
   },
   {
-    "id": "b15dddc1-94c4-4e62-8d12-8b5ef0f9c3a8",
-    "wine_id": "36184307-3697-500a-bdaa-d264da7077c5",
-    "source_url": null,
-    "source_path": "data/images_extended/36184307-3697-500a-bdaa-d264da7077c5/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "36184307-3697-500a-bdaa-d264da7077c5/vivino_1.jpg"
-  },
-  {
-    "id": "fb3fbd2e-159e-49f5-bdb9-20f5b291a74b",
-    "wine_id": "36184307-3697-500a-bdaa-d264da7077c5",
-    "source_url": null,
-    "source_path": "data/images_extended/36184307-3697-500a-bdaa-d264da7077c5/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "36184307-3697-500a-bdaa-d264da7077c5/vivino_2.jpg"
-  },
-  {
     "id": "821503db-b8ca-4519-be9e-b9e45e014ff7",
     "wine_id": "36184307-3697-500a-bdaa-d264da7077c5",
     "source_url": null,
@@ -50857,24 +50290,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd/main.jpg"
-  },
-  {
-    "id": "88a57c48-4dde-4ba2-b368-81d4981a2468",
-    "wine_id": "37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd",
-    "source_url": null,
-    "source_path": "data/images_extended/37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd/vivino_1.jpg"
-  },
-  {
-    "id": "b1e6bcd2-1b81-46f1-b788-36dc231dc75b",
-    "wine_id": "37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd",
-    "source_url": null,
-    "source_path": "data/images_extended/37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "37664b0f-2fe1-5cd2-9b0a-12f1faa7c0fd/vivino_2.jpg"
   },
   {
     "id": "be71de49-6185-569f-a7ee-c69d32f914fe",
@@ -53001,15 +52416,6 @@
     "minio_path": "39b1899b-97c3-5c77-8610-331c1be5eaf7/main.jpg"
   },
   {
-    "id": "af45b213-5c7b-543b-a602-8478598d1af6",
-    "wine_id": "39b1899b-97c3-5c77-8610-331c1be5eaf7",
-    "source_url": null,
-    "source_path": "data/images_extended/39b1899b-97c3-5c77-8610-331c1be5eaf7/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "39b1899b-97c3-5c77-8610-331c1be5eaf7/vivino_1.jpg"
-  },
-  {
     "id": "4920e884-1038-4963-a096-eada52479c48",
     "wine_id": "39b1899b-97c3-5c77-8610-331c1be5eaf7",
     "source_url": null,
@@ -54351,42 +53757,6 @@
     "minio_path": "3afca627-04a3-5fa5-8706-cf3a0e94769e/main.jpg"
   },
   {
-    "id": "20c07b47-22b1-4c56-a9ee-b8ac564faa69",
-    "wine_id": "3afca627-04a3-5fa5-8706-cf3a0e94769e",
-    "source_url": null,
-    "source_path": "data/images_extended/3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_1.jpg"
-  },
-  {
-    "id": "6398054d-cb05-437d-8c4b-5988217a7827",
-    "wine_id": "3afca627-04a3-5fa5-8706-cf3a0e94769e",
-    "source_url": null,
-    "source_path": "data/images_extended/3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_3.jpg"
-  },
-  {
-    "id": "c817126b-f31f-43d0-a7f3-7365f72cea38",
-    "wine_id": "3afca627-04a3-5fa5-8706-cf3a0e94769e",
-    "source_url": null,
-    "source_path": "data/images_extended/3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_4.jpg"
-  },
-  {
-    "id": "844fcaf0-87ac-4ce8-a74c-0e4e43662f16",
-    "wine_id": "3afca627-04a3-5fa5-8706-cf3a0e94769e",
-    "source_url": null,
-    "source_path": "data/images_extended/3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_6/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3afca627-04a3-5fa5-8706-cf3a0e94769e/vivino_6.jpg"
-  },
-  {
     "id": "d564135e-1f8b-42c1-a5aa-92530eac1abb",
     "wine_id": "3afca627-04a3-5fa5-8706-cf3a0e94769e",
     "source_url": null,
@@ -54675,15 +54045,6 @@
     "minio_path": "3bf3abd7-ec65-5a17-969d-606733622893/main.jpg"
   },
   {
-    "id": "85b1799d-e58c-41b9-992e-69b449b8a4ad",
-    "wine_id": "3bf3abd7-ec65-5a17-969d-606733622893",
-    "source_url": null,
-    "source_path": "data/images_extended/3bf3abd7-ec65-5a17-969d-606733622893/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3bf3abd7-ec65-5a17-969d-606733622893/vivino_1.jpg"
-  },
-  {
     "id": "aa7021a6-0c8b-5d48-beca-7186712807a9",
     "wine_id": "3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b",
     "source_url": null,
@@ -54772,24 +54133,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b/main.jpg"
-  },
-  {
-    "id": "68c57057-9a9d-4ee4-9ad5-dd408bc3f3c8",
-    "wine_id": "3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b",
-    "source_url": null,
-    "source_path": "data/images_extended/3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b/vivino_1.jpg"
-  },
-  {
-    "id": "77dd14b7-d941-4f0a-8b19-818202a66e97",
-    "wine_id": "3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b",
-    "source_url": null,
-    "source_path": "data/images_extended/3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3bf620dc-3c83-5e60-8cf4-5f9c0a9a0f4b/vivino_2.jpg"
   },
   {
     "id": "fd5bee28-a398-5776-8f67-c915ce9a4354",
@@ -56934,24 +56277,6 @@
     "minio_path": "3e4c5d17-422a-5fe2-839e-554f07315c36/main.jpg"
   },
   {
-    "id": "5fa7854c-a814-48ef-9110-87ec0657b5e7",
-    "wine_id": "3e4c5d17-422a-5fe2-839e-554f07315c36",
-    "source_url": null,
-    "source_path": "data/images_extended/3e4c5d17-422a-5fe2-839e-554f07315c36/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3e4c5d17-422a-5fe2-839e-554f07315c36/vivino_1.jpg"
-  },
-  {
-    "id": "c129d65b-2cb9-4b2c-be32-28a61f08bc65",
-    "wine_id": "3e4c5d17-422a-5fe2-839e-554f07315c36",
-    "source_url": null,
-    "source_path": "data/images_extended/3e4c5d17-422a-5fe2-839e-554f07315c36/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3e4c5d17-422a-5fe2-839e-554f07315c36/vivino_2.jpg"
-  },
-  {
     "id": "b95ad129-c3a2-47f2-a7d9-2f2c751af377",
     "wine_id": "3e4c5d17-422a-5fe2-839e-554f07315c36",
     "source_url": null,
@@ -58167,24 +57492,6 @@
     "minio_path": "3f7ead06-b0a1-509c-88ab-5e9b3e0f2198/main.jpg"
   },
   {
-    "id": "c400320a-05ad-4ccf-99bb-b76a2e1b24fc",
-    "wine_id": "3f7ead06-b0a1-509c-88ab-5e9b3e0f2198",
-    "source_url": null,
-    "source_path": "data/images_extended/3f7ead06-b0a1-509c-88ab-5e9b3e0f2198/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3f7ead06-b0a1-509c-88ab-5e9b3e0f2198/vivino_1.jpg"
-  },
-  {
-    "id": "d21e9c10-e448-4798-a97f-d17837d0fc1d",
-    "wine_id": "3f7ead06-b0a1-509c-88ab-5e9b3e0f2198",
-    "source_url": null,
-    "source_path": "data/images_extended/3f7ead06-b0a1-509c-88ab-5e9b3e0f2198/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3f7ead06-b0a1-509c-88ab-5e9b3e0f2198/vivino_2.jpg"
-  },
-  {
     "id": "8062a6f5-14cd-5c38-ae5e-89e70b22c1eb",
     "wine_id": "3fb9fda7-84bf-50e3-9bb0-be5617cef81e",
     "source_url": null,
@@ -58273,15 +57580,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "3fb9fda7-84bf-50e3-9bb0-be5617cef81e/main.jpg"
-  },
-  {
-    "id": "e2bc7bac-14a6-4555-af94-d3b492b1dda2",
-    "wine_id": "3fb9fda7-84bf-50e3-9bb0-be5617cef81e",
-    "source_url": null,
-    "source_path": "data/images_extended/3fb9fda7-84bf-50e3-9bb0-be5617cef81e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3fb9fda7-84bf-50e3-9bb0-be5617cef81e/vivino_1.jpg"
   },
   {
     "id": "87dff1ff-5e5f-44b8-bce1-bc781dbc01b3",
@@ -58570,15 +57868,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "3fd72aef-a840-5f67-b03e-fd8c788b1b75/main.jpg"
-  },
-  {
-    "id": "861e75da-a944-44dd-8cfc-39c1726ae2cd",
-    "wine_id": "3fd72aef-a840-5f67-b03e-fd8c788b1b75",
-    "source_url": null,
-    "source_path": "data/images_extended/3fd72aef-a840-5f67-b03e-fd8c788b1b75/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "3fd72aef-a840-5f67-b03e-fd8c788b1b75/vivino_1.jpg"
   },
   {
     "id": "b3ad127b-375b-53cd-bbb0-d8af1b09dd18",
@@ -59292,15 +58581,6 @@
     "minio_path": "40c392c5-02b0-5f64-b6b5-39bbf46a745e/main.jpg"
   },
   {
-    "id": "67a54de8-dbe6-4059-a794-6dbe5607478c",
-    "wine_id": "40c392c5-02b0-5f64-b6b5-39bbf46a745e",
-    "source_url": null,
-    "source_path": "data/images_extended/40c392c5-02b0-5f64-b6b5-39bbf46a745e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "40c392c5-02b0-5f64-b6b5-39bbf46a745e/vivino_1.jpg"
-  },
-  {
     "id": "06df5962-9ce3-5750-8822-4502fe88677e",
     "wine_id": "40fb2cd5-83a5-5949-b707-201bae0bd0ed",
     "source_url": null,
@@ -59877,24 +59157,6 @@
     "minio_path": "417be19f-dc38-59b4-b7e8-a8c6851f5d53/main.jpg"
   },
   {
-    "id": "5da90a54-1bc0-4478-b7f8-6cf0888a8f3b",
-    "wine_id": "417be19f-dc38-59b4-b7e8-a8c6851f5d53",
-    "source_url": null,
-    "source_path": "data/images_extended/417be19f-dc38-59b4-b7e8-a8c6851f5d53/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "417be19f-dc38-59b4-b7e8-a8c6851f5d53/vivino_1.jpg"
-  },
-  {
-    "id": "1df1ae06-7072-4382-8748-49f11cc87e15",
-    "wine_id": "417be19f-dc38-59b4-b7e8-a8c6851f5d53",
-    "source_url": null,
-    "source_path": "data/images_extended/417be19f-dc38-59b4-b7e8-a8c6851f5d53/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "417be19f-dc38-59b4-b7e8-a8c6851f5d53/vivino_2.jpg"
-  },
-  {
     "id": "98e5adf8-5879-55c1-90d3-93b1fc4ebaa6",
     "wine_id": "418e01a7-6993-50ae-9231-4a7355d68342",
     "source_url": null,
@@ -60334,24 +59596,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "41c118ad-6326-5535-85fd-0d44d50cbfe9/main.jpg"
-  },
-  {
-    "id": "5b65ae54-1f89-5e4b-a1c0-58d3e4eae749",
-    "wine_id": "41c118ad-6326-5535-85fd-0d44d50cbfe9",
-    "source_url": null,
-    "source_path": "data/images_extended/41c118ad-6326-5535-85fd-0d44d50cbfe9/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "41c118ad-6326-5535-85fd-0d44d50cbfe9/vivino_1.jpg"
-  },
-  {
-    "id": "f8dbd43f-edec-5274-800b-e6fd32e403fa",
-    "wine_id": "41c118ad-6326-5535-85fd-0d44d50cbfe9",
-    "source_url": null,
-    "source_path": "data/images_extended/41c118ad-6326-5535-85fd-0d44d50cbfe9/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "41c118ad-6326-5535-85fd-0d44d50cbfe9/vivino_3.jpg"
   },
   {
     "id": "13eb02d9-3bb2-4f70-92d0-24c752fbc4b0",
@@ -63171,15 +62415,6 @@
     "minio_path": "459bcb3a-1aa7-522a-a54e-a54c02d7f7e2/main.jpg"
   },
   {
-    "id": "dfc2ed90-feed-4a05-8d6e-7fba8462d069",
-    "wine_id": "459bcb3a-1aa7-522a-a54e-a54c02d7f7e2",
-    "source_url": null,
-    "source_path": "data/images_extended/459bcb3a-1aa7-522a-a54e-a54c02d7f7e2/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "459bcb3a-1aa7-522a-a54e-a54c02d7f7e2/vivino_1.jpg"
-  },
-  {
     "id": "dcc855ac-9c86-42f7-912b-0ad3cc1ec600",
     "wine_id": "459bcb3a-1aa7-522a-a54e-a54c02d7f7e2",
     "source_url": null,
@@ -63711,15 +62946,6 @@
     "minio_path": "46420a73-9dc0-5e7d-b876-95875f6937a2/main.jpg"
   },
   {
-    "id": "457eafa9-682a-40ad-bc46-b7062ff468ce",
-    "wine_id": "46420a73-9dc0-5e7d-b876-95875f6937a2",
-    "source_url": null,
-    "source_path": "data/images_extended/46420a73-9dc0-5e7d-b876-95875f6937a2/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "46420a73-9dc0-5e7d-b876-95875f6937a2/vivino_1.jpg"
-  },
-  {
     "id": "1b3d03c7-b31b-4b67-a8bb-80623bb21df2",
     "wine_id": "46420a73-9dc0-5e7d-b876-95875f6937a2",
     "source_url": null,
@@ -63844,15 +63070,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "46b35417-82ee-5812-89fb-b96cea3c8d7f/vivino_1.jpg"
-  },
-  {
-    "id": "9c3a0bc7-bc75-4757-9b93-8312f2e6773c",
-    "wine_id": "46b35417-82ee-5812-89fb-b96cea3c8d7f",
-    "source_url": null,
-    "source_path": "data/images_extended/46b35417-82ee-5812-89fb-b96cea3c8d7f/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "46b35417-82ee-5812-89fb-b96cea3c8d7f/vivino_2.jpg"
   },
   {
     "id": "795fb60f-c47f-5a4b-beba-25d99ad01b18",
@@ -65349,15 +64566,6 @@
     "minio_path": "49c31387-d771-53ba-af24-cf0948b209a0/main.jpg"
   },
   {
-    "id": "3a768b01-39cb-5e3e-94b5-df682bcb9400",
-    "wine_id": "49c31387-d771-53ba-af24-cf0948b209a0",
-    "source_url": null,
-    "source_path": "data/images_extended/49c31387-d771-53ba-af24-cf0948b209a0/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "49c31387-d771-53ba-af24-cf0948b209a0/vivino_1.jpg"
-  },
-  {
     "id": "b171b925-d452-5ea3-bd00-3118d40f75a8",
     "wine_id": "49df4d20-9156-52ca-ab9a-aacdc604f931",
     "source_url": null,
@@ -66193,15 +65401,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "4a9356ea-7ac6-566d-b375-8d1caebf6b1c/main.jpg"
-  },
-  {
-    "id": "7490e34e-2150-4b00-a1a2-2dd62c439f87",
-    "wine_id": "4a9356ea-7ac6-566d-b375-8d1caebf6b1c",
-    "source_url": null,
-    "source_path": "data/images_extended/4a9356ea-7ac6-566d-b375-8d1caebf6b1c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4a9356ea-7ac6-566d-b375-8d1caebf6b1c/vivino_1.jpg"
   },
   {
     "id": "2e83fba0-7b4b-4291-aaf5-3fdec483ee95",
@@ -67167,24 +66366,6 @@
     "minio_path": "4b7ec91b-2428-557b-ba6b-f140a2ebde1a/main.jpg"
   },
   {
-    "id": "0d6a197d-7af0-4c17-8da6-ccc8064811fb",
-    "wine_id": "4b7ec91b-2428-557b-ba6b-f140a2ebde1a",
-    "source_url": null,
-    "source_path": "data/images_extended/4b7ec91b-2428-557b-ba6b-f140a2ebde1a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4b7ec91b-2428-557b-ba6b-f140a2ebde1a/vivino_1.jpg"
-  },
-  {
-    "id": "da06ac6c-f85c-4971-afc7-51d990035d7c",
-    "wine_id": "4b7ec91b-2428-557b-ba6b-f140a2ebde1a",
-    "source_url": null,
-    "source_path": "data/images_extended/4b7ec91b-2428-557b-ba6b-f140a2ebde1a/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4b7ec91b-2428-557b-ba6b-f140a2ebde1a/vivino_2.jpg"
-  },
-  {
     "id": "5dfb2f59-a92a-4c75-a2f1-3690b9e14b81",
     "wine_id": "4b7ec91b-2428-557b-ba6b-f140a2ebde1a",
     "source_url": null,
@@ -67291,15 +66472,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "4b906490-bb35-595e-adef-59738f2690f8/main.jpg"
-  },
-  {
-    "id": "940bb88d-3cc2-4907-9b05-079461dd2891",
-    "wine_id": "4b906490-bb35-595e-adef-59738f2690f8",
-    "source_url": null,
-    "source_path": "data/images_extended/4b906490-bb35-595e-adef-59738f2690f8/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4b906490-bb35-595e-adef-59738f2690f8/vivino_1.jpg"
   },
   {
     "id": "12c3f7af-51a4-53b6-9174-6cf0a6912cce",
@@ -67869,15 +67041,6 @@
     "minio_path": "4c50311e-846d-5baa-8489-0fd29a6670b5/main.jpg"
   },
   {
-    "id": "97f52509-1c6f-4099-b33d-7d0e7595a218",
-    "wine_id": "4c50311e-846d-5baa-8489-0fd29a6670b5",
-    "source_url": null,
-    "source_path": "data/images_extended/4c50311e-846d-5baa-8489-0fd29a6670b5/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4c50311e-846d-5baa-8489-0fd29a6670b5/vivino_1.jpg"
-  },
-  {
     "id": "cb19bb42-1359-5a4a-a910-323b2f43de10",
     "wine_id": "4c50311e-846d-5baa-8489-0fd29a6670b5",
     "source_url": null,
@@ -68434,15 +67597,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "4d69f964-c641-551d-b696-0ce3aad9850e/main.jpg"
-  },
-  {
-    "id": "59721e45-15d2-4ab2-910a-ac620781fb6e",
-    "wine_id": "4d69f964-c641-551d-b696-0ce3aad9850e",
-    "source_url": null,
-    "source_path": "data/images_extended/4d69f964-c641-551d-b696-0ce3aad9850e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4d69f964-c641-551d-b696-0ce3aad9850e/vivino_1.jpg"
   },
   {
     "id": "4d015cc3-ca5f-5b4f-b9cb-0aa68fcc4d8d",
@@ -69199,15 +68353,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "4dffa075-3326-58e8-ab62-e29ae59510db/main.jpg"
-  },
-  {
-    "id": "d32a8023-a1c8-49a7-9216-87270aade3ea",
-    "wine_id": "4dffa075-3326-58e8-ab62-e29ae59510db",
-    "source_url": null,
-    "source_path": "data/images_extended/4dffa075-3326-58e8-ab62-e29ae59510db/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4dffa075-3326-58e8-ab62-e29ae59510db/vivino_1.jpg"
   },
   {
     "id": "a24adc2c-1860-5dba-a743-12359cd3091b",
@@ -70236,24 +69381,6 @@
     "minio_path": "4ed6ebde-c7d6-54be-b310-e106207b91ce/main.jpg"
   },
   {
-    "id": "e759ba5b-a652-4f74-bde1-82e7111ada72",
-    "wine_id": "4ed6ebde-c7d6-54be-b310-e106207b91ce",
-    "source_url": null,
-    "source_path": "data/images_extended/4ed6ebde-c7d6-54be-b310-e106207b91ce/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4ed6ebde-c7d6-54be-b310-e106207b91ce/vivino_1.jpg"
-  },
-  {
-    "id": "4c19cffa-4f33-4619-93ba-7a35f93e22d0",
-    "wine_id": "4ed6ebde-c7d6-54be-b310-e106207b91ce",
-    "source_url": null,
-    "source_path": "data/images_extended/4ed6ebde-c7d6-54be-b310-e106207b91ce/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4ed6ebde-c7d6-54be-b310-e106207b91ce/vivino_2.jpg"
-  },
-  {
     "id": "bad2c532-ca54-49ff-94ee-4ce648eed52a",
     "wine_id": "4ed6ebde-c7d6-54be-b310-e106207b91ce",
     "source_url": null,
@@ -71008,42 +70135,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "4fe258cf-8dc6-5628-96f4-d8b191038fb4/main.jpg"
-  },
-  {
-    "id": "c0fcd630-5905-5bc6-99c4-5a18d9b2b599",
-    "wine_id": "4fe258cf-8dc6-5628-96f4-d8b191038fb4",
-    "source_url": null,
-    "source_path": "data/images_extended/4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_1.jpg"
-  },
-  {
-    "id": "6d87a412-fb6f-53d3-9337-429bb0adfede",
-    "wine_id": "4fe258cf-8dc6-5628-96f4-d8b191038fb4",
-    "source_url": null,
-    "source_path": "data/images_extended/4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_2.jpg"
-  },
-  {
-    "id": "55b4e266-d436-5db7-9bcd-3b7d2ae0cb79",
-    "wine_id": "4fe258cf-8dc6-5628-96f4-d8b191038fb4",
-    "source_url": null,
-    "source_path": "data/images_extended/4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_3.jpg"
-  },
-  {
-    "id": "6dca6f55-a7bf-5a23-90d6-054b13b09b49",
-    "wine_id": "4fe258cf-8dc6-5628-96f4-d8b191038fb4",
-    "source_url": null,
-    "source_path": "data/images_extended/4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "4fe258cf-8dc6-5628-96f4-d8b191038fb4/vivino_4.jpg"
   },
   {
     "id": "57471063-d87c-4ca8-8819-101d127c052c",
@@ -72792,24 +71883,6 @@
     "minio_path": "521efbef-3401-58b5-b853-10c02549aa3d/main.jpg"
   },
   {
-    "id": "92e7b7b7-f8db-48b7-9d2f-86c8673f00c4",
-    "wine_id": "521efbef-3401-58b5-b853-10c02549aa3d",
-    "source_url": null,
-    "source_path": "data/images_extended/521efbef-3401-58b5-b853-10c02549aa3d/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "521efbef-3401-58b5-b853-10c02549aa3d/vivino_1.jpg"
-  },
-  {
-    "id": "04ff4dcb-e2ec-47ea-b24d-54f89925643e",
-    "wine_id": "521efbef-3401-58b5-b853-10c02549aa3d",
-    "source_url": null,
-    "source_path": "data/images_extended/521efbef-3401-58b5-b853-10c02549aa3d/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "521efbef-3401-58b5-b853-10c02549aa3d/vivino_2.jpg"
-  },
-  {
     "id": "94f46bb8-eddc-4b51-8f51-68484e5de92b",
     "wine_id": "521efbef-3401-58b5-b853-10c02549aa3d",
     "source_url": null,
@@ -73656,24 +72729,6 @@
     "minio_path": "53345ce4-83cd-5d76-a814-791519446997/main.jpg"
   },
   {
-    "id": "f4b4e810-2ffc-42a8-8e48-ae2ab362bc01",
-    "wine_id": "53345ce4-83cd-5d76-a814-791519446997",
-    "source_url": null,
-    "source_path": "data/images_extended/53345ce4-83cd-5d76-a814-791519446997/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "53345ce4-83cd-5d76-a814-791519446997/vivino_1.jpg"
-  },
-  {
-    "id": "e1b8de93-13e9-4a5d-b658-986866f9bb34",
-    "wine_id": "53345ce4-83cd-5d76-a814-791519446997",
-    "source_url": null,
-    "source_path": "data/images_extended/53345ce4-83cd-5d76-a814-791519446997/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "53345ce4-83cd-5d76-a814-791519446997/vivino_2.jpg"
-  },
-  {
     "id": "7579cb04-d067-4ba9-b07b-f64e83888d87",
     "wine_id": "53345ce4-83cd-5d76-a814-791519446997",
     "source_url": null,
@@ -74482,24 +73537,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "53fbbf97-4b5d-5e68-b6fe-bcbd979491f9/main.jpg"
-  },
-  {
-    "id": "7d1dec33-383e-4db5-8654-3956b02db3e8",
-    "wine_id": "53fbbf97-4b5d-5e68-b6fe-bcbd979491f9",
-    "source_url": null,
-    "source_path": "data/images_extended/53fbbf97-4b5d-5e68-b6fe-bcbd979491f9/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "53fbbf97-4b5d-5e68-b6fe-bcbd979491f9/vivino_1.jpg"
-  },
-  {
-    "id": "8becfe2a-2bf6-472f-a3ec-c9f69e217c5b",
-    "wine_id": "53fbbf97-4b5d-5e68-b6fe-bcbd979491f9",
-    "source_url": null,
-    "source_path": "data/images_extended/53fbbf97-4b5d-5e68-b6fe-bcbd979491f9/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "53fbbf97-4b5d-5e68-b6fe-bcbd979491f9/vivino_2.jpg"
   },
   {
     "id": "3055fc3f-6e73-4f70-a57c-42936e2352fa",
@@ -77301,24 +76338,6 @@
     "minio_path": "57ad0898-a27b-5d04-8492-a3d1e9cf1277/main.jpg"
   },
   {
-    "id": "07b25304-d10d-4498-9655-614b98396711",
-    "wine_id": "57ad0898-a27b-5d04-8492-a3d1e9cf1277",
-    "source_url": null,
-    "source_path": "data/images_extended/57ad0898-a27b-5d04-8492-a3d1e9cf1277/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "57ad0898-a27b-5d04-8492-a3d1e9cf1277/vivino_1.jpg"
-  },
-  {
-    "id": "04d88f13-d735-43c6-a16a-d8b00efc0c70",
-    "wine_id": "57ad0898-a27b-5d04-8492-a3d1e9cf1277",
-    "source_url": null,
-    "source_path": "data/images_extended/57ad0898-a27b-5d04-8492-a3d1e9cf1277/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "57ad0898-a27b-5d04-8492-a3d1e9cf1277/vivino_2.jpg"
-  },
-  {
     "id": "81c7e884-78a7-4919-addc-f5aab2f13e7d",
     "wine_id": "57ad0898-a27b-5d04-8492-a3d1e9cf1277",
     "source_url": null,
@@ -78210,15 +77229,6 @@
     "minio_path": "58c1ff0b-47fb-569c-8145-cbee36230547/main.jpg"
   },
   {
-    "id": "fb4b77a1-04a3-52f5-91b0-5f38b5a8c80b",
-    "wine_id": "58c1ff0b-47fb-569c-8145-cbee36230547",
-    "source_url": null,
-    "source_path": "data/images_extended/58c1ff0b-47fb-569c-8145-cbee36230547/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "58c1ff0b-47fb-569c-8145-cbee36230547/vivino_3.jpg"
-  },
-  {
     "id": "a1ac40a9-5217-4089-b297-0d8690ed0b1b",
     "wine_id": "58c1ff0b-47fb-569c-8145-cbee36230547",
     "source_url": null,
@@ -79099,15 +78109,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "5ae4f2ce-a4d1-5b7f-9af6-6443133c3249/main.jpg"
-  },
-  {
-    "id": "ba272f1f-b55d-4b1e-b4c5-2f3957c4bb1a",
-    "wine_id": "5ae4f2ce-a4d1-5b7f-9af6-6443133c3249",
-    "source_url": null,
-    "source_path": "data/images_extended/5ae4f2ce-a4d1-5b7f-9af6-6443133c3249/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5ae4f2ce-a4d1-5b7f-9af6-6443133c3249/vivino_3.jpg"
   },
   {
     "id": "51e7bd08-54d8-5288-9674-129999bf9100",
@@ -80019,24 +79020,6 @@
     "minio_path": "5bafc647-d1eb-5e7d-b21a-fb20110db958/main.jpg"
   },
   {
-    "id": "12e519b2-33fe-422c-bae5-66b554a66766",
-    "wine_id": "5bafc647-d1eb-5e7d-b21a-fb20110db958",
-    "source_url": null,
-    "source_path": "data/images_extended/5bafc647-d1eb-5e7d-b21a-fb20110db958/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5bafc647-d1eb-5e7d-b21a-fb20110db958/vivino_1.jpg"
-  },
-  {
-    "id": "98bcda2a-4a9c-417c-885b-1ed1b6a67906",
-    "wine_id": "5bafc647-d1eb-5e7d-b21a-fb20110db958",
-    "source_url": null,
-    "source_path": "data/images_extended/5bafc647-d1eb-5e7d-b21a-fb20110db958/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5bafc647-d1eb-5e7d-b21a-fb20110db958/vivino_2.jpg"
-  },
-  {
     "id": "f1f4a491-76ac-57b5-9cc7-3aaef023b8d2",
     "wine_id": "5bca3a90-e493-52d4-a110-06d0a7b66f72",
     "source_url": null,
@@ -80719,24 +79702,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "5c38a750-5908-5aae-91fb-c5dfd0030cac/main.jpg"
-  },
-  {
-    "id": "c8d4a817-8a34-4984-a044-afc1dcfadc9d",
-    "wine_id": "5c38a750-5908-5aae-91fb-c5dfd0030cac",
-    "source_url": null,
-    "source_path": "data/images_extended/5c38a750-5908-5aae-91fb-c5dfd0030cac/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5c38a750-5908-5aae-91fb-c5dfd0030cac/vivino_1.jpg"
-  },
-  {
-    "id": "39658942-523a-42f3-a34c-e5ecf9d3cf92",
-    "wine_id": "5c38a750-5908-5aae-91fb-c5dfd0030cac",
-    "source_url": null,
-    "source_path": "data/images_extended/5c38a750-5908-5aae-91fb-c5dfd0030cac/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5c38a750-5908-5aae-91fb-c5dfd0030cac/vivino_2.jpg"
   },
   {
     "id": "1f98db97-c66c-5d92-b757-af4ba382a1ae",
@@ -81801,24 +80766,6 @@
     "minio_path": "5dc610e4-3859-55f3-bb57-0751c35c188c/vivino_1.jpg"
   },
   {
-    "id": "8e316b2f-33d0-4af7-bbb3-2932b808860b",
-    "wine_id": "5dc610e4-3859-55f3-bb57-0751c35c188c",
-    "source_url": null,
-    "source_path": "data/images_extended/5dc610e4-3859-55f3-bb57-0751c35c188c/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5dc610e4-3859-55f3-bb57-0751c35c188c/vivino_2.jpg"
-  },
-  {
-    "id": "9c52f2f6-eac2-4909-ad34-05a09b2ea42b",
-    "wine_id": "5dc610e4-3859-55f3-bb57-0751c35c188c",
-    "source_url": null,
-    "source_path": "data/images_extended/5dc610e4-3859-55f3-bb57-0751c35c188c/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5dc610e4-3859-55f3-bb57-0751c35c188c/vivino_3.jpg"
-  },
-  {
     "id": "572af5dd-3d26-4b16-9a3d-3c6dfe8dfc1f",
     "wine_id": "5dc610e4-3859-55f3-bb57-0751c35c188c",
     "source_url": null,
@@ -81916,15 +80863,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "5de1df9a-bb94-5df3-8f90-a89d12a758fb/main.jpg"
-  },
-  {
-    "id": "80f51582-4578-4c67-b492-f4eda0217514",
-    "wine_id": "5de1df9a-bb94-5df3-8f90-a89d12a758fb",
-    "source_url": null,
-    "source_path": "data/images_extended/5de1df9a-bb94-5df3-8f90-a89d12a758fb/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5de1df9a-bb94-5df3-8f90-a89d12a758fb/vivino_1.jpg"
   },
   {
     "id": "1b5eb549-5f0d-4acc-8384-b7a16c069002",
@@ -82645,15 +81583,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "5ec8adb0-b3a5-5bc3-af9c-b463a35ebebc/vivino_1.jpg"
-  },
-  {
-    "id": "817423f1-0cb7-444e-a9a2-1d619f252877",
-    "wine_id": "5ec8adb0-b3a5-5bc3-af9c-b463a35ebebc",
-    "source_url": null,
-    "source_path": "data/images_extended/5ec8adb0-b3a5-5bc3-af9c-b463a35ebebc/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5ec8adb0-b3a5-5bc3-af9c-b463a35ebebc/vivino_2.jpg"
   },
   {
     "id": "d55f8f13-44df-53a5-9a11-2de9d0853378",
@@ -84195,15 +83124,6 @@
     "minio_path": "5fdd2321-bea3-5965-a7de-cd6f5259f2fa/main.jpg"
   },
   {
-    "id": "eb515bc6-74ba-4337-8b71-059336194e0b",
-    "wine_id": "5fdd2321-bea3-5965-a7de-cd6f5259f2fa",
-    "source_url": null,
-    "source_path": "data/images_extended/5fdd2321-bea3-5965-a7de-cd6f5259f2fa/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "5fdd2321-bea3-5965-a7de-cd6f5259f2fa/vivino_2.jpg"
-  },
-  {
     "id": "701e46ac-0ca1-5b3d-b9d1-8070b0542b55",
     "wine_id": "6027dc50-cbee-5fa8-b307-bb9779324f5b",
     "source_url": null,
@@ -84715,15 +83635,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "609532d4-fe41-5fc0-a5f5-a4e251dc11c4/vivino_1.jpg"
-  },
-  {
-    "id": "6075b6e9-759e-5bd4-92c7-ebbac65a7194",
-    "wine_id": "609532d4-fe41-5fc0-a5f5-a4e251dc11c4",
-    "source_url": null,
-    "source_path": "data/images_extended/609532d4-fe41-5fc0-a5f5-a4e251dc11c4/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "609532d4-fe41-5fc0-a5f5-a4e251dc11c4/vivino_2.jpg"
   },
   {
     "id": "0d90d3df-9a8d-59ac-8b18-a210a62946e1",
@@ -87237,15 +86148,6 @@
     "minio_path": "6242d72c-c85f-5a37-85af-7a034e00e412/main.jpg"
   },
   {
-    "id": "43d2f1be-19b0-40d7-a28b-768ba6e27edd",
-    "wine_id": "6242d72c-c85f-5a37-85af-7a034e00e412",
-    "source_url": null,
-    "source_path": "data/images_extended/6242d72c-c85f-5a37-85af-7a034e00e412/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6242d72c-c85f-5a37-85af-7a034e00e412/vivino_1.jpg"
-  },
-  {
     "id": "3ada17af-015e-4169-a1ac-60eb0bb8d731",
     "wine_id": "6242d72c-c85f-5a37-85af-7a034e00e412",
     "source_url": null,
@@ -89199,24 +88101,6 @@
     "minio_path": "6423ad72-1885-5516-a2d9-e1a875c73512/main.jpg"
   },
   {
-    "id": "c0a6e8b1-1aa0-40d7-917d-62f1748ea509",
-    "wine_id": "6423ad72-1885-5516-a2d9-e1a875c73512",
-    "source_url": null,
-    "source_path": "data/images_extended/6423ad72-1885-5516-a2d9-e1a875c73512/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6423ad72-1885-5516-a2d9-e1a875c73512/vivino_1.jpg"
-  },
-  {
-    "id": "61128e89-9778-4294-882e-385a2a456b46",
-    "wine_id": "6423ad72-1885-5516-a2d9-e1a875c73512",
-    "source_url": null,
-    "source_path": "data/images_extended/6423ad72-1885-5516-a2d9-e1a875c73512/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6423ad72-1885-5516-a2d9-e1a875c73512/vivino_2.jpg"
-  },
-  {
     "id": "cf714a57-ae82-5fc8-a900-4628f622b804",
     "wine_id": "64aab18d-9b91-51ee-bfc1-15c89ae08e84",
     "source_url": null,
@@ -89764,24 +88648,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "6514f956-69b6-588f-8c6d-5e5558d3c899/main.jpg"
-  },
-  {
-    "id": "7e76391d-eb72-41b9-a03c-d0e3f389696b",
-    "wine_id": "6514f956-69b6-588f-8c6d-5e5558d3c899",
-    "source_url": null,
-    "source_path": "data/images_extended/6514f956-69b6-588f-8c6d-5e5558d3c899/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6514f956-69b6-588f-8c6d-5e5558d3c899/vivino_1.jpg"
-  },
-  {
-    "id": "d628c08e-f6e3-4ec4-9a12-f7e9cb89d52b",
-    "wine_id": "6514f956-69b6-588f-8c6d-5e5558d3c899",
-    "source_url": null,
-    "source_path": "data/images_extended/6514f956-69b6-588f-8c6d-5e5558d3c899/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6514f956-69b6-588f-8c6d-5e5558d3c899/vivino_2.jpg"
   },
   {
     "id": "91f7f3da-5aaf-41c2-b528-85fb8206f49d",
@@ -91503,24 +90369,6 @@
     "minio_path": "68535b57-1652-542d-b356-68e483a0ff12/main.jpg"
   },
   {
-    "id": "d8364254-d464-5283-9949-a19e8765b6d2",
-    "wine_id": "68535b57-1652-542d-b356-68e483a0ff12",
-    "source_url": null,
-    "source_path": "data/images_extended/68535b57-1652-542d-b356-68e483a0ff12/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "68535b57-1652-542d-b356-68e483a0ff12/vivino_1.jpg"
-  },
-  {
-    "id": "4c989db4-db83-5976-88fb-7948768be5b5",
-    "wine_id": "68535b57-1652-542d-b356-68e483a0ff12",
-    "source_url": null,
-    "source_path": "data/images_extended/68535b57-1652-542d-b356-68e483a0ff12/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "68535b57-1652-542d-b356-68e483a0ff12/vivino_2.jpg"
-  },
-  {
     "id": "d43464cb-9233-4360-90bc-11bdbd681c0c",
     "wine_id": "68535b57-1652-542d-b356-68e483a0ff12",
     "source_url": null,
@@ -91663,15 +90511,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "68537a8a-e953-5d27-af57-70b309faf5e4/vivino_1.jpg"
-  },
-  {
-    "id": "6d62b516-36bb-4642-a243-d7d93144a394",
-    "wine_id": "68537a8a-e953-5d27-af57-70b309faf5e4",
-    "source_url": null,
-    "source_path": "data/images_extended/68537a8a-e953-5d27-af57-70b309faf5e4/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "68537a8a-e953-5d27-af57-70b309faf5e4/vivino_2.jpg"
   },
   {
     "id": "e9f2da3b-f8df-4bb5-be3f-ab66725d9238",
@@ -92466,24 +91305,6 @@
     "minio_path": "692b0929-86f1-5ef5-845c-2ae528311be2/main.jpg"
   },
   {
-    "id": "a0e7189f-f6e0-48ac-8ada-95d5bd3c6f0a",
-    "wine_id": "692b0929-86f1-5ef5-845c-2ae528311be2",
-    "source_url": null,
-    "source_path": "data/images_extended/692b0929-86f1-5ef5-845c-2ae528311be2/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "692b0929-86f1-5ef5-845c-2ae528311be2/vivino_1.jpg"
-  },
-  {
-    "id": "c31ed322-318d-499b-9aab-21492b17f624",
-    "wine_id": "692b0929-86f1-5ef5-845c-2ae528311be2",
-    "source_url": null,
-    "source_path": "data/images_extended/692b0929-86f1-5ef5-845c-2ae528311be2/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "692b0929-86f1-5ef5-845c-2ae528311be2/vivino_2.jpg"
-  },
-  {
     "id": "cd914778-741f-4ecb-bc64-8182882a2009",
     "wine_id": "692b0929-86f1-5ef5-845c-2ae528311be2",
     "source_url": null,
@@ -92914,24 +91735,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "698fc0c9-bc2e-54e9-8842-57edb8666ab7/main.jpg"
-  },
-  {
-    "id": "3c01bcc9-9fa8-5dad-9802-c146beef29d4",
-    "wine_id": "698fc0c9-bc2e-54e9-8842-57edb8666ab7",
-    "source_url": null,
-    "source_path": "data/images_extended/698fc0c9-bc2e-54e9-8842-57edb8666ab7/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "698fc0c9-bc2e-54e9-8842-57edb8666ab7/vivino_1.jpg"
-  },
-  {
-    "id": "4d086e11-9a6d-563a-a254-8192851b1e08",
-    "wine_id": "698fc0c9-bc2e-54e9-8842-57edb8666ab7",
-    "source_url": null,
-    "source_path": "data/images_extended/698fc0c9-bc2e-54e9-8842-57edb8666ab7/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "698fc0c9-bc2e-54e9-8842-57edb8666ab7/vivino_2.jpg"
   },
   {
     "id": "fd4f8c34-3b33-4474-acef-709b017577f3",
@@ -96471,15 +95274,6 @@
     "minio_path": "6c7da781-30d3-5260-9ae7-94770ea56c12/main.jpg"
   },
   {
-    "id": "36a32a65-ed25-4d6e-a4f3-2e31ca0ff648",
-    "wine_id": "6c7da781-30d3-5260-9ae7-94770ea56c12",
-    "source_url": null,
-    "source_path": "data/images_extended/6c7da781-30d3-5260-9ae7-94770ea56c12/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6c7da781-30d3-5260-9ae7-94770ea56c12/vivino_1.jpg"
-  },
-  {
     "id": "7f0ae9d6-b4d4-48b3-ba0d-10236dc4683b",
     "wine_id": "6c7da781-30d3-5260-9ae7-94770ea56c12",
     "source_url": null,
@@ -96865,15 +95659,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "6d2fef2b-2e19-55a7-9b5f-5b6e13961c58/main.jpg"
-  },
-  {
-    "id": "5c02d408-0845-4ace-927f-68f045a06369",
-    "wine_id": "6d2fef2b-2e19-55a7-9b5f-5b6e13961c58",
-    "source_url": null,
-    "source_path": "data/images_extended/6d2fef2b-2e19-55a7-9b5f-5b6e13961c58/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6d2fef2b-2e19-55a7-9b5f-5b6e13961c58/vivino_1.jpg"
   },
   {
     "id": "0aa18293-abc2-40ae-b6f5-5ab29a39ac00",
@@ -98269,15 +97054,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "6efe3cde-7e19-55bf-a6c9-2c0382069611/vivino_1.jpg"
-  },
-  {
-    "id": "1f854958-48c7-4a25-b1ea-7d230a4548e0",
-    "wine_id": "6efe3cde-7e19-55bf-a6c9-2c0382069611",
-    "source_url": null,
-    "source_path": "data/images_extended/6efe3cde-7e19-55bf-a6c9-2c0382069611/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "6efe3cde-7e19-55bf-a6c9-2c0382069611/vivino_2.jpg"
   },
   {
     "id": "e4a3c5f6-40f0-4ba7-ac18-b747ceee6b1e",
@@ -101223,15 +99999,6 @@
     "minio_path": "72662e3e-2c03-5636-8599-846baaad2684/main.jpg"
   },
   {
-    "id": "2b411476-e0e3-4a8c-a382-c523bbcfa5f3",
-    "wine_id": "72662e3e-2c03-5636-8599-846baaad2684",
-    "source_url": null,
-    "source_path": "data/images_extended/72662e3e-2c03-5636-8599-846baaad2684/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "72662e3e-2c03-5636-8599-846baaad2684/vivino_1.jpg"
-  },
-  {
     "id": "7a4f49e1-0c16-5d7b-9eda-d060fec75622",
     "wine_id": "726e6aad-d52e-5dcc-b44f-5db1210466b0",
     "source_url": null,
@@ -101419,15 +100186,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "72dc5966-3b9c-521d-a995-7e68b1ddb493/main.jpg"
-  },
-  {
-    "id": "5a53eba6-4d86-4901-9bb9-7679da1ef7f8",
-    "wine_id": "72dc5966-3b9c-521d-a995-7e68b1ddb493",
-    "source_url": null,
-    "source_path": "data/images_extended/72dc5966-3b9c-521d-a995-7e68b1ddb493/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "72dc5966-3b9c-521d-a995-7e68b1ddb493/vivino_1.jpg"
   },
   {
     "id": "f639fe3a-7f17-4888-a866-3850316667ec",
@@ -102031,24 +100789,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "7368d510-5fee-5c1a-9cba-d0e4f0f24a31/main.jpg"
-  },
-  {
-    "id": "444042c7-451f-4ae0-8e4b-b0f4fabec41b",
-    "wine_id": "7368d510-5fee-5c1a-9cba-d0e4f0f24a31",
-    "source_url": null,
-    "source_path": "data/images_extended/7368d510-5fee-5c1a-9cba-d0e4f0f24a31/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7368d510-5fee-5c1a-9cba-d0e4f0f24a31/vivino_1.jpg"
-  },
-  {
-    "id": "4b931bca-3724-4fe6-983b-4d4d8522bcde",
-    "wine_id": "7368d510-5fee-5c1a-9cba-d0e4f0f24a31",
-    "source_url": null,
-    "source_path": "data/images_extended/7368d510-5fee-5c1a-9cba-d0e4f0f24a31/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7368d510-5fee-5c1a-9cba-d0e4f0f24a31/vivino_2.jpg"
   },
   {
     "id": "14e15f7b-7a57-57c5-9c41-ad84100d50a4",
@@ -105570,24 +104310,6 @@
     "minio_path": "79196107-6469-5b3f-9c5b-a7d71e3e6f6f/main.jpg"
   },
   {
-    "id": "94a32396-bb99-40c7-bb4d-19fd48148ff5",
-    "wine_id": "79196107-6469-5b3f-9c5b-a7d71e3e6f6f",
-    "source_url": null,
-    "source_path": "data/images_extended/79196107-6469-5b3f-9c5b-a7d71e3e6f6f/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "79196107-6469-5b3f-9c5b-a7d71e3e6f6f/vivino_1.jpg"
-  },
-  {
-    "id": "db69b757-2a9c-4311-8d3a-3419c0fbcfbe",
-    "wine_id": "79196107-6469-5b3f-9c5b-a7d71e3e6f6f",
-    "source_url": null,
-    "source_path": "data/images_extended/79196107-6469-5b3f-9c5b-a7d71e3e6f6f/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "79196107-6469-5b3f-9c5b-a7d71e3e6f6f/vivino_2.jpg"
-  },
-  {
     "id": "c9126a0f-696e-44ad-998f-cfd7e5b0ca85",
     "wine_id": "79196107-6469-5b3f-9c5b-a7d71e3e6f6f",
     "source_url": null,
@@ -105885,24 +104607,6 @@
     "minio_path": "792e9d3f-0ea8-5ab3-ba11-fedc8ee93856/main.jpg"
   },
   {
-    "id": "5238b6e6-5ff3-4e15-922c-e16f23792d61",
-    "wine_id": "792e9d3f-0ea8-5ab3-ba11-fedc8ee93856",
-    "source_url": null,
-    "source_path": "data/images_extended/792e9d3f-0ea8-5ab3-ba11-fedc8ee93856/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "792e9d3f-0ea8-5ab3-ba11-fedc8ee93856/vivino_1.jpg"
-  },
-  {
-    "id": "ca625f86-08ad-4641-9d27-c7ee809ad47f",
-    "wine_id": "792e9d3f-0ea8-5ab3-ba11-fedc8ee93856",
-    "source_url": null,
-    "source_path": "data/images_extended/792e9d3f-0ea8-5ab3-ba11-fedc8ee93856/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "792e9d3f-0ea8-5ab3-ba11-fedc8ee93856/vivino_2.jpg"
-  },
-  {
     "id": "02f01d9a-901b-5c4e-9317-73b56c5aaa97",
     "wine_id": "795e7ef8-6217-5bab-8270-df65406bec66",
     "source_url": null,
@@ -106099,15 +104803,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "797a233d-42e6-540a-a5c4-44469015be5e/main.jpg"
-  },
-  {
-    "id": "22127b36-6e1f-46eb-8dc3-5311b3fd37c1",
-    "wine_id": "797a233d-42e6-540a-a5c4-44469015be5e",
-    "source_url": null,
-    "source_path": "data/images_extended/797a233d-42e6-540a-a5c4-44469015be5e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "797a233d-42e6-540a-a5c4-44469015be5e/vivino_1.jpg"
   },
   {
     "id": "6b512f4c-ffda-4e2d-966f-c57a61475f48",
@@ -106900,15 +105595,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "79d869df-e545-53fc-9eb3-32e9464fdf3a/main.jpg"
-  },
-  {
-    "id": "70ee7563-bbe2-4e37-8dc6-5abb610c88bd",
-    "wine_id": "79d869df-e545-53fc-9eb3-32e9464fdf3a",
-    "source_url": null,
-    "source_path": "data/images_extended/79d869df-e545-53fc-9eb3-32e9464fdf3a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "79d869df-e545-53fc-9eb3-32e9464fdf3a/vivino_1.jpg"
   },
   {
     "id": "f322a29a-0d97-42a2-92cf-a4758a53ce56",
@@ -108252,15 +106938,6 @@
     "minio_path": "7aed0870-57c1-5ca7-8565-291f5b3bec5a/main.jpg"
   },
   {
-    "id": "73a60038-017f-4a57-a55f-932b69cbfad0",
-    "wine_id": "7aed0870-57c1-5ca7-8565-291f5b3bec5a",
-    "source_url": null,
-    "source_path": "data/images_extended/7aed0870-57c1-5ca7-8565-291f5b3bec5a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7aed0870-57c1-5ca7-8565-291f5b3bec5a/vivino_1.jpg"
-  },
-  {
     "id": "8bac73b9-ab41-56ae-bfbe-4115880732b8",
     "wine_id": "7afdeea0-f6b6-5689-888e-84dd6c59f964",
     "source_url": null,
@@ -108835,15 +107512,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "7b6e5958-4936-55f7-8bad-805e93c447c4/main.jpg"
-  },
-  {
-    "id": "3b5d536b-b9f4-48d6-8cb2-00725556ef1a",
-    "wine_id": "7b6e5958-4936-55f7-8bad-805e93c447c4",
-    "source_url": null,
-    "source_path": "data/images_extended/7b6e5958-4936-55f7-8bad-805e93c447c4/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7b6e5958-4936-55f7-8bad-805e93c447c4/vivino_1.jpg"
   },
   {
     "id": "1bfa0409-cc85-4144-94cb-f83689ff164e",
@@ -110295,24 +108963,6 @@
     "minio_path": "7ce8d876-b844-5e43-8da1-b2107bc9f00c/main.jpg"
   },
   {
-    "id": "95401e83-4081-4be1-810c-7e5accfbb0fd",
-    "wine_id": "7ce8d876-b844-5e43-8da1-b2107bc9f00c",
-    "source_url": null,
-    "source_path": "data/images_extended/7ce8d876-b844-5e43-8da1-b2107bc9f00c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7ce8d876-b844-5e43-8da1-b2107bc9f00c/vivino_1.jpg"
-  },
-  {
-    "id": "be38eb25-065a-43e0-9d12-0b45a8df6f34",
-    "wine_id": "7ce8d876-b844-5e43-8da1-b2107bc9f00c",
-    "source_url": null,
-    "source_path": "data/images_extended/7ce8d876-b844-5e43-8da1-b2107bc9f00c/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7ce8d876-b844-5e43-8da1-b2107bc9f00c/vivino_2.jpg"
-  },
-  {
     "id": "e64b5fb9-9cdf-4f76-a3d1-4e2fa9133ca6",
     "wine_id": "7ce8d876-b844-5e43-8da1-b2107bc9f00c",
     "source_url": null,
@@ -111004,15 +109654,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "7e0bd8e1-54cb-57b5-aed3-008c69137bd1/main.jpg"
-  },
-  {
-    "id": "ab6f2b70-5ab3-4bec-b571-b550ac313ee4",
-    "wine_id": "7e0bd8e1-54cb-57b5-aed3-008c69137bd1",
-    "source_url": null,
-    "source_path": "data/images_extended/7e0bd8e1-54cb-57b5-aed3-008c69137bd1/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7e0bd8e1-54cb-57b5-aed3-008c69137bd1/vivino_1.jpg"
   },
   {
     "id": "0a0e5828-71af-50a0-a38c-1e57e294bdd2",
@@ -112264,15 +110905,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "7f679e5f-cf60-5316-bdad-374c6453bc04/main.jpg"
-  },
-  {
-    "id": "68dbff39-7457-4a37-9ba3-8b17e7837b39",
-    "wine_id": "7f679e5f-cf60-5316-bdad-374c6453bc04",
-    "source_url": null,
-    "source_path": "data/images_extended/7f679e5f-cf60-5316-bdad-374c6453bc04/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "7f679e5f-cf60-5316-bdad-374c6453bc04/vivino_1.jpg"
   },
   {
     "id": "bad083b8-e9a8-59a6-9808-db547b23aa03",
@@ -114372,15 +113004,6 @@
     "minio_path": "81f2eb70-2934-556b-a2c4-0ad9815350da/main.jpg"
   },
   {
-    "id": "4816934c-d2c6-5ecb-823e-e25fe4fb4837",
-    "wine_id": "81f2eb70-2934-556b-a2c4-0ad9815350da",
-    "source_url": null,
-    "source_path": "data/images_extended/81f2eb70-2934-556b-a2c4-0ad9815350da/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "81f2eb70-2934-556b-a2c4-0ad9815350da/vivino_1.jpg"
-  },
-  {
     "id": "0b79c0e3-2893-4f67-8fe6-ea638cabb0b9",
     "wine_id": "81f2eb70-2934-556b-a2c4-0ad9815350da",
     "source_url": null,
@@ -114847,24 +113470,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "82470d32-5e73-52dd-820f-b7a02752b5b4/main.jpg"
-  },
-  {
-    "id": "392bd52b-1ea0-4474-bd8d-dec3eacdaa84",
-    "wine_id": "82470d32-5e73-52dd-820f-b7a02752b5b4",
-    "source_url": null,
-    "source_path": "data/images_extended/82470d32-5e73-52dd-820f-b7a02752b5b4/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "82470d32-5e73-52dd-820f-b7a02752b5b4/vivino_1.jpg"
-  },
-  {
-    "id": "a9cad68a-52d5-429f-ab8b-805b2d1ae960",
-    "wine_id": "82470d32-5e73-52dd-820f-b7a02752b5b4",
-    "source_url": null,
-    "source_path": "data/images_extended/82470d32-5e73-52dd-820f-b7a02752b5b4/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "82470d32-5e73-52dd-820f-b7a02752b5b4/vivino_2.jpg"
   },
   {
     "id": "d07721ad-fb64-461d-9867-fd448896ead7",
@@ -116433,15 +115038,6 @@
     "minio_path": "841418c5-4ca7-5f53-8819-3e9c3fb5ad86/main.jpg"
   },
   {
-    "id": "fe25d255-48df-4a4a-8b7d-f4d800efe59d",
-    "wine_id": "841418c5-4ca7-5f53-8819-3e9c3fb5ad86",
-    "source_url": null,
-    "source_path": "data/images_extended/841418c5-4ca7-5f53-8819-3e9c3fb5ad86/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "841418c5-4ca7-5f53-8819-3e9c3fb5ad86/vivino_1.jpg"
-  },
-  {
     "id": "1cb0858d-3140-5225-8734-c21ccf344e07",
     "wine_id": "841418c5-4ca7-5f53-8819-3e9c3fb5ad86",
     "source_url": null,
@@ -116674,15 +115270,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "849e3e77-375b-57e7-a7cf-d2e723e10e31/main.jpg"
-  },
-  {
-    "id": "e1dae260-8607-58fc-b256-19984a4f8bf0",
-    "wine_id": "849e3e77-375b-57e7-a7cf-d2e723e10e31",
-    "source_url": null,
-    "source_path": "data/images_extended/849e3e77-375b-57e7-a7cf-d2e723e10e31/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "849e3e77-375b-57e7-a7cf-d2e723e10e31/vivino_1.jpg"
   },
   {
     "id": "5e32d72e-5aa6-46ca-9f38-a86e07e58916",
@@ -118674,15 +117261,6 @@
     "minio_path": "87c66893-a6ba-5d3c-8a5b-7329fb0808a6/main.jpg"
   },
   {
-    "id": "e21563f1-60bf-458f-bdc3-50413d8f1bd6",
-    "wine_id": "87c66893-a6ba-5d3c-8a5b-7329fb0808a6",
-    "source_url": null,
-    "source_path": "data/images_extended/87c66893-a6ba-5d3c-8a5b-7329fb0808a6/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "87c66893-a6ba-5d3c-8a5b-7329fb0808a6/vivino_1.jpg"
-  },
-  {
     "id": "db1ea1d2-0d4a-4805-910b-b43f62b69e46",
     "wine_id": "87c66893-a6ba-5d3c-8a5b-7329fb0808a6",
     "source_url": null,
@@ -119311,15 +117889,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "8860e21f-e2df-5d4f-b58c-47ab968029f1/main.jpg"
-  },
-  {
-    "id": "f5f603d8-8d30-45a5-9569-773df7f28422",
-    "wine_id": "8860e21f-e2df-5d4f-b58c-47ab968029f1",
-    "source_url": null,
-    "source_path": "data/images_extended/8860e21f-e2df-5d4f-b58c-47ab968029f1/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8860e21f-e2df-5d4f-b58c-47ab968029f1/vivino_1.jpg"
   },
   {
     "id": "8948cd73-fbf8-5102-9049-e1c5b39ff168",
@@ -121644,15 +120213,6 @@
     "minio_path": "8b1c6b52-c584-58eb-838e-201cfb46b629/main.jpg"
   },
   {
-    "id": "66b1f123-75d0-4e7c-9717-906a90f5a7fc",
-    "wine_id": "8b1c6b52-c584-58eb-838e-201cfb46b629",
-    "source_url": null,
-    "source_path": "data/images_extended/8b1c6b52-c584-58eb-838e-201cfb46b629/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8b1c6b52-c584-58eb-838e-201cfb46b629/vivino_1.jpg"
-  },
-  {
     "id": "16830e6a-eb95-5c2a-9254-18f5fa941c37",
     "wine_id": "8b23864b-561b-5519-b0ec-5e8d62248ec0",
     "source_url": null,
@@ -122614,24 +121174,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "8bc51691-be02-54ef-9be8-a3053e4a1626/main.jpg"
-  },
-  {
-    "id": "0565f305-fb41-4db1-858e-542f71f6293b",
-    "wine_id": "8bc51691-be02-54ef-9be8-a3053e4a1626",
-    "source_url": null,
-    "source_path": "data/images_extended/8bc51691-be02-54ef-9be8-a3053e4a1626/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8bc51691-be02-54ef-9be8-a3053e4a1626/vivino_1.jpg"
-  },
-  {
-    "id": "8e16d082-3c31-4f3a-8460-645b93a0adb5",
-    "wine_id": "8bc51691-be02-54ef-9be8-a3053e4a1626",
-    "source_url": null,
-    "source_path": "data/images_extended/8bc51691-be02-54ef-9be8-a3053e4a1626/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8bc51691-be02-54ef-9be8-a3053e4a1626/vivino_2.jpg"
   },
   {
     "id": "6a68116e-c544-5e4b-b735-bcee66ddcf92",
@@ -123939,15 +122481,6 @@
     "minio_path": "8cef08b0-557a-5ca5-9ee3-d26671d67a0b/vivino_5.jpg"
   },
   {
-    "id": "8bb5f19a-ce17-5cca-8df8-9207c4eba5b0",
-    "wine_id": "8cef08b0-557a-5ca5-9ee3-d26671d67a0b",
-    "source_url": null,
-    "source_path": "data/images_extended/8cef08b0-557a-5ca5-9ee3-d26671d67a0b/vivino_6/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8cef08b0-557a-5ca5-9ee3-d26671d67a0b/vivino_6.jpg"
-  },
-  {
     "id": "7a2d8344-2aed-5f71-a838-2d7344fc0b50",
     "wine_id": "8d0b9f37-1555-540f-a33d-643ef53512b3",
     "source_url": null,
@@ -124236,15 +122769,6 @@
     "minio_path": "8d1a9863-59fc-5520-ae7b-64b82adb81a6/main.jpg"
   },
   {
-    "id": "26925aa8-9e70-4456-b05d-374594c44a3a",
-    "wine_id": "8d1a9863-59fc-5520-ae7b-64b82adb81a6",
-    "source_url": null,
-    "source_path": "data/images_extended/8d1a9863-59fc-5520-ae7b-64b82adb81a6/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8d1a9863-59fc-5520-ae7b-64b82adb81a6/vivino_1.jpg"
-  },
-  {
     "id": "cdfaf14a-4e10-41ab-87a3-0b597a16c26a",
     "wine_id": "8d1a9863-59fc-5520-ae7b-64b82adb81a6",
     "source_url": null,
@@ -124369,24 +122893,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "8d3c56b8-2494-5198-a601-254116573429/main.jpg"
-  },
-  {
-    "id": "caf14f7d-faf6-4b0d-9078-9822fb9e4b92",
-    "wine_id": "8d3c56b8-2494-5198-a601-254116573429",
-    "source_url": null,
-    "source_path": "data/images_extended/8d3c56b8-2494-5198-a601-254116573429/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8d3c56b8-2494-5198-a601-254116573429/vivino_1.jpg"
-  },
-  {
-    "id": "66f5d8aa-dcf3-4e42-b4a7-91939d810abe",
-    "wine_id": "8d3c56b8-2494-5198-a601-254116573429",
-    "source_url": null,
-    "source_path": "data/images_extended/8d3c56b8-2494-5198-a601-254116573429/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8d3c56b8-2494-5198-a601-254116573429/vivino_2.jpg"
   },
   {
     "id": "dd8b4fc3-43d5-46d0-a600-3df4fd4ed893",
@@ -125325,24 +123831,6 @@
     "minio_path": "8ea03094-512b-538f-bb65-4973766e4d7b/main.jpg"
   },
   {
-    "id": "d300cd0c-f841-4bf6-a264-4672a2a18355",
-    "wine_id": "8ea03094-512b-538f-bb65-4973766e4d7b",
-    "source_url": null,
-    "source_path": "data/images_extended/8ea03094-512b-538f-bb65-4973766e4d7b/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8ea03094-512b-538f-bb65-4973766e4d7b/vivino_1.jpg"
-  },
-  {
-    "id": "3453f44e-4469-457e-a36a-fed0b50c4580",
-    "wine_id": "8ea03094-512b-538f-bb65-4973766e4d7b",
-    "source_url": null,
-    "source_path": "data/images_extended/8ea03094-512b-538f-bb65-4973766e4d7b/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8ea03094-512b-538f-bb65-4973766e4d7b/vivino_2.jpg"
-  },
-  {
     "id": "df5e1c45-c5a0-4055-a488-ffa97a7e5ac4",
     "wine_id": "8ea03094-512b-538f-bb65-4973766e4d7b",
     "source_url": null,
@@ -125863,24 +124351,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "8f0a6f03-bc34-569b-83d3-0b197a1a309c/main.jpg"
-  },
-  {
-    "id": "3f35d91d-d89a-4787-975a-9d6312996d1f",
-    "wine_id": "8f0a6f03-bc34-569b-83d3-0b197a1a309c",
-    "source_url": null,
-    "source_path": "data/images_extended/8f0a6f03-bc34-569b-83d3-0b197a1a309c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8f0a6f03-bc34-569b-83d3-0b197a1a309c/vivino_1.jpg"
-  },
-  {
-    "id": "a23d8d94-d19a-4647-aa92-a8081fc3ab7b",
-    "wine_id": "8f0a6f03-bc34-569b-83d3-0b197a1a309c",
-    "source_url": null,
-    "source_path": "data/images_extended/8f0a6f03-bc34-569b-83d3-0b197a1a309c/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8f0a6f03-bc34-569b-83d3-0b197a1a309c/vivino_2.jpg"
   },
   {
     "id": "b3370631-dbcb-557e-90d0-1236ed490f3b",
@@ -126495,42 +124965,6 @@
     "minio_path": "8f85733b-a088-593f-aaf6-2eee8c002041/main.jpg"
   },
   {
-    "id": "6596ba20-83ad-40b9-98a2-c314aaacf5e9",
-    "wine_id": "8f85733b-a088-593f-aaf6-2eee8c002041",
-    "source_url": null,
-    "source_path": "data/images_extended/8f85733b-a088-593f-aaf6-2eee8c002041/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8f85733b-a088-593f-aaf6-2eee8c002041/vivino_1.jpg"
-  },
-  {
-    "id": "92d9b2d8-7507-492a-ba17-234bed4c714c",
-    "wine_id": "8f85733b-a088-593f-aaf6-2eee8c002041",
-    "source_url": null,
-    "source_path": "data/images_extended/8f85733b-a088-593f-aaf6-2eee8c002041/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8f85733b-a088-593f-aaf6-2eee8c002041/vivino_2.jpg"
-  },
-  {
-    "id": "86df0489-ab1b-4c18-a5da-af2d9984c28a",
-    "wine_id": "8f85733b-a088-593f-aaf6-2eee8c002041",
-    "source_url": null,
-    "source_path": "data/images_extended/8f85733b-a088-593f-aaf6-2eee8c002041/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8f85733b-a088-593f-aaf6-2eee8c002041/vivino_3.jpg"
-  },
-  {
-    "id": "23af2954-d935-4e94-9ece-f6696816880a",
-    "wine_id": "8f85733b-a088-593f-aaf6-2eee8c002041",
-    "source_url": null,
-    "source_path": "data/images_extended/8f85733b-a088-593f-aaf6-2eee8c002041/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "8f85733b-a088-593f-aaf6-2eee8c002041/vivino_4.jpg"
-  },
-  {
     "id": "86f6dd6a-127b-4531-8449-77488b27a814",
     "wine_id": "8f85733b-a088-593f-aaf6-2eee8c002041",
     "source_url": null,
@@ -126934,24 +125368,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "901e3c16-f7d4-5527-8cbc-d79ac9dc5f84/main.jpg"
-  },
-  {
-    "id": "02e6c85d-8ffe-4460-9f06-1345067a52bb",
-    "wine_id": "901e3c16-f7d4-5527-8cbc-d79ac9dc5f84",
-    "source_url": null,
-    "source_path": "data/images_extended/901e3c16-f7d4-5527-8cbc-d79ac9dc5f84/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "901e3c16-f7d4-5527-8cbc-d79ac9dc5f84/vivino_1.jpg"
-  },
-  {
-    "id": "c28ca4f3-cefc-422a-ba71-8e8a0ce5e5da",
-    "wine_id": "901e3c16-f7d4-5527-8cbc-d79ac9dc5f84",
-    "source_url": null,
-    "source_path": "data/images_extended/901e3c16-f7d4-5527-8cbc-d79ac9dc5f84/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "901e3c16-f7d4-5527-8cbc-d79ac9dc5f84/vivino_2.jpg"
   },
   {
     "id": "49f3c57f-6fd7-4cb4-9e6a-d7c4eac37db6",
@@ -129006,15 +127422,6 @@
     "minio_path": "9271dac4-1f02-5cfe-9300-ab7d55be1f68/main.jpg"
   },
   {
-    "id": "f98c1926-0a92-465a-8073-137070bc78b0",
-    "wine_id": "9271dac4-1f02-5cfe-9300-ab7d55be1f68",
-    "source_url": null,
-    "source_path": "data/images_extended/9271dac4-1f02-5cfe-9300-ab7d55be1f68/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9271dac4-1f02-5cfe-9300-ab7d55be1f68/vivino_1.jpg"
-  },
-  {
     "id": "7488ce13-041f-40ec-a229-00e6928225df",
     "wine_id": "9271dac4-1f02-5cfe-9300-ab7d55be1f68",
     "source_url": null,
@@ -130050,24 +128457,6 @@
     "minio_path": "94c0d2e8-0a93-5bd9-a449-dd11245fea13/main.jpg"
   },
   {
-    "id": "8d8cdf23-e7fd-4639-b5d8-ebb2708bddad",
-    "wine_id": "94c0d2e8-0a93-5bd9-a449-dd11245fea13",
-    "source_url": null,
-    "source_path": "data/images_extended/94c0d2e8-0a93-5bd9-a449-dd11245fea13/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "94c0d2e8-0a93-5bd9-a449-dd11245fea13/vivino_1.jpg"
-  },
-  {
-    "id": "6ce008e1-6d91-4e1e-8494-c46229042c2f",
-    "wine_id": "94c0d2e8-0a93-5bd9-a449-dd11245fea13",
-    "source_url": null,
-    "source_path": "data/images_extended/94c0d2e8-0a93-5bd9-a449-dd11245fea13/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "94c0d2e8-0a93-5bd9-a449-dd11245fea13/vivino_2.jpg"
-  },
-  {
     "id": "1e46553c-c51b-4e75-bca2-1b7854d69715",
     "wine_id": "94c0d2e8-0a93-5bd9-a449-dd11245fea13",
     "source_url": null,
@@ -130950,15 +129339,6 @@
     "minio_path": "96da8971-6bdc-593c-abd8-e8a354796d49/main.jpg"
   },
   {
-    "id": "1fed321f-108b-4100-be20-628420282162",
-    "wine_id": "96da8971-6bdc-593c-abd8-e8a354796d49",
-    "source_url": null,
-    "source_path": "data/images_extended/96da8971-6bdc-593c-abd8-e8a354796d49/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "96da8971-6bdc-593c-abd8-e8a354796d49/vivino_1.jpg"
-  },
-  {
     "id": "8efee8af-a1b6-45e5-b31b-4aef635b5a8e",
     "wine_id": "96da8971-6bdc-593c-abd8-e8a354796d49",
     "source_url": null,
@@ -131524,15 +129904,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "976dcc20-9742-57f8-b236-890cfd011bc3/main.jpg"
-  },
-  {
-    "id": "9226d2ad-dc2c-4c12-93be-bb132fc47a99",
-    "wine_id": "976dcc20-9742-57f8-b236-890cfd011bc3",
-    "source_url": null,
-    "source_path": "data/images_extended/976dcc20-9742-57f8-b236-890cfd011bc3/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "976dcc20-9742-57f8-b236-890cfd011bc3/vivino_1.jpg"
   },
   {
     "id": "7fdc3d8d-1c78-4bcf-b447-b3e9bb107fdd",
@@ -132939,24 +131310,6 @@
     "minio_path": "98bb0049-d0b2-5dfe-bec7-cddff9137f24/main.jpg"
   },
   {
-    "id": "003dace1-3640-4383-867b-cbeb21f98770",
-    "wine_id": "98bb0049-d0b2-5dfe-bec7-cddff9137f24",
-    "source_url": null,
-    "source_path": "data/images_extended/98bb0049-d0b2-5dfe-bec7-cddff9137f24/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "98bb0049-d0b2-5dfe-bec7-cddff9137f24/vivino_3.jpg"
-  },
-  {
-    "id": "40e1235b-f964-4ae5-8442-12e508559ef7",
-    "wine_id": "98bb0049-d0b2-5dfe-bec7-cddff9137f24",
-    "source_url": null,
-    "source_path": "data/images_extended/98bb0049-d0b2-5dfe-bec7-cddff9137f24/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "98bb0049-d0b2-5dfe-bec7-cddff9137f24/vivino_4.jpg"
-  },
-  {
     "id": "4f972f54-2df1-489a-9307-454ca1c4be17",
     "wine_id": "98bb0049-d0b2-5dfe-bec7-cddff9137f24",
     "source_url": null,
@@ -133261,15 +131614,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "99891c2e-d4e9-59c1-a456-6b8752a5de9e/main.jpg"
-  },
-  {
-    "id": "1bc7acc7-8dba-4ee4-8ff9-49a9dcbc3904",
-    "wine_id": "99891c2e-d4e9-59c1-a456-6b8752a5de9e",
-    "source_url": null,
-    "source_path": "data/images_extended/99891c2e-d4e9-59c1-a456-6b8752a5de9e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "99891c2e-d4e9-59c1-a456-6b8752a5de9e/vivino_1.jpg"
   },
   {
     "id": "698c0e03-166b-4667-ae10-04fa5d0de494",
@@ -134602,15 +132946,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "9c21a21e-aa61-5064-8723-0c440fe05424/main.jpg"
-  },
-  {
-    "id": "736a556a-dd4e-4d1f-ab58-fceb25a2dd8f",
-    "wine_id": "9c21a21e-aa61-5064-8723-0c440fe05424",
-    "source_url": null,
-    "source_path": "data/images_extended/9c21a21e-aa61-5064-8723-0c440fe05424/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9c21a21e-aa61-5064-8723-0c440fe05424/vivino_1.jpg"
   },
   {
     "id": "39e8b8f1-fa33-4fd9-b84e-0ec343ac078d",
@@ -136260,15 +134595,6 @@
     "minio_path": "9e17b76d-9746-58ba-81f3-5c2c8f6ebf95/main.jpg"
   },
   {
-    "id": "14459a1f-6b36-5b99-a510-adfabcd7aed2",
-    "wine_id": "9e17b76d-9746-58ba-81f3-5c2c8f6ebf95",
-    "source_url": null,
-    "source_path": "data/images_extended/9e17b76d-9746-58ba-81f3-5c2c8f6ebf95/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9e17b76d-9746-58ba-81f3-5c2c8f6ebf95/vivino_1.jpg"
-  },
-  {
     "id": "8df499d8-888d-4c24-9929-ac0f04984ca3",
     "wine_id": "9e17b76d-9746-58ba-81f3-5c2c8f6ebf95",
     "source_url": null,
@@ -137241,24 +135567,6 @@
     "minio_path": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/main.jpg"
   },
   {
-    "id": "e7147d71-f73a-4292-b2f8-559c57b495fb",
-    "wine_id": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451",
-    "source_url": null,
-    "source_path": "data/images_extended/9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_1.jpg"
-  },
-  {
-    "id": "ff965244-34a1-5b5a-aca2-4b0cd6b1115c",
-    "wine_id": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451",
-    "source_url": null,
-    "source_path": "data/images_extended/9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_2.jpg"
-  },
-  {
     "id": "b16c5bf0-65eb-503d-af91-923dcd8c90b8",
     "wine_id": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451",
     "source_url": null,
@@ -137266,15 +135574,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_3.jpg"
-  },
-  {
-    "id": "f8ff47e3-ecfa-4c0e-befd-559d38799c46",
-    "wine_id": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451",
-    "source_url": null,
-    "source_path": "data/images_extended/9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9ea28252-b56d-5bbf-9ddb-68f3d0ab8451/vivino_4.jpg"
   },
   {
     "id": "915f3465-5c36-40ed-b478-666de8097abc",
@@ -138573,24 +136872,6 @@
     "minio_path": "9ff76ffa-d925-58fe-978c-047663c633fb/main.jpg"
   },
   {
-    "id": "e435cf1d-ca55-43aa-9670-242e687ef17e",
-    "wine_id": "9ff76ffa-d925-58fe-978c-047663c633fb",
-    "source_url": null,
-    "source_path": "data/images_extended/9ff76ffa-d925-58fe-978c-047663c633fb/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9ff76ffa-d925-58fe-978c-047663c633fb/vivino_1.jpg"
-  },
-  {
-    "id": "442b08be-dcdf-4347-94a2-07d5637e2e3e",
-    "wine_id": "9ff76ffa-d925-58fe-978c-047663c633fb",
-    "source_url": null,
-    "source_path": "data/images_extended/9ff76ffa-d925-58fe-978c-047663c633fb/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "9ff76ffa-d925-58fe-978c-047663c633fb/vivino_2.jpg"
-  },
-  {
     "id": "9cb59b67-dc06-4c6b-a5f3-b719f4ec57ed",
     "wine_id": "9ff76ffa-d925-58fe-978c-047663c633fb",
     "source_url": null,
@@ -139113,24 +137394,6 @@
     "minio_path": "a0cc9007-fb10-5451-a825-3a346d3de018/main.jpg"
   },
   {
-    "id": "430f7ef0-fae4-4a4c-b1d0-855395ac3187",
-    "wine_id": "a0cc9007-fb10-5451-a825-3a346d3de018",
-    "source_url": null,
-    "source_path": "data/images_extended/a0cc9007-fb10-5451-a825-3a346d3de018/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a0cc9007-fb10-5451-a825-3a346d3de018/vivino_1.jpg"
-  },
-  {
-    "id": "7e52f468-f800-4571-888d-a799c4aa3201",
-    "wine_id": "a0cc9007-fb10-5451-a825-3a346d3de018",
-    "source_url": null,
-    "source_path": "data/images_extended/a0cc9007-fb10-5451-a825-3a346d3de018/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a0cc9007-fb10-5451-a825-3a346d3de018/vivino_2.jpg"
-  },
-  {
     "id": "966671c8-1d9a-4434-b8d1-1c35a1bab12d",
     "wine_id": "a0cc9007-fb10-5451-a825-3a346d3de018",
     "source_url": null,
@@ -139453,15 +137716,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "a0f7b237-f3d2-5e80-a733-85674014c28a/main.jpg"
-  },
-  {
-    "id": "2838ac11-7276-4787-b599-63f7616ff097",
-    "wine_id": "a0f7b237-f3d2-5e80-a733-85674014c28a",
-    "source_url": null,
-    "source_path": "data/images_extended/a0f7b237-f3d2-5e80-a733-85674014c28a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a0f7b237-f3d2-5e80-a733-85674014c28a/vivino_1.jpg"
   },
   {
     "id": "42e5be12-ab69-5b76-a4d3-35c06d654f7e",
@@ -141885,15 +140139,6 @@
     "minio_path": "a2df155f-aaad-5ffa-919d-939f1e3d67ca/main.jpg"
   },
   {
-    "id": "53e3f5ec-8ce3-4620-aaf0-87abab4616a2",
-    "wine_id": "a2df155f-aaad-5ffa-919d-939f1e3d67ca",
-    "source_url": null,
-    "source_path": "data/images_extended/a2df155f-aaad-5ffa-919d-939f1e3d67ca/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a2df155f-aaad-5ffa-919d-939f1e3d67ca/vivino_2.jpg"
-  },
-  {
     "id": "5bf96c74-38bc-492b-af4a-997e1a012d3d",
     "wine_id": "a2df155f-aaad-5ffa-919d-939f1e3d67ca",
     "source_url": null,
@@ -142389,24 +140634,6 @@
     "minio_path": "a3ad5881-034f-5a15-8cc9-edc1e834e98a/main.jpg"
   },
   {
-    "id": "bf0d2400-00b9-4922-87ab-9cfb05e1036b",
-    "wine_id": "a3ad5881-034f-5a15-8cc9-edc1e834e98a",
-    "source_url": null,
-    "source_path": "data/images_extended/a3ad5881-034f-5a15-8cc9-edc1e834e98a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a3ad5881-034f-5a15-8cc9-edc1e834e98a/vivino_1.jpg"
-  },
-  {
-    "id": "e7d32f2c-35b6-4d0d-9240-868ee31d2304",
-    "wine_id": "a3ad5881-034f-5a15-8cc9-edc1e834e98a",
-    "source_url": null,
-    "source_path": "data/images_extended/a3ad5881-034f-5a15-8cc9-edc1e834e98a/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a3ad5881-034f-5a15-8cc9-edc1e834e98a/vivino_2.jpg"
-  },
-  {
     "id": "a343e308-83e9-5928-a7ac-d7143030c989",
     "wine_id": "a403bb24-fd0d-5d8c-af7d-75a0cf3139a9",
     "source_url": null,
@@ -142855,24 +141082,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "a423ffd0-7144-5912-b555-8cf5d1033645/main.jpg"
-  },
-  {
-    "id": "0ea43c79-c232-45c8-a178-165ee78c4b6b",
-    "wine_id": "a423ffd0-7144-5912-b555-8cf5d1033645",
-    "source_url": null,
-    "source_path": "data/images_extended/a423ffd0-7144-5912-b555-8cf5d1033645/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a423ffd0-7144-5912-b555-8cf5d1033645/vivino_1.jpg"
-  },
-  {
-    "id": "17154030-4598-4b84-9e98-f912a7914343",
-    "wine_id": "a423ffd0-7144-5912-b555-8cf5d1033645",
-    "source_url": null,
-    "source_path": "data/images_extended/a423ffd0-7144-5912-b555-8cf5d1033645/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a423ffd0-7144-5912-b555-8cf5d1033645/vivino_2.jpg"
   },
   {
     "id": "60096dbf-c19c-4a7a-bd61-89baaa3c9175",
@@ -143962,24 +142171,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "a5a30b05-d852-56e1-bdb2-62bad118f28c/main.jpg"
-  },
-  {
-    "id": "e196bd7c-76ee-4eb4-b5da-8f92a07d061c",
-    "wine_id": "a5a30b05-d852-56e1-bdb2-62bad118f28c",
-    "source_url": null,
-    "source_path": "data/images_extended/a5a30b05-d852-56e1-bdb2-62bad118f28c/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a5a30b05-d852-56e1-bdb2-62bad118f28c/vivino_3.jpg"
-  },
-  {
-    "id": "d2cdda7f-d027-4c56-b943-8491d06871e9",
-    "wine_id": "a5a30b05-d852-56e1-bdb2-62bad118f28c",
-    "source_url": null,
-    "source_path": "data/images_extended/a5a30b05-d852-56e1-bdb2-62bad118f28c/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a5a30b05-d852-56e1-bdb2-62bad118f28c/vivino_4.jpg"
   },
   {
     "id": "109df57b-24b7-4a55-9e2f-3ca08aa9b24f",
@@ -147537,15 +145728,6 @@
     "minio_path": "a9d12843-c517-5782-91a0-70bad6fa8480/main.jpg"
   },
   {
-    "id": "29463273-e5f9-4955-8db5-526d462870a8",
-    "wine_id": "a9d12843-c517-5782-91a0-70bad6fa8480",
-    "source_url": null,
-    "source_path": "data/images_extended/a9d12843-c517-5782-91a0-70bad6fa8480/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "a9d12843-c517-5782-91a0-70bad6fa8480/vivino_1.jpg"
-  },
-  {
     "id": "f3172c77-7708-58e4-bba9-e37a73a47f50",
     "wine_id": "aa054c40-3141-5554-8cb6-0b690f840378",
     "source_url": null,
@@ -149148,15 +147330,6 @@
     "minio_path": "ab298c96-a10a-51c9-9588-c9107471cea6/main.jpg"
   },
   {
-    "id": "459fc372-9bdc-4197-9eea-10e044969795",
-    "wine_id": "ab298c96-a10a-51c9-9588-c9107471cea6",
-    "source_url": null,
-    "source_path": "data/images_extended/ab298c96-a10a-51c9-9588-c9107471cea6/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ab298c96-a10a-51c9-9588-c9107471cea6/vivino_2.jpg"
-  },
-  {
     "id": "70b05250-022a-5cbc-bc2f-1db06e4283a7",
     "wine_id": "ab39b5d6-ef4a-5766-ba55-22f65182c7ef",
     "source_url": null,
@@ -149335,15 +147508,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "ab3fd661-d390-533d-9529-dfaf1a09e8fd/main.jpg"
-  },
-  {
-    "id": "28056a03-9b29-471a-a3d7-adb5ce7dad60",
-    "wine_id": "ab3fd661-d390-533d-9529-dfaf1a09e8fd",
-    "source_url": null,
-    "source_path": "data/images_extended/ab3fd661-d390-533d-9529-dfaf1a09e8fd/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ab3fd661-d390-533d-9529-dfaf1a09e8fd/vivino_1.jpg"
   },
   {
     "id": "07c4a31e-fbc6-47f2-bb35-f580d7f8372d",
@@ -150327,15 +148491,6 @@
     "minio_path": "abcb2165-c92e-570c-a0c6-b23af8527775/main.jpg"
   },
   {
-    "id": "bbaab481-7574-4153-9eb4-aa4867e8fa5d",
-    "wine_id": "abcb2165-c92e-570c-a0c6-b23af8527775",
-    "source_url": null,
-    "source_path": "data/images_extended/abcb2165-c92e-570c-a0c6-b23af8527775/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "abcb2165-c92e-570c-a0c6-b23af8527775/vivino_1.jpg"
-  },
-  {
     "id": "1407a727-019b-4c29-ae18-f5fd607340c4",
     "wine_id": "abcb2165-c92e-570c-a0c6-b23af8527775",
     "source_url": null,
@@ -150559,24 +148714,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "ac002469-b8c0-5ad4-a1db-235e544f3c0c/main.jpg"
-  },
-  {
-    "id": "7ec9a484-5452-42da-b061-96678c745f73",
-    "wine_id": "ac002469-b8c0-5ad4-a1db-235e544f3c0c",
-    "source_url": null,
-    "source_path": "data/images_extended/ac002469-b8c0-5ad4-a1db-235e544f3c0c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ac002469-b8c0-5ad4-a1db-235e544f3c0c/vivino_1.jpg"
-  },
-  {
-    "id": "14d5e552-2f5c-4964-a968-76366a44370e",
-    "wine_id": "ac002469-b8c0-5ad4-a1db-235e544f3c0c",
-    "source_url": null,
-    "source_path": "data/images_extended/ac002469-b8c0-5ad4-a1db-235e544f3c0c/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ac002469-b8c0-5ad4-a1db-235e544f3c0c/vivino_4.jpg"
   },
   {
     "id": "37c0587d-65ee-5e9d-86e2-1bc6ed488612",
@@ -151344,15 +149481,6 @@
     "minio_path": "ace28099-e31e-5632-8147-9ce70ac80a06/vivino_2.jpg"
   },
   {
-    "id": "2c46de4d-95c2-4b16-9245-9a9deb39437e",
-    "wine_id": "ace28099-e31e-5632-8147-9ce70ac80a06",
-    "source_url": null,
-    "source_path": "data/images_extended/ace28099-e31e-5632-8147-9ce70ac80a06/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ace28099-e31e-5632-8147-9ce70ac80a06/vivino_3.jpg"
-  },
-  {
     "id": "ec7c3cab-bd96-58d3-a5ec-937433ad49af",
     "wine_id": "ad2afaaf-a2ea-5b36-9648-ba78301ca36b",
     "source_url": null,
@@ -151441,24 +149569,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "ad2afaaf-a2ea-5b36-9648-ba78301ca36b/main.jpg"
-  },
-  {
-    "id": "fcf8f4d7-1c30-42da-845c-85c6314518ad",
-    "wine_id": "ad2afaaf-a2ea-5b36-9648-ba78301ca36b",
-    "source_url": null,
-    "source_path": "data/images_extended/ad2afaaf-a2ea-5b36-9648-ba78301ca36b/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ad2afaaf-a2ea-5b36-9648-ba78301ca36b/vivino_1.jpg"
-  },
-  {
-    "id": "d3c3e83a-cd34-43eb-90ad-0e3fd7d24a69",
-    "wine_id": "ad2afaaf-a2ea-5b36-9648-ba78301ca36b",
-    "source_url": null,
-    "source_path": "data/images_extended/ad2afaaf-a2ea-5b36-9648-ba78301ca36b/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ad2afaaf-a2ea-5b36-9648-ba78301ca36b/vivino_2.jpg"
   },
   {
     "id": "0f9f7cf9-4848-512d-8f0f-85234ee6ec11",
@@ -151666,15 +149776,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "ad3c87f6-b6be-52f5-93c1-8e91d5ca2c8b/main.jpg"
-  },
-  {
-    "id": "53a9db40-e7ae-4e3e-80c7-0736d2af6ec0",
-    "wine_id": "ad3c87f6-b6be-52f5-93c1-8e91d5ca2c8b",
-    "source_url": null,
-    "source_path": "data/images_extended/ad3c87f6-b6be-52f5-93c1-8e91d5ca2c8b/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ad3c87f6-b6be-52f5-93c1-8e91d5ca2c8b/vivino_1.jpg"
   },
   {
     "id": "722017b6-071f-535c-a861-81e39b2c7064",
@@ -152143,24 +150244,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "ae1de548-6384-544b-b820-b323e802697c/main.jpg"
-  },
-  {
-    "id": "13cb9385-09d6-411d-a26e-7a9a04eb3fdb",
-    "wine_id": "ae1de548-6384-544b-b820-b323e802697c",
-    "source_url": null,
-    "source_path": "data/images_extended/ae1de548-6384-544b-b820-b323e802697c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ae1de548-6384-544b-b820-b323e802697c/vivino_1.jpg"
-  },
-  {
-    "id": "080cdad2-77de-4a83-8678-4feac72349af",
-    "wine_id": "ae1de548-6384-544b-b820-b323e802697c",
-    "source_url": null,
-    "source_path": "data/images_extended/ae1de548-6384-544b-b820-b323e802697c/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ae1de548-6384-544b-b820-b323e802697c/vivino_2.jpg"
   },
   {
     "id": "8edb2f53-b650-4b93-a0fc-33d2c85482f9",
@@ -153907,42 +151990,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "b0b6573d-711e-5973-af73-9b0b41ab6802/main.jpg"
-  },
-  {
-    "id": "db088a63-ef5a-4f3d-8e6a-e9309f56387d",
-    "wine_id": "b0b6573d-711e-5973-af73-9b0b41ab6802",
-    "source_url": null,
-    "source_path": "data/images_extended/b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_1.jpg"
-  },
-  {
-    "id": "f2eeb671-e682-4710-8398-c620fe8642ad",
-    "wine_id": "b0b6573d-711e-5973-af73-9b0b41ab6802",
-    "source_url": null,
-    "source_path": "data/images_extended/b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_2.jpg"
-  },
-  {
-    "id": "5e5e83e0-f618-4597-9a31-b93735e2ebd3",
-    "wine_id": "b0b6573d-711e-5973-af73-9b0b41ab6802",
-    "source_url": null,
-    "source_path": "data/images_extended/b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_3.jpg"
-  },
-  {
-    "id": "a97c606f-d82d-435d-8e2f-f640d91fcc11",
-    "wine_id": "b0b6573d-711e-5973-af73-9b0b41ab6802",
-    "source_url": null,
-    "source_path": "data/images_extended/b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b0b6573d-711e-5973-af73-9b0b41ab6802/vivino_4.jpg"
   },
   {
     "id": "8d6102ba-fc6e-5077-9374-34c975032013",
@@ -156330,24 +154377,6 @@
     "minio_path": "b3d040ae-5161-5ec7-aeb5-bd0834c1cc80/main.jpg"
   },
   {
-    "id": "6624c7ee-30f5-49ef-8ada-07115f6470d2",
-    "wine_id": "b3d040ae-5161-5ec7-aeb5-bd0834c1cc80",
-    "source_url": null,
-    "source_path": "data/images_extended/b3d040ae-5161-5ec7-aeb5-bd0834c1cc80/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b3d040ae-5161-5ec7-aeb5-bd0834c1cc80/vivino_1.jpg"
-  },
-  {
-    "id": "ca660ca6-e622-4959-9212-48611c8628fd",
-    "wine_id": "b3d040ae-5161-5ec7-aeb5-bd0834c1cc80",
-    "source_url": null,
-    "source_path": "data/images_extended/b3d040ae-5161-5ec7-aeb5-bd0834c1cc80/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b3d040ae-5161-5ec7-aeb5-bd0834c1cc80/vivino_2.jpg"
-  },
-  {
     "id": "a2bcd5e1-8a92-55a2-8b62-7ab5a55321d1",
     "wine_id": "b3f8b2e5-d460-5d58-9db4-70e13f25aa1f",
     "source_url": null,
@@ -157066,33 +155095,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "b4a9c407-704f-5027-9776-ec0c2613fccc/main.jpg"
-  },
-  {
-    "id": "6587762c-ef8b-495f-a983-36ef16cd21de",
-    "wine_id": "b4a9c407-704f-5027-9776-ec0c2613fccc",
-    "source_url": null,
-    "source_path": "data/images_extended/b4a9c407-704f-5027-9776-ec0c2613fccc/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b4a9c407-704f-5027-9776-ec0c2613fccc/vivino_1.jpg"
-  },
-  {
-    "id": "0a82b916-e0f4-4a09-b647-5d212fa6c96c",
-    "wine_id": "b4a9c407-704f-5027-9776-ec0c2613fccc",
-    "source_url": null,
-    "source_path": "data/images_extended/b4a9c407-704f-5027-9776-ec0c2613fccc/vivino_4/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b4a9c407-704f-5027-9776-ec0c2613fccc/vivino_4.jpg"
-  },
-  {
-    "id": "514d5b75-f520-4ede-8ae6-789c74940f64",
-    "wine_id": "b4a9c407-704f-5027-9776-ec0c2613fccc",
-    "source_url": null,
-    "source_path": "data/images_extended/b4a9c407-704f-5027-9776-ec0c2613fccc/vivino_5/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b4a9c407-704f-5027-9776-ec0c2613fccc/vivino_5.jpg"
   },
   {
     "id": "6bd293ae-5275-55c5-9ac2-ec74610a139f",
@@ -158175,24 +156177,6 @@
     "minio_path": "b61fa2bb-bb24-5626-87b7-df54bbfdfcdf/main.jpg"
   },
   {
-    "id": "34498c7f-3f0a-4df4-be37-c97b69fcc8c1",
-    "wine_id": "b61fa2bb-bb24-5626-87b7-df54bbfdfcdf",
-    "source_url": null,
-    "source_path": "data/images_extended/b61fa2bb-bb24-5626-87b7-df54bbfdfcdf/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b61fa2bb-bb24-5626-87b7-df54bbfdfcdf/vivino_1.jpg"
-  },
-  {
-    "id": "9852a796-e3a1-420e-b4e6-d6ab7e468b18",
-    "wine_id": "b61fa2bb-bb24-5626-87b7-df54bbfdfcdf",
-    "source_url": null,
-    "source_path": "data/images_extended/b61fa2bb-bb24-5626-87b7-df54bbfdfcdf/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b61fa2bb-bb24-5626-87b7-df54bbfdfcdf/vivino_2.jpg"
-  },
-  {
     "id": "07b55922-5dcf-4f7a-b99b-da0a43a73931",
     "wine_id": "b61fa2bb-bb24-5626-87b7-df54bbfdfcdf",
     "source_url": null,
@@ -158769,15 +156753,6 @@
     "minio_path": "b68c37d4-0c64-55b6-9037-d1574c7ae028/main.jpg"
   },
   {
-    "id": "9f3abd14-99cb-4117-bad9-83c79b77e67c",
-    "wine_id": "b68c37d4-0c64-55b6-9037-d1574c7ae028",
-    "source_url": null,
-    "source_path": "data/images_extended/b68c37d4-0c64-55b6-9037-d1574c7ae028/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b68c37d4-0c64-55b6-9037-d1574c7ae028/vivino_1.jpg"
-  },
-  {
     "id": "e62599ed-a614-4f4b-9a16-573323e274bb",
     "wine_id": "b68c37d4-0c64-55b6-9037-d1574c7ae028",
     "source_url": null,
@@ -159271,24 +157246,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "b76ff7e3-47d5-5360-9864-5e5feca6a1bf/main.jpg"
-  },
-  {
-    "id": "72b68090-f4f6-45ac-b64f-6309f07558c4",
-    "wine_id": "b76ff7e3-47d5-5360-9864-5e5feca6a1bf",
-    "source_url": null,
-    "source_path": "data/images_extended/b76ff7e3-47d5-5360-9864-5e5feca6a1bf/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b76ff7e3-47d5-5360-9864-5e5feca6a1bf/vivino_1.jpg"
-  },
-  {
-    "id": "f82a52a0-3d1a-4723-94b8-2d689b4751fb",
-    "wine_id": "b76ff7e3-47d5-5360-9864-5e5feca6a1bf",
-    "source_url": null,
-    "source_path": "data/images_extended/b76ff7e3-47d5-5360-9864-5e5feca6a1bf/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b76ff7e3-47d5-5360-9864-5e5feca6a1bf/vivino_2.jpg"
   },
   {
     "id": "52e2f719-47a1-4dbb-8659-21dbd6eeaa6f",
@@ -160630,15 +158587,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "b8daef92-b4d7-57f7-a064-e41e9e0388af/main.jpg"
-  },
-  {
-    "id": "e1b1014a-db00-51b5-8f7b-94a15ac23668",
-    "wine_id": "b8daef92-b4d7-57f7-a064-e41e9e0388af",
-    "source_url": null,
-    "source_path": "data/images_extended/b8daef92-b4d7-57f7-a064-e41e9e0388af/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "b8daef92-b4d7-57f7-a064-e41e9e0388af/vivino_1.jpg"
   },
   {
     "id": "b94e9d58-69e6-5d5e-ac6a-e3a74d7007d9",
@@ -162477,24 +160425,6 @@
     "minio_path": "bb8687ea-a648-5691-84ac-fb3bb32d5574/main.jpg"
   },
   {
-    "id": "425ff048-7877-4221-b948-7f52079170b4",
-    "wine_id": "bb8687ea-a648-5691-84ac-fb3bb32d5574",
-    "source_url": null,
-    "source_path": "data/images_extended/bb8687ea-a648-5691-84ac-fb3bb32d5574/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bb8687ea-a648-5691-84ac-fb3bb32d5574/vivino_1.jpg"
-  },
-  {
-    "id": "9b4a7c0d-38d4-4d08-9907-1dde9ea76672",
-    "wine_id": "bb8687ea-a648-5691-84ac-fb3bb32d5574",
-    "source_url": null,
-    "source_path": "data/images_extended/bb8687ea-a648-5691-84ac-fb3bb32d5574/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bb8687ea-a648-5691-84ac-fb3bb32d5574/vivino_2.jpg"
-  },
-  {
     "id": "d4af5b31-95f5-4adf-addc-15782595b75b",
     "wine_id": "bb8687ea-a648-5691-84ac-fb3bb32d5574",
     "source_url": null,
@@ -163188,15 +161118,6 @@
     "minio_path": "bc75f1ee-77c6-5db2-a291-2d34de268418/main.jpg"
   },
   {
-    "id": "df41851e-36af-4624-baa0-fa3604455850",
-    "wine_id": "bc75f1ee-77c6-5db2-a291-2d34de268418",
-    "source_url": null,
-    "source_path": "data/images_extended/bc75f1ee-77c6-5db2-a291-2d34de268418/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bc75f1ee-77c6-5db2-a291-2d34de268418/vivino_2.jpg"
-  },
-  {
     "id": "11836166-6206-464f-a02f-462495d72bb8",
     "wine_id": "bc75f1ee-77c6-5db2-a291-2d34de268418",
     "source_url": null,
@@ -163321,24 +161242,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "bc86b627-b2c1-50a6-9cd3-324b94283a5a/main.jpg"
-  },
-  {
-    "id": "f3a8b97f-a487-4d0e-adb4-b6adb0434746",
-    "wine_id": "bc86b627-b2c1-50a6-9cd3-324b94283a5a",
-    "source_url": null,
-    "source_path": "data/images_extended/bc86b627-b2c1-50a6-9cd3-324b94283a5a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bc86b627-b2c1-50a6-9cd3-324b94283a5a/vivino_1.jpg"
-  },
-  {
-    "id": "a71989a9-7597-4d2a-b78e-f41c2ff9cb34",
-    "wine_id": "bc86b627-b2c1-50a6-9cd3-324b94283a5a",
-    "source_url": null,
-    "source_path": "data/images_extended/bc86b627-b2c1-50a6-9cd3-324b94283a5a/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bc86b627-b2c1-50a6-9cd3-324b94283a5a/vivino_2.jpg"
   },
   {
     "id": "b414921c-73cc-4a29-a5df-1878462ba44e",
@@ -164565,15 +162468,6 @@
     "minio_path": "bd9bc052-48a4-54d1-975c-d14767dae33c/main.jpg"
   },
   {
-    "id": "50d3fedb-f1b0-4398-a084-6883f3c0b9ca",
-    "wine_id": "bd9bc052-48a4-54d1-975c-d14767dae33c",
-    "source_url": null,
-    "source_path": "data/images_extended/bd9bc052-48a4-54d1-975c-d14767dae33c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bd9bc052-48a4-54d1-975c-d14767dae33c/vivino_1.jpg"
-  },
-  {
     "id": "f6e98397-33c1-57f0-bc16-8ee53a915bee",
     "wine_id": "bde03864-9b84-5d28-a0cf-7013da73ad00",
     "source_url": null,
@@ -164662,15 +162556,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "bde03864-9b84-5d28-a0cf-7013da73ad00/main.jpg"
-  },
-  {
-    "id": "f13991e1-e7c5-464c-a69d-ec3aeb108aa6",
-    "wine_id": "bde03864-9b84-5d28-a0cf-7013da73ad00",
-    "source_url": null,
-    "source_path": "data/images_extended/bde03864-9b84-5d28-a0cf-7013da73ad00/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bde03864-9b84-5d28-a0cf-7013da73ad00/vivino_1.jpg"
   },
   {
     "id": "8e894271-5c3f-5d5f-8dc2-8b1642824dca",
@@ -165274,15 +163159,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "bed74a61-e307-581c-99a6-8f4e4fc918f0/main.jpg"
-  },
-  {
-    "id": "5d8fd355-6833-46cd-987c-acd672326a2e",
-    "wine_id": "bed74a61-e307-581c-99a6-8f4e4fc918f0",
-    "source_url": null,
-    "source_path": "data/images_extended/bed74a61-e307-581c-99a6-8f4e4fc918f0/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "bed74a61-e307-581c-99a6-8f4e4fc918f0/vivino_1.jpg"
   },
   {
     "id": "8fb5e75f-f6a6-5776-83b9-4f34ac9e196e",
@@ -165951,15 +163827,6 @@
     "minio_path": "c0825f19-99e3-5bc5-b5b7-720864bf0a47/main.jpg"
   },
   {
-    "id": "d469b20b-4608-419d-bd47-197b5c3cec3b",
-    "wine_id": "c0825f19-99e3-5bc5-b5b7-720864bf0a47",
-    "source_url": null,
-    "source_path": "data/images_extended/c0825f19-99e3-5bc5-b5b7-720864bf0a47/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c0825f19-99e3-5bc5-b5b7-720864bf0a47/vivino_1.jpg"
-  },
-  {
     "id": "5ce0410f-fef1-4618-bf41-b1d16760602a",
     "wine_id": "c0825f19-99e3-5bc5-b5b7-720864bf0a47",
     "source_url": null,
@@ -166057,15 +163924,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "c082df3b-5042-51a1-9acf-a3a1db83c7d8/main.jpg"
-  },
-  {
-    "id": "954a40d0-109f-4643-acd5-1f9b71a7deab",
-    "wine_id": "c082df3b-5042-51a1-9acf-a3a1db83c7d8",
-    "source_url": null,
-    "source_path": "data/images_extended/c082df3b-5042-51a1-9acf-a3a1db83c7d8/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c082df3b-5042-51a1-9acf-a3a1db83c7d8/vivino_1.jpg"
   },
   {
     "id": "6466ecef-8599-4e63-827e-c8c7c90a8857",
@@ -166977,15 +164835,6 @@
     "minio_path": "c1a47561-6b96-5e50-818c-58a9d4055b69/main.jpg"
   },
   {
-    "id": "0b9f6d10-1bd8-4bba-aa8d-061c22eaa670",
-    "wine_id": "c1a47561-6b96-5e50-818c-58a9d4055b69",
-    "source_url": null,
-    "source_path": "data/images_extended/c1a47561-6b96-5e50-818c-58a9d4055b69/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c1a47561-6b96-5e50-818c-58a9d4055b69/vivino_2.jpg"
-  },
-  {
     "id": "0354128b-e3e3-4fc9-bcbf-b0a79ced629e",
     "wine_id": "c1a47561-6b96-5e50-818c-58a9d4055b69",
     "source_url": null,
@@ -167310,15 +165159,6 @@
     "minio_path": "c1dd7a86-be60-5196-b460-51f1dd58b85f/vivino_1.jpg"
   },
   {
-    "id": "af79a58d-953b-56da-81a1-6baf1f429355",
-    "wine_id": "c1dd7a86-be60-5196-b460-51f1dd58b85f",
-    "source_url": null,
-    "source_path": "data/images_extended/c1dd7a86-be60-5196-b460-51f1dd58b85f/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c1dd7a86-be60-5196-b460-51f1dd58b85f/vivino_2.jpg"
-  },
-  {
     "id": "bd0e92bf-784c-4949-b661-cbfd4913fd97",
     "wine_id": "c1dd7a86-be60-5196-b460-51f1dd58b85f",
     "source_url": null,
@@ -167427,15 +165267,6 @@
     "minio_path": "c21954aa-7976-5558-a260-12c2df5e1c9d/main.jpg"
   },
   {
-    "id": "f88e9a0e-5f5e-4d5e-956b-307f144aa807",
-    "wine_id": "c21954aa-7976-5558-a260-12c2df5e1c9d",
-    "source_url": null,
-    "source_path": "data/images_extended/c21954aa-7976-5558-a260-12c2df5e1c9d/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c21954aa-7976-5558-a260-12c2df5e1c9d/vivino_3.jpg"
-  },
-  {
     "id": "72f72356-69c1-4926-a7a3-5e4df0a14010",
     "wine_id": "c21954aa-7976-5558-a260-12c2df5e1c9d",
     "source_url": null,
@@ -167533,24 +165364,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "c21ad25f-b538-51d4-b01b-18474c8182c2/main.jpg"
-  },
-  {
-    "id": "c7debd0f-b781-4713-a09d-806a3cd5248a",
-    "wine_id": "c21ad25f-b538-51d4-b01b-18474c8182c2",
-    "source_url": null,
-    "source_path": "data/images_extended/c21ad25f-b538-51d4-b01b-18474c8182c2/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c21ad25f-b538-51d4-b01b-18474c8182c2/vivino_1.jpg"
-  },
-  {
-    "id": "a30752ef-900a-48d9-9465-dbb01bb99b67",
-    "wine_id": "c21ad25f-b538-51d4-b01b-18474c8182c2",
-    "source_url": null,
-    "source_path": "data/images_extended/c21ad25f-b538-51d4-b01b-18474c8182c2/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c21ad25f-b538-51d4-b01b-18474c8182c2/vivino_2.jpg"
   },
   {
     "id": "7dcefc76-6299-42d7-8229-77ea6eb72943",
@@ -168424,15 +166237,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "c31a0f77-dc22-56bd-abe6-c51eebc4e22c/main.jpg"
-  },
-  {
-    "id": "e5458ecc-48e9-4ed9-a376-eb703c68376d",
-    "wine_id": "c31a0f77-dc22-56bd-abe6-c51eebc4e22c",
-    "source_url": null,
-    "source_path": "data/images_extended/c31a0f77-dc22-56bd-abe6-c51eebc4e22c/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c31a0f77-dc22-56bd-abe6-c51eebc4e22c/vivino_1.jpg"
   },
   {
     "id": "9b473702-e835-4c1e-9317-e06afdef3b84",
@@ -169450,15 +167254,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "c3ca358b-ae73-51c9-b524-5fd117818d90/main.jpg"
-  },
-  {
-    "id": "400d7ed6-19a3-411a-9e97-f28dc4843daa",
-    "wine_id": "c3ca358b-ae73-51c9-b524-5fd117818d90",
-    "source_url": null,
-    "source_path": "data/images_extended/c3ca358b-ae73-51c9-b524-5fd117818d90/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c3ca358b-ae73-51c9-b524-5fd117818d90/vivino_1.jpg"
   },
   {
     "id": "148e2dea-91ce-4942-ada7-f7f515bf333d",
@@ -173070,15 +170865,6 @@
     "minio_path": "c8ded5ac-1e74-59ee-a6d4-587dbe75b0bf/vivino_1.jpg"
   },
   {
-    "id": "10112203-c316-4600-b3f8-ccda53f0372f",
-    "wine_id": "c8ded5ac-1e74-59ee-a6d4-587dbe75b0bf",
-    "source_url": null,
-    "source_path": "data/images_extended/c8ded5ac-1e74-59ee-a6d4-587dbe75b0bf/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c8ded5ac-1e74-59ee-a6d4-587dbe75b0bf/vivino_2.jpg"
-  },
-  {
     "id": "28dbddb3-32c7-4fdb-86a5-d48caf9d9698",
     "wine_id": "c8ded5ac-1e74-59ee-a6d4-587dbe75b0bf",
     "source_url": null,
@@ -173545,15 +171331,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "c95813a6-8335-5c51-8b59-bbcd1bafc88a/main.jpg"
-  },
-  {
-    "id": "cd39bcfd-c787-47c3-b5f8-d0dcff01359e",
-    "wine_id": "c95813a6-8335-5c51-8b59-bbcd1bafc88a",
-    "source_url": null,
-    "source_path": "data/images_extended/c95813a6-8335-5c51-8b59-bbcd1bafc88a/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c95813a6-8335-5c51-8b59-bbcd1bafc88a/vivino_1.jpg"
   },
   {
     "id": "92b9876b-606f-5d75-8ccb-d4ae230672b8",
@@ -174076,15 +171853,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "c9d8b828-9148-5dea-9f3d-58bfd6352315/main.jpg"
-  },
-  {
-    "id": "f2c5a217-76f5-4f4d-ad37-5e62953f7272",
-    "wine_id": "c9d8b828-9148-5dea-9f3d-58bfd6352315",
-    "source_url": null,
-    "source_path": "data/images_extended/c9d8b828-9148-5dea-9f3d-58bfd6352315/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "c9d8b828-9148-5dea-9f3d-58bfd6352315/vivino_1.jpg"
   },
   {
     "id": "8ba28ae5-df66-4169-9ad3-5bcd67ff5631",
@@ -174798,24 +172566,6 @@
     "minio_path": "cb530c91-d22f-515e-93ac-b758d3a219a2/main.jpg"
   },
   {
-    "id": "a331f9e0-3f28-45b9-b348-fbbc086d9356",
-    "wine_id": "cb530c91-d22f-515e-93ac-b758d3a219a2",
-    "source_url": null,
-    "source_path": "data/images_extended/cb530c91-d22f-515e-93ac-b758d3a219a2/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "cb530c91-d22f-515e-93ac-b758d3a219a2/vivino_1.jpg"
-  },
-  {
-    "id": "64cc145e-ecd6-48ca-8dbf-bb76d830d83e",
-    "wine_id": "cb530c91-d22f-515e-93ac-b758d3a219a2",
-    "source_url": null,
-    "source_path": "data/images_extended/cb530c91-d22f-515e-93ac-b758d3a219a2/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "cb530c91-d22f-515e-93ac-b758d3a219a2/vivino_2.jpg"
-  },
-  {
     "id": "ddc17a70-5db7-4345-86e6-55c15446f5aa",
     "wine_id": "cb530c91-d22f-515e-93ac-b758d3a219a2",
     "source_url": null,
@@ -175111,24 +172861,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "cbfc8b6d-598c-59a5-983b-891ed5388c80/main.jpg"
-  },
-  {
-    "id": "95f1a52c-0e3b-5a69-804b-e9669c49910f",
-    "wine_id": "cbfc8b6d-598c-59a5-983b-891ed5388c80",
-    "source_url": null,
-    "source_path": "data/images_extended/cbfc8b6d-598c-59a5-983b-891ed5388c80/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "cbfc8b6d-598c-59a5-983b-891ed5388c80/vivino_1.jpg"
-  },
-  {
-    "id": "20d833c6-545c-5dd1-9922-f3960e59d707",
-    "wine_id": "cbfc8b6d-598c-59a5-983b-891ed5388c80",
-    "source_url": null,
-    "source_path": "data/images_extended/cbfc8b6d-598c-59a5-983b-891ed5388c80/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "cbfc8b6d-598c-59a5-983b-891ed5388c80/vivino_2.jpg"
   },
   {
     "id": "b64d46f2-7c2c-4f1c-9658-bdde42f4e7e8",
@@ -175473,15 +173205,6 @@
     "minio_path": "cd3bdbe3-21b8-5711-b818-19f623953dfc/main.jpg"
   },
   {
-    "id": "10e3a35e-0bf3-4952-bdb5-d793a34ca14d",
-    "wine_id": "cd3bdbe3-21b8-5711-b818-19f623953dfc",
-    "source_url": null,
-    "source_path": "data/images_extended/cd3bdbe3-21b8-5711-b818-19f623953dfc/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "cd3bdbe3-21b8-5711-b818-19f623953dfc/vivino_1.jpg"
-  },
-  {
     "id": "547fe8ca-2baa-4bfe-9a58-3b0eed766cad",
     "wine_id": "cd3bdbe3-21b8-5711-b818-19f623953dfc",
     "source_url": null,
@@ -175768,15 +173491,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "cd8b1a12-d4bd-5c9e-83cd-21a4614e6e30/main.jpg"
-  },
-  {
-    "id": "81ce7c43-e1ef-5de2-9285-022acd6a78cb",
-    "wine_id": "cd8b1a12-d4bd-5c9e-83cd-21a4614e6e30",
-    "source_url": null,
-    "source_path": "data/images_extended/cd8b1a12-d4bd-5c9e-83cd-21a4614e6e30/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "cd8b1a12-d4bd-5c9e-83cd-21a4614e6e30/vivino_1.jpg"
   },
   {
     "id": "ad297224-0587-4f01-986c-e7a09745285c",
@@ -178128,15 +175842,6 @@
     "minio_path": "d034ed0b-ff75-58c9-93ba-4a03d2a9dd16/main.jpg"
   },
   {
-    "id": "e00b53de-9894-5556-9b8c-3bb36d63a5d0",
-    "wine_id": "d034ed0b-ff75-58c9-93ba-4a03d2a9dd16",
-    "source_url": null,
-    "source_path": "data/images_extended/d034ed0b-ff75-58c9-93ba-4a03d2a9dd16/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d034ed0b-ff75-58c9-93ba-4a03d2a9dd16/vivino_1.jpg"
-  },
-  {
     "id": "212f551c-bb40-4e3d-aa36-627504af7331",
     "wine_id": "d034ed0b-ff75-58c9-93ba-4a03d2a9dd16",
     "source_url": null,
@@ -178711,15 +176416,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "d13fddb5-56f1-5287-ab29-aa994dc11238/main.jpg"
-  },
-  {
-    "id": "f8f81bed-c51c-52a7-9ed7-1395880bfbb3",
-    "wine_id": "d13fddb5-56f1-5287-ab29-aa994dc11238",
-    "source_url": null,
-    "source_path": "data/images_extended/d13fddb5-56f1-5287-ab29-aa994dc11238/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d13fddb5-56f1-5287-ab29-aa994dc11238/vivino_1.jpg"
   },
   {
     "id": "76090f04-3088-4eed-ad5e-75e8949a4c24",
@@ -181386,24 +179082,6 @@
     "minio_path": "d49c81c6-d082-52e8-9e65-6e2816d466c4/main.jpg"
   },
   {
-    "id": "3226b917-25ee-4a07-afd0-1785b6c81a5c",
-    "wine_id": "d49c81c6-d082-52e8-9e65-6e2816d466c4",
-    "source_url": null,
-    "source_path": "data/images_extended/d49c81c6-d082-52e8-9e65-6e2816d466c4/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d49c81c6-d082-52e8-9e65-6e2816d466c4/vivino_1.jpg"
-  },
-  {
-    "id": "41090176-2d48-46c2-9305-9c1cdfa4e007",
-    "wine_id": "d49c81c6-d082-52e8-9e65-6e2816d466c4",
-    "source_url": null,
-    "source_path": "data/images_extended/d49c81c6-d082-52e8-9e65-6e2816d466c4/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d49c81c6-d082-52e8-9e65-6e2816d466c4/vivino_2.jpg"
-  },
-  {
     "id": "01c4ad4a-bb42-55f9-9ba8-0d99b0df2b9e",
     "wine_id": "d4b5c70b-0b35-52e8-ae42-41a4693d74ec",
     "source_url": null,
@@ -181681,15 +179359,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "d528829b-1733-5826-873e-d70909c5bded/main.jpg"
-  },
-  {
-    "id": "5835b6fa-74fb-4378-b41a-a744193980f3",
-    "wine_id": "d528829b-1733-5826-873e-d70909c5bded",
-    "source_url": null,
-    "source_path": "data/images_extended/d528829b-1733-5826-873e-d70909c5bded/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d528829b-1733-5826-873e-d70909c5bded/vivino_1.jpg"
   },
   {
     "id": "53bf4f8e-8e1f-5eff-9778-d33bbfb862cc",
@@ -185742,15 +183411,6 @@
     "minio_path": "d99f5519-ac11-576e-a7ea-bb3d7ff80a1f/main.jpg"
   },
   {
-    "id": "6a2407e1-596a-4d30-91fe-8cce8715c077",
-    "wine_id": "d99f5519-ac11-576e-a7ea-bb3d7ff80a1f",
-    "source_url": null,
-    "source_path": "data/images_extended/d99f5519-ac11-576e-a7ea-bb3d7ff80a1f/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d99f5519-ac11-576e-a7ea-bb3d7ff80a1f/vivino_1.jpg"
-  },
-  {
     "id": "6203b85d-f771-57b5-8627-5065f6225bad",
     "wine_id": "d9d3cc6c-3565-5c5a-802b-69ad5f4c7cf8",
     "source_url": null,
@@ -186163,15 +183823,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "d9e84f62-3764-5f2d-adaf-9f0f4ce1ff87/main.jpg"
-  },
-  {
-    "id": "59844c5c-3067-4e5a-9cd5-f9e7c939ef19",
-    "wine_id": "d9e84f62-3764-5f2d-adaf-9f0f4ce1ff87",
-    "source_url": null,
-    "source_path": "data/images_extended/d9e84f62-3764-5f2d-adaf-9f0f4ce1ff87/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "d9e84f62-3764-5f2d-adaf-9f0f4ce1ff87/vivino_1.jpg"
   },
   {
     "id": "102ccace-4b9c-5a76-8093-b4207000c96f",
@@ -187776,15 +185427,6 @@
     "minio_path": "db6eaee0-f286-5b11-a6d3-266a44df1fc9/main.jpg"
   },
   {
-    "id": "f8f4b4fc-b5db-4f7b-8b8b-8b6493b97679",
-    "wine_id": "db6eaee0-f286-5b11-a6d3-266a44df1fc9",
-    "source_url": null,
-    "source_path": "data/images_extended/db6eaee0-f286-5b11-a6d3-266a44df1fc9/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "db6eaee0-f286-5b11-a6d3-266a44df1fc9/vivino_1.jpg"
-  },
-  {
     "id": "1ac89e9b-daa1-493b-9425-67cf6900f459",
     "wine_id": "db6eaee0-f286-5b11-a6d3-266a44df1fc9",
     "source_url": null,
@@ -189178,15 +186820,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "dd374075-3ed5-51de-956e-10d7735491cc/main.jpg"
-  },
-  {
-    "id": "e899b480-8d94-419c-abaf-6184be7e9dc2",
-    "wine_id": "dd374075-3ed5-51de-956e-10d7735491cc",
-    "source_url": null,
-    "source_path": "data/images_extended/dd374075-3ed5-51de-956e-10d7735491cc/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "dd374075-3ed5-51de-956e-10d7735491cc/vivino_1.jpg"
   },
   {
     "id": "56ea033e-0a04-422c-a7df-cb5656856448",
@@ -190746,15 +188379,6 @@
     "minio_path": "df44d68f-c627-5831-a2ae-08de68a58459/main.jpg"
   },
   {
-    "id": "c4b6e8cc-c328-42ae-80f8-13fe0086df33",
-    "wine_id": "df44d68f-c627-5831-a2ae-08de68a58459",
-    "source_url": null,
-    "source_path": "data/images_extended/df44d68f-c627-5831-a2ae-08de68a58459/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "df44d68f-c627-5831-a2ae-08de68a58459/vivino_2.jpg"
-  },
-  {
     "id": "2be43195-f483-401f-aac5-9149adbff248",
     "wine_id": "df44d68f-c627-5831-a2ae-08de68a58459",
     "source_url": null,
@@ -190978,24 +188602,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "df7e9ff0-ee96-592f-8aae-322cbcf1b792/main.jpg"
-  },
-  {
-    "id": "c894466e-ca01-47e3-ae52-b94e61a3ee1a",
-    "wine_id": "df7e9ff0-ee96-592f-8aae-322cbcf1b792",
-    "source_url": null,
-    "source_path": "data/images_extended/df7e9ff0-ee96-592f-8aae-322cbcf1b792/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "df7e9ff0-ee96-592f-8aae-322cbcf1b792/vivino_1.jpg"
-  },
-  {
-    "id": "28febe34-0236-4c95-8559-2d89ccb3368b",
-    "wine_id": "df7e9ff0-ee96-592f-8aae-322cbcf1b792",
-    "source_url": null,
-    "source_path": "data/images_extended/df7e9ff0-ee96-592f-8aae-322cbcf1b792/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "df7e9ff0-ee96-592f-8aae-322cbcf1b792/vivino_2.jpg"
   },
   {
     "id": "4378af9c-0632-5d1a-b807-a22af3a7369d",
@@ -191664,15 +189270,6 @@
     "minio_path": "e0740944-1ace-5627-97a6-577bc4bf4c31/main.jpg"
   },
   {
-    "id": "7810a685-8a6d-4bb5-99c8-e639ec64f2ec",
-    "wine_id": "e0740944-1ace-5627-97a6-577bc4bf4c31",
-    "source_url": null,
-    "source_path": "data/images_extended/e0740944-1ace-5627-97a6-577bc4bf4c31/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e0740944-1ace-5627-97a6-577bc4bf4c31/vivino_1.jpg"
-  },
-  {
     "id": "904c5af1-6a87-4a8a-af2d-d8b0ea85065d",
     "wine_id": "e0740944-1ace-5627-97a6-577bc4bf4c31",
     "source_url": null,
@@ -192105,15 +189702,6 @@
     "minio_path": "e111c3d1-2e0d-5c4d-ab7f-7674c0ff2bef/main.jpg"
   },
   {
-    "id": "b6532a4c-c32c-43bb-9113-0a6ec23d72ae",
-    "wine_id": "e111c3d1-2e0d-5c4d-ab7f-7674c0ff2bef",
-    "source_url": null,
-    "source_path": "data/images_extended/e111c3d1-2e0d-5c4d-ab7f-7674c0ff2bef/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e111c3d1-2e0d-5c4d-ab7f-7674c0ff2bef/vivino_1.jpg"
-  },
-  {
     "id": "e51a22eb-8efe-4f1e-a4db-56609658dd1d",
     "wine_id": "e111c3d1-2e0d-5c4d-ab7f-7674c0ff2bef",
     "source_url": null,
@@ -192229,15 +189817,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "e123c214-94da-59ee-bc6e-46c0a20359bc/main.jpg"
-  },
-  {
-    "id": "13ba58dc-de7c-4896-b7d8-5780298e46ee",
-    "wine_id": "e123c214-94da-59ee-bc6e-46c0a20359bc",
-    "source_url": null,
-    "source_path": "data/images_extended/e123c214-94da-59ee-bc6e-46c0a20359bc/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e123c214-94da-59ee-bc6e-46c0a20359bc/vivino_1.jpg"
   },
   {
     "id": "0e0178c3-7d64-47ec-add5-89d34e2506ed",
@@ -192652,15 +190231,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "e1aca099-8f8b-5637-a729-683cb0331399/vivino_1.jpg"
-  },
-  {
-    "id": "e247d28b-1100-4ba7-a27f-60c0b7d4cdc0",
-    "wine_id": "e1aca099-8f8b-5637-a729-683cb0331399",
-    "source_url": null,
-    "source_path": "data/images_extended/e1aca099-8f8b-5637-a729-683cb0331399/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e1aca099-8f8b-5637-a729-683cb0331399/vivino_2.jpg"
   },
   {
     "id": "b44170b9-9d68-4f36-b0c2-e3be2d08a8e7",
@@ -193507,15 +191077,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "e29f1977-5764-574c-a7b4-6e2ac8f7e422/main.jpg"
-  },
-  {
-    "id": "f5ddd549-0ec6-4c09-a977-ad5a82ef836e",
-    "wine_id": "e29f1977-5764-574c-a7b4-6e2ac8f7e422",
-    "source_url": null,
-    "source_path": "data/images_extended/e29f1977-5764-574c-a7b4-6e2ac8f7e422/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e29f1977-5764-574c-a7b4-6e2ac8f7e422/vivino_1.jpg"
   },
   {
     "id": "39454201-91d9-5368-a33a-027a4880436b",
@@ -195532,24 +193093,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "e4dc3799-f9e4-5414-81f5-e252162282f7/vivino_1.jpg"
-  },
-  {
-    "id": "eb6a6b2b-6802-4f5c-9365-537df116a417",
-    "wine_id": "e4dc3799-f9e4-5414-81f5-e252162282f7",
-    "source_url": null,
-    "source_path": "data/images_extended/e4dc3799-f9e4-5414-81f5-e252162282f7/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e4dc3799-f9e4-5414-81f5-e252162282f7/vivino_2.jpg"
-  },
-  {
-    "id": "8f27d898-eb21-5b0c-9c07-10e004cde52f",
-    "wine_id": "e4dc3799-f9e4-5414-81f5-e252162282f7",
-    "source_url": null,
-    "source_path": "data/images_extended/e4dc3799-f9e4-5414-81f5-e252162282f7/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e4dc3799-f9e4-5414-81f5-e252162282f7/vivino_3.jpg"
   },
   {
     "id": "62ddec72-3d03-46e4-9e73-6bcd9871c3f1",
@@ -198000,24 +195543,6 @@
     "minio_path": "e8148d19-97ea-5cc5-af02-e120ad212239/main.jpg"
   },
   {
-    "id": "31da970d-f1fd-4a6e-95bc-938033a35a31",
-    "wine_id": "e8148d19-97ea-5cc5-af02-e120ad212239",
-    "source_url": null,
-    "source_path": "data/images_extended/e8148d19-97ea-5cc5-af02-e120ad212239/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e8148d19-97ea-5cc5-af02-e120ad212239/vivino_1.jpg"
-  },
-  {
-    "id": "4f882ece-7124-4b70-8d4b-275ec9a1bd8c",
-    "wine_id": "e8148d19-97ea-5cc5-af02-e120ad212239",
-    "source_url": null,
-    "source_path": "data/images_extended/e8148d19-97ea-5cc5-af02-e120ad212239/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e8148d19-97ea-5cc5-af02-e120ad212239/vivino_2.jpg"
-  },
-  {
     "id": "6421562c-d5a7-5b31-b98a-bba8c6b5acfd",
     "wine_id": "e84a3e20-ed51-5c8d-ad39-ba726864a0ee",
     "source_url": null,
@@ -199260,15 +196785,6 @@
     "minio_path": "e9cd68c4-19db-5bcd-bfcf-05d2117e8f0d/main.jpg"
   },
   {
-    "id": "4d3ae1dc-eaf1-4161-9da5-bb89fbecf2c0",
-    "wine_id": "e9cd68c4-19db-5bcd-bfcf-05d2117e8f0d",
-    "source_url": null,
-    "source_path": "data/images_extended/e9cd68c4-19db-5bcd-bfcf-05d2117e8f0d/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "e9cd68c4-19db-5bcd-bfcf-05d2117e8f0d/vivino_1.jpg"
-  },
-  {
     "id": "5db8d9ee-fada-526c-a4d6-2c7827465024",
     "wine_id": "e9f256b7-fa9c-5ccf-b8df-2f87805a1321",
     "source_url": null,
@@ -199834,15 +197350,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "ea6a1566-a778-5098-9eb5-491804b9aac0/vivino_1.jpg"
-  },
-  {
-    "id": "590885e7-057f-4432-83ef-b0a08da39cfd",
-    "wine_id": "ea6a1566-a778-5098-9eb5-491804b9aac0",
-    "source_url": null,
-    "source_path": "data/images_extended/ea6a1566-a778-5098-9eb5-491804b9aac0/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ea6a1566-a778-5098-9eb5-491804b9aac0/vivino_2.jpg"
   },
   {
     "id": "fc4a2994-d9e0-55b8-8bd0-90cbafa62652",
@@ -201031,15 +198538,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "ec00e3b9-adaf-599a-a192-295526c900ca/main.jpg"
-  },
-  {
-    "id": "826e99f9-16a1-4366-ab6a-22570c2b0a88",
-    "wine_id": "ec00e3b9-adaf-599a-a192-295526c900ca",
-    "source_url": null,
-    "source_path": "data/images_extended/ec00e3b9-adaf-599a-a192-295526c900ca/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ec00e3b9-adaf-599a-a192-295526c900ca/vivino_1.jpg"
   },
   {
     "id": "590ba32d-daf4-43fc-87cf-01ba5a61d0ca",
@@ -202644,15 +200142,6 @@
     "minio_path": "ee2e8788-785c-5c48-8cb4-77cfe6cc66ee/main.jpg"
   },
   {
-    "id": "cb9a65b8-c7c4-4ec3-8db9-bb0e4dff162b",
-    "wine_id": "ee2e8788-785c-5c48-8cb4-77cfe6cc66ee",
-    "source_url": null,
-    "source_path": "data/images_extended/ee2e8788-785c-5c48-8cb4-77cfe6cc66ee/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ee2e8788-785c-5c48-8cb4-77cfe6cc66ee/vivino_1.jpg"
-  },
-  {
     "id": "c5b8127e-afe0-5314-807c-34d4d85b33b8",
     "wine_id": "ee55e1fb-2096-5c77-9441-160bed2f925b",
     "source_url": null,
@@ -203326,15 +200815,6 @@
     "is_main": false,
     "is_generated": false,
     "minio_path": "ef19fb50-1b35-5eaa-9974-adb8b7ed2106/vivino_1.jpg"
-  },
-  {
-    "id": "3a859366-7786-4415-8eaa-8b3b2cc99e98",
-    "wine_id": "ef19fb50-1b35-5eaa-9974-adb8b7ed2106",
-    "source_url": null,
-    "source_path": "data/images_extended/ef19fb50-1b35-5eaa-9974-adb8b7ed2106/vivino_3/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "ef19fb50-1b35-5eaa-9974-adb8b7ed2106/vivino_3.jpg"
   },
   {
     "id": "eeafed33-24c7-4534-962a-61cfbab93f1e",
@@ -204444,15 +201924,6 @@
     "minio_path": "f01900ad-ad11-5381-acd3-d1a9ac56ec40/main.jpg"
   },
   {
-    "id": "bf3c401d-b41e-42c3-ba60-9e95f0ace1b1",
-    "wine_id": "f01900ad-ad11-5381-acd3-d1a9ac56ec40",
-    "source_url": null,
-    "source_path": "data/images_extended/f01900ad-ad11-5381-acd3-d1a9ac56ec40/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f01900ad-ad11-5381-acd3-d1a9ac56ec40/vivino_1.jpg"
-  },
-  {
     "id": "e525ee89-3a03-4eb2-a4c1-5a5854810872",
     "wine_id": "f01900ad-ad11-5381-acd3-d1a9ac56ec40",
     "source_url": null,
@@ -204793,15 +202264,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "f0cbd09c-0442-5846-bf76-f4b510f5e49e/main.jpg"
-  },
-  {
-    "id": "ac8052be-c77e-486b-9c2c-15806fa166dc",
-    "wine_id": "f0cbd09c-0442-5846-bf76-f4b510f5e49e",
-    "source_url": null,
-    "source_path": "data/images_extended/f0cbd09c-0442-5846-bf76-f4b510f5e49e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f0cbd09c-0442-5846-bf76-f4b510f5e49e/vivino_1.jpg"
   },
   {
     "id": "d93721dc-9352-4105-8acc-da7238854ee3",
@@ -205702,15 +203164,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "f209379c-f3de-5490-8158-f41762a91d6f/main.jpg"
-  },
-  {
-    "id": "9933ec92-11b7-402c-a1a9-8ceff69a4fba",
-    "wine_id": "f209379c-f3de-5490-8158-f41762a91d6f",
-    "source_url": null,
-    "source_path": "data/images_extended/f209379c-f3de-5490-8158-f41762a91d6f/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f209379c-f3de-5490-8158-f41762a91d6f/vivino_1.jpg"
   },
   {
     "id": "f43f7d19-7208-4ee9-88a6-8bf98f7fe5b1",
@@ -207270,15 +204723,6 @@
     "minio_path": "f3bd5536-08fd-5f75-9ce5-db4af09b4aca/main.jpg"
   },
   {
-    "id": "705e2d0c-6d9b-4a05-95fe-6ff5f8b53746",
-    "wine_id": "f3bd5536-08fd-5f75-9ce5-db4af09b4aca",
-    "source_url": null,
-    "source_path": "data/images_extended/f3bd5536-08fd-5f75-9ce5-db4af09b4aca/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f3bd5536-08fd-5f75-9ce5-db4af09b4aca/vivino_1.jpg"
-  },
-  {
     "id": "c60e4330-8a30-5645-815e-1f327f631e8e",
     "wine_id": "f3c7bfeb-b0d8-5485-ac98-ff9eeb85e583",
     "source_url": null,
@@ -208015,24 +205459,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "f49eb538-9e45-5f1a-82f0-df2315d24d1e/main.jpg"
-  },
-  {
-    "id": "819d0e2e-9c58-440d-8c3e-3efd646dd82d",
-    "wine_id": "f49eb538-9e45-5f1a-82f0-df2315d24d1e",
-    "source_url": null,
-    "source_path": "data/images_extended/f49eb538-9e45-5f1a-82f0-df2315d24d1e/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f49eb538-9e45-5f1a-82f0-df2315d24d1e/vivino_1.jpg"
-  },
-  {
-    "id": "30c23b9e-2120-4176-b72a-f74fda3f6d68",
-    "wine_id": "f49eb538-9e45-5f1a-82f0-df2315d24d1e",
-    "source_url": null,
-    "source_path": "data/images_extended/f49eb538-9e45-5f1a-82f0-df2315d24d1e/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f49eb538-9e45-5f1a-82f0-df2315d24d1e/vivino_2.jpg"
   },
   {
     "id": "937e2e95-af2c-4c43-ac76-543dfb33884a",
@@ -210699,15 +208125,6 @@
     "minio_path": "f7bad14c-b098-52c7-bcdf-0e5d1b14de50/main.jpg"
   },
   {
-    "id": "a0f2319e-d84d-42fa-9342-c18cf36051f4",
-    "wine_id": "f7bad14c-b098-52c7-bcdf-0e5d1b14de50",
-    "source_url": null,
-    "source_path": "data/images_extended/f7bad14c-b098-52c7-bcdf-0e5d1b14de50/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "f7bad14c-b098-52c7-bcdf-0e5d1b14de50/vivino_2.jpg"
-  },
-  {
     "id": "ca4a6e6e-3540-5075-84c3-fe407b7c03ef",
     "wine_id": "f7fcee5a-ddfc-53ca-9b91-fefb520cb5c5",
     "source_url": null,
@@ -213219,15 +210636,6 @@
     "minio_path": "fa6c896e-f25f-50ae-bf5b-a33b027d36b6/main.jpg"
   },
   {
-    "id": "a253777c-b348-47ae-ab88-09a8247f06f7",
-    "wine_id": "fa6c896e-f25f-50ae-bf5b-a33b027d36b6",
-    "source_url": null,
-    "source_path": "data/images_extended/fa6c896e-f25f-50ae-bf5b-a33b027d36b6/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fa6c896e-f25f-50ae-bf5b-a33b027d36b6/vivino_1.jpg"
-  },
-  {
     "id": "8723894f-2b4a-506f-83e3-99874504dabb",
     "wine_id": "fa6c896e-f25f-50ae-bf5b-a33b027d36b6",
     "source_url": null,
@@ -213910,24 +211318,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "fb345112-7ca2-5f6a-ada4-a368384bfe24/main.jpg"
-  },
-  {
-    "id": "876a8351-2f85-42be-8f39-4e098f9463ac",
-    "wine_id": "fb345112-7ca2-5f6a-ada4-a368384bfe24",
-    "source_url": null,
-    "source_path": "data/images_extended/fb345112-7ca2-5f6a-ada4-a368384bfe24/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fb345112-7ca2-5f6a-ada4-a368384bfe24/vivino_1.jpg"
-  },
-  {
-    "id": "5060afeb-6810-4b0b-91b2-561e08edd2ef",
-    "wine_id": "fb345112-7ca2-5f6a-ada4-a368384bfe24",
-    "source_url": null,
-    "source_path": "data/images_extended/fb345112-7ca2-5f6a-ada4-a368384bfe24/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fb345112-7ca2-5f6a-ada4-a368384bfe24/vivino_2.jpg"
   },
   {
     "id": "43dce170-efb5-477e-9848-a2c450d82b03",
@@ -215064,24 +212454,6 @@
     "minio_path": "fc214178-2c56-5279-b7a0-8cfaf57b3ecc/main.jpg"
   },
   {
-    "id": "8f82b6c1-a957-4f78-a931-fb02c69a225d",
-    "wine_id": "fc214178-2c56-5279-b7a0-8cfaf57b3ecc",
-    "source_url": null,
-    "source_path": "data/images_extended/fc214178-2c56-5279-b7a0-8cfaf57b3ecc/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fc214178-2c56-5279-b7a0-8cfaf57b3ecc/vivino_1.jpg"
-  },
-  {
-    "id": "5d40f60f-e092-461a-a26a-bcfd241a1719",
-    "wine_id": "fc214178-2c56-5279-b7a0-8cfaf57b3ecc",
-    "source_url": null,
-    "source_path": "data/images_extended/fc214178-2c56-5279-b7a0-8cfaf57b3ecc/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fc214178-2c56-5279-b7a0-8cfaf57b3ecc/vivino_2.jpg"
-  },
-  {
     "id": "e722a8c3-f3c0-59ec-8600-2eda3e6543e3",
     "wine_id": "fc48dde2-9f9e-56fc-b255-672f8ac5b0b2",
     "source_url": null,
@@ -216045,15 +213417,6 @@
     "minio_path": "fd0aa06e-888c-522c-be33-bb9779ee8208/main.jpg"
   },
   {
-    "id": "ac1b51a3-2902-4ce2-bc73-f66c2d0aeb8d",
-    "wine_id": "fd0aa06e-888c-522c-be33-bb9779ee8208",
-    "source_url": null,
-    "source_path": "data/images_extended/fd0aa06e-888c-522c-be33-bb9779ee8208/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fd0aa06e-888c-522c-be33-bb9779ee8208/vivino_1.jpg"
-  },
-  {
     "id": "6d1c3c31-d4f4-5a01-b2c3-af4f6f349fb3",
     "wine_id": "fd21c026-1b56-53ff-8cfd-cccace960dd2",
     "source_url": null,
@@ -216610,24 +213973,6 @@
     "is_main": true,
     "is_generated": false,
     "minio_path": "fd791358-3750-52e4-a550-57c3767b0ecf/main.jpg"
-  },
-  {
-    "id": "7fe72f6d-38c4-4cb6-ab4d-48ef75bbe487",
-    "wine_id": "fd791358-3750-52e4-a550-57c3767b0ecf",
-    "source_url": null,
-    "source_path": "data/images_extended/fd791358-3750-52e4-a550-57c3767b0ecf/vivino_1/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fd791358-3750-52e4-a550-57c3767b0ecf/vivino_1.jpg"
-  },
-  {
-    "id": "64cbc1f3-9739-42d2-80e9-7515b1810ab0",
-    "wine_id": "fd791358-3750-52e4-a550-57c3767b0ecf",
-    "source_url": null,
-    "source_path": "data/images_extended/fd791358-3750-52e4-a550-57c3767b0ecf/vivino_2/original.jpg",
-    "is_main": false,
-    "is_generated": false,
-    "minio_path": "fd791358-3750-52e4-a550-57c3767b0ecf/vivino_2.jpg"
   },
   {
     "id": "89ae58da-21a7-4a72-b275-3cbdee35a7a7",

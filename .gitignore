@@ -31,12 +31,13 @@ models/yolo/*
 # данные: большие артефакты скачиваются отдельно (см. README), в репозитории — только data/db
 data/photos.tar.gz
 data/embeddings/
-data/embeddings_old/
 data/images/
 data/images_w_vivino/
-data/eval_runs/
 data/images_extended/
+data/removed_vivino/
 data/eval/
+data/eval_miss/
+data/eval_runs/
 data/catboost/
 data/ocr_lab_cache/
 data/site_cache/

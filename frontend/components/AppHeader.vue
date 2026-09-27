@@ -34,7 +34,8 @@
         <span v-if="app.notifications.value.unread" class="dot">{{ app.notifications.value.unread }}</span>
       </button>
       <button v-if="app.user.value" class="pill-user desktop-only" type="button" @click="go('profile')">
-        <UserRound :size="18" />
+        <span v-if="app.user.value.avatar_url" class="header-avatar"><img :src="app.user.value.avatar_url" alt="" /></span>
+        <UserRound v-else :size="18" />
         <span>{{ app.user.value.email }}</span>
       </button>
       <button v-else class="ui-button secondary small desktop-only" type="button" @click="login">Войти</button>

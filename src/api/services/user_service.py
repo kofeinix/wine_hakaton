@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -36,6 +36,7 @@ from src.connections.database.models import (
     User,
     Wine,
     WineReview,
+    WineReviewReaction,
 )
 from src.connections.database.postgres import DatabaseClient
 from src.settings.settings import AuthSettings, NotificationSettings
@@ -123,6 +124,24 @@ class UserService:
     async def get_user(self, user_id: UUID) -> User | None:
         async with self.database.session() as session:
             return await session.get(User, user_id)
+
+    async def update_profile(
+        self,
+        user_id: UUID,
+        *,
+        avatar_url: str | None = None,
+        review_notification_period_minutes: int | None = None,
+    ) -> User | None:
+        async with self.database.session() as session:
+            user = await session.get(User, user_id)
+            if user is None:
+                return None
+            if avatar_url is not None:
+                user.avatar_url = avatar_url
+            if review_notification_period_minutes is not None:
+                user.review_notification_period_minutes = review_notification_period_minutes
+            await session.commit()
+            return user
 
     async def _claim_anonymous_history(self, session, user_id: UUID, anon_id: str | None) -> None:
         """Временная история по cookie переходит в аккаунт при входе/регистрации."""
@@ -329,23 +348,66 @@ class UserService:
                 return None
             rows = (
                 await session.execute(
-                    select(WineReview, User.email)
+                    select(WineReview, User.email, User.avatar_url)
                     .join(User, User.id == WineReview.user_id)
                     .where(WineReview.wine_id == wine_id)
                     .order_by(WineReview.updated_at.desc())
                 )
             ).all()
-        ratings = [review.rating for review, _ in rows if review.rating]
+            author_ids = [review.user_id for review, _, _ in rows]
+            review_counts = dict(
+                (
+                    await session.execute(
+                        select(WineReview.user_id, func.count())
+                        .where(WineReview.user_id.in_(author_ids), WineReview.comment.is_not(None))
+                        .group_by(WineReview.user_id)
+                    )
+                ).all()
+            ) if author_ids else {}
+            reaction_rows = (
+                await session.execute(
+                    select(
+                        WineReviewReaction.review_user_id,
+                        WineReviewReaction.value,
+                        func.count(),
+                    )
+                    .where(WineReviewReaction.wine_id == wine_id)
+                    .group_by(WineReviewReaction.review_user_id, WineReviewReaction.value)
+                )
+            ).all()
+            reaction_counts: dict[UUID, dict[int, int]] = {}
+            for author_id, value, count in reaction_rows:
+                reaction_counts.setdefault(author_id, {})[value] = int(count)
+            my_reactions = {}
+            if viewer_id is not None:
+                my_reactions = dict(
+                    (
+                        await session.execute(
+                            select(WineReviewReaction.review_user_id, WineReviewReaction.value).where(
+                                WineReviewReaction.wine_id == wine_id,
+                                WineReviewReaction.user_id == viewer_id,
+                            )
+                        )
+                    ).all()
+                )
+        ratings = [review.rating for review, _, _ in rows if review.rating]
         items = [
             PublicReview(
+                user_id=str(review.user_id),
                 author="Вы" if review.user_id == viewer_id else _mask_email(email),
+                avatar_url=avatar_url,
+                author_review_count=int(review_counts.get(review.user_id, 0)),
+                author_frame=_review_frame(int(review_counts.get(review.user_id, 0))),
                 is_mine=review.user_id == viewer_id,
                 rating=review.rating,
                 comment=review.comment,
+                likes=reaction_counts.get(review.user_id, {}).get(1, 0),
+                dislikes=reaction_counts.get(review.user_id, {}).get(-1, 0),
+                my_reaction=my_reactions.get(review.user_id),
                 created_at=review.created_at,
                 updated_at=review.updated_at,
             )
-            for review, email in rows
+            for review, email, avatar_url in rows
         ]
         items.sort(key=lambda item: not item.is_mine)  # стабильно: свой первым, остальные по дате
         return WineReviewsResponse(
@@ -374,6 +436,53 @@ class UserService:
             for row in rows
             if row.wine_id in cards
         ]
+
+    async def set_review_reaction(
+        self,
+        user_id: UUID,
+        wine_id: UUID,
+        review_user_id: UUID,
+        value: int,
+    ) -> bool:
+        """Поставить лайк/дизлайк отзыву. False — отзыва нет."""
+        if value not in (-1, 1) or user_id == review_user_id:
+            return False
+        async with self.database.session() as session:
+            exists = await session.scalar(
+                select(WineReview.user_id).where(
+                    WineReview.user_id == review_user_id,
+                    WineReview.wine_id == wine_id,
+                    WineReview.comment.is_not(None),
+                )
+            )
+            if exists is None:
+                return False
+            await session.execute(
+                insert(WineReviewReaction)
+                .values(user_id=user_id, review_user_id=review_user_id, wine_id=wine_id, value=value)
+                .on_conflict_do_update(
+                    index_elements=[
+                        WineReviewReaction.user_id,
+                        WineReviewReaction.review_user_id,
+                        WineReviewReaction.wine_id,
+                    ],
+                    set_={"value": value, "updated_at": func.now()},
+                )
+            )
+            await session.commit()
+        return True
+
+    async def delete_review_reaction(self, user_id: UUID, wine_id: UUID, review_user_id: UUID) -> bool:
+        async with self.database.session() as session:
+            result = await session.execute(
+                delete(WineReviewReaction).where(
+                    WineReviewReaction.user_id == user_id,
+                    WineReviewReaction.review_user_id == review_user_id,
+                    WineReviewReaction.wine_id == wine_id,
+                )
+            )
+            await session.commit()
+        return bool(result.rowcount)
 
     # --- уведомления ---------------------------------------------------------------
 
@@ -501,8 +610,67 @@ class UserService:
                 )
             )
             await session.commit()
+        created += await self.process_due_review_reaction_notifications(batch_size=batch_size)
         if created:
-            logger.info("Created %s viewed-wines reminders", created)
+            logger.info("Created %s notifications", created)
+        return created
+
+    async def process_due_review_reaction_notifications(self, batch_size: int = 200) -> int:
+        """Сводка автору: сколько людей оценили его комментарии за выбранный период."""
+        now = _now()
+        created = 0
+        async with self.database.session() as session:
+            users = list(
+                (
+                    await session.scalars(
+                        select(User)
+                        .where(
+                            User.review_notification_period_minutes > 0,
+                            # только те, у кого период уже истёк, иначе первые batch_size
+                            # пользователей навсегда займут выборку
+                            or_(
+                                User.review_reactions_notified_at.is_(None),
+                                User.review_reactions_notified_at
+                                <= now - func.make_interval(0, 0, 0, 0, 0, User.review_notification_period_minutes),
+                            ),
+                        )
+                        .order_by(User.review_reactions_notified_at.asc().nulls_first())
+                        .limit(batch_size)
+                    )
+                ).all()
+            )
+            for user in users:
+                configured_start = now - timedelta(minutes=user.review_notification_period_minutes)
+                if user.review_reactions_notified_at and user.review_reactions_notified_at > configured_start:
+                    continue
+                period_start = user.review_reactions_notified_at or configured_start
+                if period_start >= now:
+                    continue
+                reactors_count = await session.scalar(
+                    select(func.count(func.distinct(WineReviewReaction.user_id))).where(
+                        WineReviewReaction.review_user_id == user.id,
+                        WineReviewReaction.updated_at > period_start,
+                        WineReviewReaction.updated_at <= now,
+                    )
+                )
+                user.review_reactions_notified_at = now
+                reactors_count = int(reactors_count or 0)
+                if not reactors_count:
+                    continue
+                session.add(
+                    Notification(
+                        user_id=user.id,
+                        kind="review_reactions",
+                        message=(
+                            f"За {_period_label(user.review_notification_period_minutes)} ваши комментарии "
+                            f"оценили {reactors_count} {_people_word(reactors_count)}"
+                        ),
+                        period_start=period_start,
+                        period_end=now,
+                    )
+                )
+                created += 1
+            await session.commit()
         return created
 
     async def _viewed_items(self, user_id: UUID, refs: list[ViewedRef]) -> list[ViewedWine]:
@@ -563,6 +731,37 @@ def _mask_email(email: str) -> str:
     """Публичное имя автора: первая буква логина, остальное скрыто."""
     local = email.split("@", 1)[0]
     return f"{local[:1].upper()}•••" if local else "Пользователь"
+
+
+def _review_frame(count: int) -> str:
+    if count > 100:
+        return "diamond"
+    if count >= 50:
+        return "gold"
+    if count >= 10:
+        return "silver"
+    if count >= 1:
+        return "bronze"
+    return "none"
+
+
+def _period_label(minutes: int) -> str:
+    """Для фразы «За … ваши комментарии оценили»: минуту, час, сутки, 7 дн."""
+    if minutes % 1440 == 0:
+        days = minutes // 1440
+        return "сутки" if days == 1 else f"{days} дн."
+    if minutes % 60 == 0:
+        hours = minutes // 60
+        return "час" if hours == 1 else f"{hours} ч"
+    return "минуту" if minutes == 1 else f"{minutes} мин"
+
+
+def _people_word(count: int) -> str:
+    mod10 = count % 10
+    mod100 = count % 100
+    if mod10 == 1 and mod100 != 11:
+        return "человек"
+    return "человека" if mod10 in (2, 3, 4) and not 12 <= mod100 <= 14 else "человек"
 
 
 def _review_response(review: WineReview) -> ReviewResponse:
