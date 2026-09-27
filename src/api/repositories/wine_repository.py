@@ -96,6 +96,11 @@ class WineRepository:
                 ).all()
             )
 
+    async def load_all_wines(self) -> list[Wine]:
+        """Весь каталог с карточками (для сомелье: ~2 тыс. вин, держим в памяти)."""
+        async with self.database.session() as session:
+            return list((await session.scalars(self._with_wine_options(select(Wine)))).all())
+
     async def load_color_aliases(self) -> dict[str, list[str]]:
         async with self.database.session() as session:
             rows = (

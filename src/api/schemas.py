@@ -272,3 +272,35 @@ class ProfileUpdateRequest(BaseModel):
 
 class ReviewReactionRequest(BaseModel):
     value: int = Field(description="1 — лайк, -1 — дизлайк")
+
+
+class SommelierOption(BaseModel):
+    value: str
+    label: str
+    count: int = Field(default=0, description="Сколько вин останется, если выбрать вариант")
+
+
+class SommelierFacets(BaseModel):
+    occasions: list[SommelierOption]
+    dishes: list[SommelierOption]
+    tastes: list[SommelierOption]
+    types: list[SommelierOption]
+    colors: list[SommelierOption]
+    sugars: list[SommelierOption]
+    regions: list[SommelierOption]
+    grapes: list[SommelierOption]
+
+
+class SommelierMatch(BaseModel):
+    wine: WineResponse
+    score: float
+    reasons: list[str] = Field(description="Почему вино подошло — из полей карточки, каждую причину можно проверить")
+
+
+class SommelierSearchResponse(BaseModel):
+    total: int
+    items: list[SommelierMatch]
+    corrected_query: str | None = Field(
+        default=None, description="Исправленный запрос, если по исходному ничего не нашлось (опечатка)"
+    )
+    facets: SommelierFacets

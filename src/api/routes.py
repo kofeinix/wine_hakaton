@@ -4,8 +4,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 
 from src.api.auth import OptionalUserId, ensure_anon_id
-from src.api.schemas import SearchResponse, SlugResponse, WineResponse
+from src.api.schemas import SearchResponse, SlugResponse, SommelierSearchResponse, WineResponse
 from src.api.services import WineService
+from src.api.services.sommelier_service import SORTS, SommelierQuery, SommelierService
 from src.api.services.user_service import Owner
 from src.api.services.wine_service import SearchOutcome
 from src.api.utils import _read_image_upload
@@ -136,4 +137,55 @@ async def get_photo(photo_id: str, wine_service: WineServiceDep) -> Response:
         content=file_data.getvalue(),
         media_type=content_type,
         headers={"Cache-Control": f"public, max-age={PHOTO_CACHE_SECONDS}, immutable"},
+    )
+
+
+def get_sommelier_service(request: Request) -> SommelierService:
+    return request.app.state.sommelier_service
+
+
+@router.get(
+    "/sommelier/search",
+    response_model=SommelierSearchResponse,
+    tags=["sommelier"],
+    summary="Сомелье: подбор и поиск вина",
+    description=(
+        "Без нейросети: фильтры по полям каталога, повод (правила по цвету, сахару и гастросочетаниям), "
+        "блюда и вкус (ключевые слова описания), поиск по названию/производителю/сорту с исправлением опечаток. "
+        "Блюда и вкусы складываются (И), значения одного фильтра — варианты (ИЛИ). "
+        "`facets` — все варианты фильтров со счётчиком: сколько вин будет, если выбрать вариант."
+    ),
+)
+async def sommelier_search(
+    sommelier: Annotated[SommelierService, Depends(get_sommelier_service)],
+    q: Annotated[str, Query(max_length=200, description="Название, производитель, сорт или регион")] = "",
+    occasion: Annotated[str | None, Query(description="aperitif, dinner, gift, party, date, picnic, grill, dessert")] = None,
+    dish: Annotated[list[str], Query(description="Группы блюд: cheese, fish, meat, ...")] = [],
+    taste: Annotated[list[str], Query(description="fresh, fruity, floral, aged, full, light, spicy")] = [],
+    type: Annotated[list[str], Query(description="sparkling, still")] = [],
+    color: Annotated[list[str], Query()] = [],
+    sugar: Annotated[list[str], Query()] = [],
+    region: Annotated[list[str], Query()] = [],
+    grape: Annotated[list[str], Query()] = [],
+    min_rating: Annotated[float | None, Query(ge=0, le=5)] = None,
+    sort: Annotated[str, Query(description="relevance, rating, name")] = "relevance",
+    limit: Annotated[int, Query(ge=1, le=60)] = 12,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> SommelierSearchResponse:
+    return await sommelier.search(
+        SommelierQuery(
+            text=q,
+            occasion=occasion,
+            dishes=dish,
+            tastes=taste,
+            types=type,
+            colors=color,
+            sugars=sugar,
+            regions=region,
+            grapes=grape,
+            min_rating=min_rating,
+            sort=sort if sort in SORTS else "relevance",
+            limit=limit,
+            offset=offset,
+        )
     )
