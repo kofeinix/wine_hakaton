@@ -132,7 +132,9 @@ services:
       - --prune
 
   minio:
-    image: minio/minio:latest
+    # официальные образы MinIO (Docker Hub, quay.io) больше не отдаются без входа;
+    # pgsty — community-сборки MinIO и mc (проект Pigsty), amd64 и arm64
+    image: pgsty/minio:latest
     container_name: wine_hakaton_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -152,7 +154,7 @@ services:
       start_period: 10s
 
   minio-init:
-    image: minio/mc:latest
+    image: pgsty/mc:latest
     container_name: wine_hakaton_minio_init
     restart: "no"
     depends_on:
@@ -168,30 +170,57 @@ services:
       MINIO_SEED_ARCHIVE: /seed/photos.tar.gz
       # 1 — перезалить bucket из архива, даже если он уже заполнен
       MINIO_RESEED: ${MINIO_RESEED:-0}
+      # как часто писать в лог прогресс распаковки, секунд
+      MINIO_PROGRESS_SECONDS: ${MINIO_PROGRESS_SECONDS:-15}
     volumes:
       - ./data:/seed:ro
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         set -eu
+        log() { echo "[minio-init $$(date +%H:%M:%S)] $$*"; }
+        count_photos() { mc ls --recursive "local/$$MINIO__BUCKET" 2>/dev/null | wc -l | tr -d ' '; }
+
+        log "connecting to MinIO at http://minio:9000, bucket '$$MINIO__BUCKET'"
         mc alias set local http://minio:9000 "$$MINIO__ACCESS_KEY" "$$MINIO__SECRET_KEY" >/dev/null
-        mc mb --ignore-existing "local/$$MINIO__BUCKET"
-        existing=$$(mc ls --recursive "local/$$MINIO__BUCKET" | head -n 1)
-        if [ -n "$$existing" ] && [ "$$MINIO_RESEED" != "1" ]; then
-          echo "MinIO bucket '$$MINIO__BUCKET' already has photos; skipping seed (MINIO_RESEED=1 to reseed)."
+        mc mb --ignore-existing "local/$$MINIO__BUCKET" >/dev/null
+        existing=$$(count_photos)
+        if [ "$$existing" -gt 0 ] && [ "$$MINIO_RESEED" != "1" ]; then
+          log "bucket already has $$existing photos; skipping seed (MINIO_RESEED=1 to reseed)"
           exit 0
         fi
         if [ ! -f "$$MINIO_SEED_ARCHIVE" ]; then
-          echo "WARNING: data/photos.tar.gz not found: bucket '$$MINIO__BUCKET' stays empty, wine photos will 404."
-          echo "Put photos.tar.gz into ./data/ (or run scripts/build_photos_archive.py) and rerun: docker compose up minio-init"
+          log "WARNING: data/photos.tar.gz not found: bucket stays empty, wine photos will 404"
+          log "put photos.tar.gz into ./data/ (or run scripts/build_photos_archive.py) and rerun: docker compose up minio-init"
           exit 0
         fi
-        mc rm --recursive --force "local/$$MINIO__BUCKET" >/dev/null 2>&1 || true
-        mc cp --disable-multipart \
+        if [ "$$existing" -gt 0 ]; then
+          log "MINIO_RESEED=1: removing $$existing existing photos"
+          mc rm --recursive --force "local/$$MINIO__BUCKET" >/dev/null 2>&1 || true
+        fi
+
+        log "archive: $$MINIO_SEED_ARCHIVE, $$(numfmt --to=iec --suffix=B "$$(stat -c %s "$$MINIO_SEED_ARCHIVE")")"
+        log "uploading with auto-extract: MinIO unpacks photos while receiving the archive"
+        log "a ~5 GB archive takes several minutes; progress every $${MINIO_PROGRESS_SECONDS}s"
+        started=$$(date +%s)
+        # фоновый отчёт: сколько фото уже распаковано в bucket
+        (
+          while sleep "$$MINIO_PROGRESS_SECONDS"; do
+            log "  ... $$(count_photos) photos in bucket, $$(( $$(date +%s) - started ))s elapsed"
+          done
+        ) &
+        reporter=$$!
+        if ! mc cp --disable-multipart \
           --attr "X-Amz-Meta-Snowball-Auto-Extract=true" \
-          "$$MINIO_SEED_ARCHIVE" "local/$$MINIO__BUCKET/" >/dev/null
-        count=$$(mc ls --recursive "local/$$MINIO__BUCKET" | wc -l)
-        echo "MinIO bucket '$$MINIO__BUCKET' seeded with $$count photos."
+          "$$MINIO_SEED_ARCHIVE" "local/$$MINIO__BUCKET/" >/tmp/mc-cp.log 2>&1; then
+          kill "$$reporter" 2>/dev/null || true
+          log "ERROR: upload failed after $$(( $$(date +%s) - started ))s, mc output:"
+          cat /tmp/mc-cp.log
+          log "partially seeded: $$(count_photos) photos; fix the cause and rerun with MINIO_RESEED=1"
+          exit 1
+        fi
+        kill "$$reporter" 2>/dev/null || true
+        log "done: bucket seeded with $$(count_photos) photos in $$(( $$(date +%s) - started ))s"
 
   qdrant:
     image: qdrant/qdrant:latest
