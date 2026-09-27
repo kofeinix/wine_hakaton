@@ -3050,6 +3050,89 @@ main {
   }
 }
 
+/* --- «на главный экран» (только телефоны) ------------------------------------------------ */
+
+.install-app {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  width: min(1329px, calc(100% - 32px));
+  margin: 48px auto 0;
+  padding: 18px 44px 18px 16px;
+  border-radius: 24px;
+  background: var(--bg-card);
+}
+
+.install-app-icon {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(123, 53, 40, 0.15);
+}
+
+.install-app-body {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+}
+
+.install-app-body h2 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.install-app-body p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.install-app-body .ui-button {
+  justify-self: start;
+}
+
+.install-app-steps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.install-app-key {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.install-app-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-subtle);
+}
+
 .site-footer {
   display: flex;
   justify-content: space-between;

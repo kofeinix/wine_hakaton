@@ -28,6 +28,12 @@ export default defineNuxtConfig({
           content: "Сканер российских вин: распознавание этикетки, карточка вина, похожие варианты и история.",
         },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+        // «на экран Домой»: открывается как отдельное приложение, без адресной строки
+        { name: "theme-color", content: "#8f3d42" },
+        { name: "mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-title", content: "Сканер вин" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       ],
       // иконка вкладки — логотип команды ASD
       link: [
@@ -35,6 +41,7 @@ export default defineNuxtConfig({
         { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
         { rel: "icon", type: "image/png", sizes: "256x256", href: "/favicon.png" },
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+        { rel: "manifest", href: "/manifest.webmanifest" },
       ],
     },
   },

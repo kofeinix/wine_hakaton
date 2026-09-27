@@ -8,6 +8,7 @@
       <ProfilePage v-else />
     </main>
 
+    <InstallApp />
     <AppFooter />
     <AuthModal />
     <NotificationModal />
