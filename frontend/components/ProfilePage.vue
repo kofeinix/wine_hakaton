@@ -155,39 +155,62 @@
     <ProfileAchievements v-else-if="app.profileTab.value === 'achievements'" />
 
     <div v-else class="profile-list">
-      <div v-if="app.notifications.value.unread" class="profile-list-toolbar">
-        <span>Новых: {{ app.notifications.value.unread }}</span>
-        <button class="ui-button transparent small" type="button" @click="app.markAllNotificationsRead">
-          <CheckCheck :size="16" />
-          Отметить все прочитанными
-        </button>
+      <div v-if="app.notifications.value.items.length" class="profile-list-toolbar">
+        <span>{{ app.notifications.value.unread ? `Новых: ${app.notifications.value.unread}` : "Все прочитаны" }}</span>
+        <div class="profile-list-toolbar-actions">
+          <button
+            v-if="app.notifications.value.unread"
+            class="ui-button transparent small"
+            type="button"
+            @click="app.markAllNotificationsRead"
+          >
+            <CheckCheck :size="16" />
+            Прочитать все
+          </button>
+          <button class="ui-button transparent small" type="button" @click="deleteAllNotifications">
+            <Trash2 :size="16" />
+            Удалить все
+          </button>
+        </div>
       </div>
       <p v-if="!app.notifications.value.items.length" class="profile-empty">
         Напоминаний пока нет. Через час после поиска мы спросим, взяли ли вы что-нибудь из просмотренного.
       </p>
-      <button
+      <div
         v-for="item in app.notifications.value.items"
         :key="item.id"
         class="notification-card"
         :class="{ unread: !item.read_at }"
-        type="button"
-        @click="openNotification(item)"
       >
-        <span class="notification-icon"><Bell :size="20" /></span>
-        <span class="notification-card-body">
-          <strong>{{ item.message }}</strong>
-          <span v-if="item.kind === 'review_reactions'">{{ formatDate(item.created_at) }} · отзывы</span>
-          <span v-else>{{ formatDate(item.created_at) }} · {{ item.wines_count }} {{ winesWord(item.wines_count) }}</span>
-        </span>
-        <span v-if="!item.read_at" class="new-badge">Новое</span>
-        <ChevronRight :size="20" class="notification-card-chevron" />
-      </button>
+        <button class="notification-card-open" type="button" @click="openNotification(item)">
+          <span class="notification-icon" :class="item.kind">
+            <Trophy v-if="item.kind === 'achievement'" :size="20" />
+            <ThumbsUp v-else-if="item.kind === 'review_reactions'" :size="20" />
+            <Bell v-else :size="20" />
+          </span>
+          <span class="notification-card-body">
+            <strong>{{ item.message }}</strong>
+            <span>{{ formatDate(item.created_at) }} · {{ notificationKind(item) }}</span>
+          </span>
+          <span v-if="!item.read_at" class="new-badge">Новое</span>
+          <ChevronRight :size="20" class="notification-card-chevron" />
+        </button>
+        <button
+          class="notification-delete"
+          type="button"
+          aria-label="Удалить уведомление"
+          title="Удалить"
+          @click="app.deleteNotification(item.id)"
+        >
+          <Trash2 :size="18" />
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save, ThumbsDown, ThumbsUp } from "@lucide/vue";
+import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save, ThumbsDown, ThumbsUp, Trash2, Trophy } from "@lucide/vue";
 
 const app = useWineApp();
 const avatarInput = ref(null);
@@ -270,12 +293,25 @@ async function uploadAvatar(event) {
   }
 }
 
+// напоминание о винах открывает список вин; остальные ведут в свой раздел кабинета
+const NOTIFICATION_TABS = { review_reactions: "reviews", achievement: "achievements" };
+
 async function openNotification(item) {
-  if (item.kind !== "review_reactions") return app.openNotificationDetail(item.id);
-  // сводка по реакциям: отмечаем прочитанной и показываем свои отзывы
+  const tab = NOTIFICATION_TABS[item.kind];
+  if (!tab) return app.openNotificationDetail(item.id);
   if (!item.read_at) await app.markNotificationRead(item.id);
-  app.profileTab.value = "reviews";
-  await app.loadReviews();
+  app.profileTab.value = tab;
+  if (tab === "reviews") await app.loadReviews();
+}
+
+function notificationKind(item) {
+  if (item.kind === "achievement") return "достижения";
+  if (item.kind === "review_reactions") return "отзывы";
+  return `${item.wines_count} ${winesWord(item.wines_count)}`;
+}
+
+async function deleteAllNotifications() {
+  if (window.confirm("Удалить все уведомления? Восстановить их не получится.")) await app.deleteAllNotifications();
 }
 
 async function savePeriod() {

@@ -560,3 +560,27 @@ async def read_notification(notification_id: str, user_id: CurrentUserId, users:
 async def read_all_notifications(user_id: CurrentUserId, users: UserServiceDep) -> Response:
     await users.mark_notifications_read(user_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/notifications",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["notifications"],
+    summary="Удалить все уведомления",
+)
+async def delete_all_notifications(user_id: CurrentUserId, users: UserServiceDep) -> Response:
+    await users.delete_notifications(user_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/notifications/{notification_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["notifications"],
+    summary="Удалить уведомление",
+    responses={404: {"description": "Уведомление не найдено"}},
+)
+async def delete_notification(notification_id: str, user_id: CurrentUserId, users: UserServiceDep) -> Response:
+    if not await users.delete_notifications(user_id, _require_uuid(notification_id, "Notification")):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Notification not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

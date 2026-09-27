@@ -35,6 +35,7 @@ from src.api.services.achievement_catalog import (
 from src.api.services.sommelier_service import SommelierService
 from src.connections.database.models import (
     Favorite,
+    Notification,
     SearchHistory,
     User,
     UserAchievement,
@@ -147,6 +148,16 @@ class AchievementService:
                     insert(UserAchievement)
                     .values([{"user_id": user_id, "code": code, "earned_at": now} for code in new_codes])
                     .on_conflict_do_nothing()
+                )
+                # и запись в уведомлениях: всплывающее окно исчезает, а здесь можно посмотреть позже
+                session.add(
+                    Notification(
+                        user_id=user_id,
+                        kind="achievement",
+                        message=_earned_message([item.title for item in catalog if item.code in new_codes], first_check),
+                        period_start=now,
+                        period_end=now,
+                    )
                 )
             rows = []
             for item in catalog:
@@ -374,6 +385,15 @@ def _should_notify(item: Achievement, value: int, state: _State, now: datetime) 
     crossed = any(state.notified_progress / item.target < mark <= value / item.target for mark in PROGRESS_MILESTONES)
     quiet = state.notified_at is None or now - state.notified_at >= PROGRESS_QUIET
     return crossed or quiet
+
+
+def _earned_message(titles: list[str], first_check: bool) -> str:
+    if first_check and len(titles) > FIRST_CHECK_TOAST_LIMIT:
+        return f"За то, что вы уже успели сделать, получено достижений: {len(titles)}"
+    if len(titles) == 1:
+        return f"Получено достижение «{titles[0]}»"
+    quoted = ", ".join(f"«{title}»" for title in titles)
+    return f"Получено достижений: {len(titles)} — {quoted}"
 
 
 def _describe(item: Achievement, value: int) -> dict:

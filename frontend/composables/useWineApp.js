@@ -150,6 +150,8 @@ export function useWineApp() {
       if (response.updates?.length && (achievements.value || profileTab.value === "achievements")) {
         await loadAchievements();
       }
+      // полученные достижения пишутся и в уведомления
+      if (updates.some((update) => update.type !== "progress")) await loadNotifications();
     } catch {
       // достижения не должны ломать основное действие
     }
@@ -450,6 +452,16 @@ export function useWineApp() {
     wineDetail.value = { wine, searchId, context };
   }
 
+  async function deleteNotification(id) {
+    await apiFetch(`/api/v1/notifications/${id}`, { method: "DELETE" });
+    await loadNotifications();
+  }
+
+  async function deleteAllNotifications() {
+    await apiFetch("/api/v1/notifications", { method: "DELETE" });
+    await loadNotifications();
+  }
+
   async function markAllNotificationsRead() {
     await apiFetch("/api/v1/notifications/read-all", { method: "POST" });
     await loadNotifications();
@@ -498,6 +510,8 @@ export function useWineApp() {
     isDragging,
     isSearching,
     loadNotifications,
+    deleteNotification,
+    deleteAllNotifications,
     loadReviews,
     markNotificationRead,
     notificationDetail,

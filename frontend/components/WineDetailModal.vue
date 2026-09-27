@@ -6,9 +6,19 @@
       </button>
 
       <div class="wine-detail-top">
-        <div class="wine-detail-photo">
+        <button
+          class="wine-detail-photo"
+          type="button"
+          :disabled="!photos.length"
+          :aria-label="photos.length ? `Открыть фото: ${wine.name}` : undefined"
+          @click="openViewer(photos, 0)"
+        >
           <img v-if="mainPhoto(wine)" :src="mainPhoto(wine)" :alt="wine.name" />
-        </div>
+          <span v-if="photos.length > 1" class="wine-detail-photo-count">
+            <Images :size="14" />
+            {{ photos.length }}
+          </span>
+        </button>
         <div class="wine-detail-main">
           <p v-if="detail.context" class="wine-detail-context">{{ detail.context }}</p>
           <h2 id="wine-detail-title">{{ wine.name }}</h2>
@@ -44,6 +54,50 @@
 
       <p v-if="wine.description" class="wine-detail-description">{{ wine.description }}</p>
 
+      <section v-if="photos.length > 1 || scenes.length" class="wine-gallery" aria-labelledby="wine-gallery-title">
+        <div class="wine-gallery-head">
+          <h3 id="wine-gallery-title">Галерея</h3>
+          <div v-if="scenes.length" class="sm-chips" role="tablist" aria-label="Что показать">
+            <button
+              type="button"
+              role="tab"
+              class="sm-chip small"
+              :class="{ selected: galleryTab === 'photos' }"
+              :aria-selected="galleryTab === 'photos'"
+              @click="galleryTab = 'photos'"
+            >
+              Фото <span>{{ photos.length }}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="sm-chip small"
+              :class="{ selected: galleryTab === 'scenes' }"
+              :aria-selected="galleryTab === 'scenes'"
+              @click="galleryTab = 'scenes'"
+            >
+              Сцены <span>{{ scenes.length }}</span>
+            </button>
+          </div>
+        </div>
+        <p v-if="galleryTab === 'scenes'" class="wine-gallery-note">
+          Сцены сгенерированы по фото бутылки — так её легче узнать на полке и на столе.
+        </p>
+        <div class="wine-gallery-grid">
+          <button
+            v-for="(photo, index) in shownGallery"
+            :key="photo.url"
+            class="wine-gallery-tile"
+            type="button"
+            :aria-label="`Открыть фото ${index + 1} из ${gallery.length}`"
+            @click="openViewer(gallery, index)"
+          >
+            <img :src="photo.url" alt="" loading="lazy" />
+            <span v-if="index === GALLERY_PREVIEW - 1 && hiddenCount" class="wine-gallery-more">+{{ hiddenCount }}</span>
+          </button>
+        </div>
+      </section>
+
       <WineReviews :wine="wine" />
 
       <div class="hero-actions">
@@ -60,19 +114,25 @@
         </a>
       </div>
     </article>
+
+    <PhotoViewer v-model:index="viewerIndex" :photos="viewerPhotos" :label="wine.name" />
   </div>
 </template>
 
 <script setup>
-import { Heart, Percent, Thermometer, Wine as WineIcon, X } from "@lucide/vue";
+import { Heart, Images, Percent, Thermometer, Wine as WineIcon, X } from "@lucide/vue";
+
+const GALLERY_PREVIEW = 8; // остальные — через плитку «+N» и листание в просмотре
 
 const app = useWineApp();
 const {
   alcoholLine,
   categoryLine,
   foodPairing,
+  generatedPhotos,
   grapeLine,
   mainPhoto,
+  realPhotos,
   regionLine,
   servingTemperature,
   shadeLine,
@@ -81,6 +141,32 @@ const {
 const detail = computed(() => app.wineDetail.value);
 const wine = computed(() => detail.value?.wine || {});
 const isFavorite = computed(() => app.favorites.value.items.some((item) => item.wine?.id === wine.value.id));
+
+const photos = computed(() => realPhotos(wine.value).map((photo) => ({ url: photo.url })));
+const scenes = computed(() =>
+  generatedPhotos(wine.value).map((photo) => ({ url: photo.url, caption: "Сцена сгенерирована по фото бутылки" })),
+);
+const galleryTab = ref("photos");
+const gallery = computed(() => (galleryTab.value === "scenes" ? scenes.value : photos.value));
+const shownGallery = computed(() => gallery.value.slice(0, GALLERY_PREVIEW));
+const hiddenCount = computed(() => Math.max(0, gallery.value.length - GALLERY_PREVIEW));
+const viewerPhotos = ref([]);
+const viewerIndex = ref(null);
+
+function openViewer(list, index) {
+  if (!list.length) return;
+  viewerPhotos.value = list;
+  viewerIndex.value = index;
+}
+
+// новое вино — галерея с начала
+watch(
+  () => wine.value.id,
+  () => {
+    galleryTab.value = "photos";
+    viewerIndex.value = null;
+  },
+);
 
 function close() {
   app.wineDetail.value = null;

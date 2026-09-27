@@ -628,6 +628,16 @@ class UserService:
             await session.commit()
         return int(result.rowcount or 0)
 
+    async def delete_notifications(self, user_id: UUID, notification_id: UUID | None = None) -> int:
+        """Удалить одно уведомление или все (вина напоминания удаляются каскадом)."""
+        condition = [Notification.user_id == user_id]
+        if notification_id is not None:
+            condition.append(Notification.id == notification_id)
+        async with self.database.session() as session:
+            result = await session.execute(delete(Notification).where(*condition))
+            await session.commit()
+        return int(result.rowcount or 0)
+
     async def process_due_reminders(self, batch_size: int = 200) -> int:
         """Сводные напоминания "вы недавно смотрели вина, что-то взяли?".
 
