@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 
 from src.api.auth import OptionalUserId, ensure_anon_id
-from src.api.schemas import CatBoostSearchResponse, SearchResponse, SlugResponse, WineResponse
+from src.api.schemas import SearchResponse, SlugResponse, WineResponse
 from src.api.services import WineService
 from src.api.services.user_service import Owner
 from src.api.services.wine_service import SearchOutcome
@@ -87,10 +87,6 @@ async def search_by_image_extended(
     user_id: OptionalUserId,
     image: ImageUpload,
     limit: int = Query(default=10, ge=1, le=50, description="Сколько результатов вернуть"),
-    stages: list[str] = Query(
-        default=["global"],
-        description="global — визуальный поиск + OCR-реранк (всегда); llm — дополнительно выбор vision-LLM.",
-    ),
     main_photos_only: bool = Query(default=False, description="Искать только по главным фото каталога"),
     views: list[str] = Query(
         default=[],
@@ -103,32 +99,10 @@ async def search_by_image_extended(
         await _read_image_upload(image),
         limit=limit,
         views=views or None,
-        stages=stages,
         main_photos_only=main_photos_only,
     )
     search_id = await _record_search(request, response, user_id, outcome) if save_history else None
     return await wine_service.build_response(outcome, search_id=search_id, debug=debug)
-
-
-@router.post(
-    "/search/image/catboost",
-    response_model=CatBoostSearchResponse,
-    tags=["search"],
-    summary="Экспериментальный поиск с CatBoost-реранкером",
-    description="Ранжирует кандидатов моделью `models/catboost/wine_reranker.cbm` (если она есть).",
-    responses=IMAGE_ERRORS,
-)
-async def search_by_image_catboost(
-    wine_service: WineServiceDep,
-    image: ImageUpload,
-    limit: int = Query(default=10, ge=1, le=50),
-    main_photos_only: bool = Query(default=False),
-) -> CatBoostSearchResponse:
-    return await wine_service.search_catboost(
-        await _read_image_upload(image),
-        limit=limit,
-        main_photos_only=main_photos_only,
-    )
 
 
 @router.get(

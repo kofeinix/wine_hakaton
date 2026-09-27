@@ -105,7 +105,6 @@ class SearchTimings(BaseModel):
     embedding_ms: float = Field(description="SigLIP2-эмбеддинги кропов")
     vector_search_ms: float = Field(description="Поиск в Qdrant")
     rerank_ms: float = Field(description="OCR-реранк кандидатов")
-    llm_ms: float | None = Field(default=None, description="Выбор кандидата LLM (stage=llm)")
 
 
 class SearchResponse(BaseModel):
@@ -122,20 +121,6 @@ class SearchResponse(BaseModel):
     search: SearchInfo
     timings_ms: SearchTimings
     diagnostics: dict[str, Any] | None = Field(default=None, description="Полная отладка — только при debug=true")
-
-
-class CatBoostMatch(BaseModel):
-    rank: int
-    slug: str
-    wine_id: str
-    score: float
-
-
-class CatBoostSearchResponse(BaseModel):
-    results: list[CatBoostMatch]
-
-
-# --- пользователи ---------------------------------------------------------------
 
 
 class Credentials(BaseModel):

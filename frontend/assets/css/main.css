@@ -1845,8 +1845,13 @@ main {
   gap: 2px;
 }
 
+/* слои окон: напоминание и карточка вина (30) < оценка (40) < вход (50) — вход всегда поверх */
 .rating-backdrop {
   z-index: 40;
+}
+
+.auth-backdrop {
+  z-index: 50;
 }
 
 .rating-modal {

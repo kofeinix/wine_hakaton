@@ -24,7 +24,7 @@ from src.ml.vision_features import extract_global_vector
 from src.settings.settings import all_settings
 
 
-DEFAULT_IMAGES_DIR = Path("data/images")
+DEFAULT_IMAGES_DIR = Path("data/images_extended")
 DEFAULT_WINES_JSON = Path("data/db/wines.json")
 DEFAULT_OUTPUT_DIR = Path("data/embeddings")
 VIEWS = ("original", "bottle_crop", "label_crop")
@@ -311,11 +311,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--photo-dir-pattern",
         nargs="+",
-        default=["*"],
-        help=(
-            "Photo folder masks to index under each wine directory. "
-            "Example: --photo-dir-pattern main 'yandex_*' 'flux_*' 'vivino_*'."
-        ),
+        # те же папки, что грузит в MinIO/wine_images scripts/seed_minio_photos.py (krsk_* и прочее — не в каталоге)
+        default=["main", "yandex_*", "vivino_*", "flux_*"],
+        help="Маски папок фото внутри папки вина. По умолчанию: main 'yandex_*' 'vivino_*' 'flux_*'.",
     )
     parser.add_argument(
         "--collection-encoder",

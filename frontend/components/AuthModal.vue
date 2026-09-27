@@ -1,7 +1,7 @@
 <template>
-  <div v-if="app.authDialog.value" class="modal-backdrop" @click.self="app.authDialog.value = false">
+  <div v-if="app.authDialog.value" class="modal-backdrop auth-backdrop" @click.self="close">
     <form class="auth-modal" @submit.prevent="app.submitAuth">
-      <button class="close-button" type="button" aria-label="Закрыть" @click="app.authDialog.value = false">
+      <button class="close-button" type="button" aria-label="Закрыть" @click="close">
         <X :size="20" />
       </button>
       <h2>{{ app.authMode.value === "login" ? "Вход" : "Регистрация" }}</h2>
@@ -28,6 +28,12 @@
 import { X } from "@lucide/vue";
 
 const app = useWineApp();
+
+// закрыли окно входа — отложенное действие гостя отменяется
+function close() {
+  app.authDialog.value = false;
+  app.pendingAction.value = null;
+}
 
 function toggleMode() {
   app.authMode.value = app.authMode.value === "login" ? "register" : "login";

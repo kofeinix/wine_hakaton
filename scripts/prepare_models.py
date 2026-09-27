@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Prepare local model files mounted by Docker Compose."""
+"""Подготовить модели в ./models (монтируется в контейнер как /models).
+
+- models/yolo/label.pt   — своя модель детекции этикеток, лежит в репозитории;
+- models/yolo/yolo26x.pt — COCO-детектор бутылок, скачивается с релизов Ultralytics;
+- models/siglip2/        — SigLIP2 для эмбеддингов, скачивается с Hugging Face.
+"""
 
 from __future__ import annotations
 
@@ -13,10 +18,8 @@ from huggingface_hub import snapshot_download
 
 DEFAULT_MODEL_ROOT = Path("models")
 DEFAULT_SIGLIP2_MODEL_ID = "google/siglip2-base-patch16-224"
-YOLO_REQUIRED_FILES = (
-    Path("yolo") / "label.pt",
-    Path("yolo") / "yolo26x.pt",
-)
+LABEL_MODEL = Path("yolo") / "label.pt"
+BOTTLE_MODEL = Path("yolo") / "yolo26x.pt"
 SIGLIP2_DIR_NAME = "siglip2"
 SIGLIP2_REQUIRED_FILES = (
     "config.json",
@@ -27,7 +30,7 @@ SIGLIP2_REQUIRED_FILES = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Prepare YOLO PT and SigLIP2 weights for docker compose."
+        description="Скачать и проверить модели для docker compose (YOLO, SigLIP2)."
     )
     parser.add_argument(
         "--model-root",
@@ -56,15 +59,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def assert_yolo_model(model_root: Path) -> None:
-    missing = [model_root / relative for relative in YOLO_REQUIRED_FILES if not (model_root / relative).is_file()]
-    if missing:
-        raise FileNotFoundError(
-            "Missing YOLO PT model(s): "
-            + ", ".join(str(path) for path in missing)
-            + ". Put label.pt and yolo26x.pt under models/yolo."
-        )
-    print("YOLO PT ready: " + ", ".join(str(model_root / relative) for relative in YOLO_REQUIRED_FILES))
+def prepare_yolo(model_root: Path) -> None:
+    label = model_root / LABEL_MODEL
+    if not label.is_file():
+        raise FileNotFoundError(f"Нет модели этикеток {label}: она хранится в репозитории, проверьте клон.")
+
+    bottle = model_root / BOTTLE_MODEL
+    if not bottle.is_file():
+        from ultralytics.utils.downloads import attempt_download_asset
+
+        bottle.parent.mkdir(parents=True, exist_ok=True)
+        attempt_download_asset(str(bottle))  # официальный релиз Ultralytics (github.com/ultralytics/assets)
+    if not bottle.is_file():
+        raise FileNotFoundError(f"Не удалось скачать {bottle}")
+    print(f"YOLO ready: {label}, {bottle}")
 
 
 def download_siglip2(
@@ -115,7 +123,7 @@ def main() -> int:
         or os.environ.get("HUGGINGFACE_HUB_TOKEN")
     )
 
-    assert_yolo_model(args.model_root)
+    prepare_yolo(args.model_root)
     download_siglip2(args.model_root, args.siglip2_model_id, args.revision, hf_token)
     print("Model directory ready for docker compose: ./models -> /models")
     return 0

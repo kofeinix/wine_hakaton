@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class OcrMatchService:
-    """OCR-скоры кандидатов по сырому OCR-тексту. Общий для API и обучения CatBoost."""
+    """OCR-скоры кандидатов по сырому OCR-тексту."""
 
     def __init__(self, repository: WineRepository, sugar_variants: dict[str, list[str]]) -> None:
         self.repository = repository

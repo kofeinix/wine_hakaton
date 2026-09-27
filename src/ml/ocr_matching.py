@@ -21,7 +21,7 @@ ocr_bonus складывается только из бонусов за най�
 Все строки сравниваются в нескольких представлениях: как есть, RU->LAT и
 LAT->RU транслитерация (и для сущностей, и для OCR).
 
-Веса подобраны кросс-валидацией на 578 eval-фото (scripts/ocr_lab):
+Веса подобраны кросс-валидацией на 578 eval-фото:
 Acc@1 86.2% (прежняя формула) -> 87.4% (CV), 88.2% на всём наборе.
 """
 
@@ -67,35 +67,6 @@ ALCOHOL_MISMATCH_TOLERANCE = 1.0
 _WORD_RE = re.compile(r"\w+")
 _ALCOHOL_RE = re.compile(r"(\d{1,2}(?:[.,]\d{1,2})?)\s*%")
 _NUMBER_RE = re.compile(r"\d{1,2}(?:[.,]\d{1,2})?")
-
-# Признаки для CatBoost (этап 2). Сырые скоры — без порогов и нижних границ.
-OCR_FEATURE_NAMES = (
-    "ocr_applied",
-    "ocr_score",
-    "ocr_name_coverage",
-    "ocr_producer_coverage",
-    "ocr_grape_coverage_mean",
-    "ocr_grape_coverage_max",
-    "ocr_name_window",
-    "ocr_producer_window",
-    "ocr_unique_evidence",
-    "ocr_unique_evidence_share",
-    "ocr_color_own",
-    "ocr_color_other",
-    "ocr_color_contradiction",
-    "ocr_sugar_own",
-    "ocr_sugar_other",
-    "ocr_sugar_contradiction",
-    "ocr_grape_detected",
-    "ocr_grape_hit",
-    "ocr_grape_extra",
-    "ocr_grape_contradiction",
-    "ocr_producer_detected",
-    "ocr_producer_contradiction",
-    "ocr_alcohol_match",
-    "ocr_alcohol_mismatch",
-    "ocr_text_tokens",
-)
 
 # --- представления строк ------------------------------------------------------
 

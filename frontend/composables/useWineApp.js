@@ -5,6 +5,8 @@ export function useWineApp() {
   const authMode = useState("wine.authMode", () => "login");
   const authError = useState("wine.authError", () => "");
   const authForm = useState("wine.authForm", () => ({ email: "", password: "" }));
+  // действие гостя, прерванное входом (оценить, в избранное) — выполняем сразу после входа
+  const pendingAction = useState("wine.pendingAction", () => null);
   const token = useState("wine.token", () => "");
   const user = useState("wine.user", () => null);
 
@@ -93,6 +95,9 @@ export function useWineApp() {
       user.value = response.user;
       authDialog.value = false;
       await refreshPrivateData();
+      const action = pendingAction.value;
+      pendingAction.value = null;
+      if (action) await action();
     } catch (error) {
       authError.value = error?.data?.detail || "Не удалось выполнить вход";
     }
@@ -248,9 +253,14 @@ export function useWineApp() {
     setSearchedImage(url);
   }
 
+  function requireAuth(action) {
+    pendingAction.value = action;
+    authDialog.value = true;
+  }
+
   async function addFavorite(match, searchId = searchResponse.value?.search_id) {
     if (!user.value) {
-      authDialog.value = true;
+      requireAuth(() => addFavorite(match, searchId));
       return;
     }
     await apiFetch("/api/v1/favorites", {
@@ -268,7 +278,7 @@ export function useWineApp() {
 
   function openRating({ wine, wineId = wine?.id, notificationId = null, review = null, rating = null }) {
     if (!user.value) {
-      authDialog.value = true;
+      requireAuth(() => openRating({ wine, wineId, notificationId, review, rating }));
       return;
     }
     const existing = review || reviews.value.items.find((item) => item.wine_id === wineId) || null;
@@ -339,6 +349,7 @@ export function useWineApp() {
     activeView,
     addFavorite,
     authDialog,
+    pendingAction,
     authError,
     authForm,
     authMode,

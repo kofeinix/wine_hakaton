@@ -1,16 +1,9 @@
-.venv
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.env
-.git
-.gitignore
-.idea
-.vscode
-tests
-docs
-Dockerfile
-docker-compose.yml
-.dockerignore
-models
+# в образ попадают только main.py, src/ и scripts/ — остальное не отправляем в контекст сборки
+*
+!main.py
+!pyproject.toml
+!uv.lock
+!src/
+!scripts/
+**/__pycache__
+**/*.pyc

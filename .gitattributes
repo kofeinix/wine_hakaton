@@ -1,2 +1,0 @@
-data/photos.tar.gz filter=lfs diff=lfs merge=lfs -text
-models/yolo/yolo26x.pt filter=lfs diff=lfs merge=lfs -text

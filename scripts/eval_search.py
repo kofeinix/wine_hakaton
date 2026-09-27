@@ -13,8 +13,8 @@
   - итоговые метрики качества (Accuracy@1, MRR, средние score).
 
 Использование:
-  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N] [--stages global|global,llm]
-  python scripts/eval_search.py --image data/eval/<wine_id>/vivino_1.jpg --stages global
+  python scripts/eval_search.py [--api-url http://localhost:8000] [--limit N]
+  python scripts/eval_search.py --image data/eval/<wine_id>/vivino_1.jpg
 """
 
 from __future__ import annotations
@@ -29,7 +29,6 @@ import httpx
 
 EVAL_DIR = Path(__file__).resolve().parent.parent / "data" / "eval"
 SEARCH_ENDPOINT = "/api/v1/search/image/extended"
-CATBOOST_SEARCH_ENDPOINT = "/api/v1/search/image/catboost"
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 # Расширение -> MIME-тип (сервер требует content_type, начинающийся с "image/")
@@ -82,25 +81,20 @@ async def search_image(
     image_path: Path,
     views: list[str] | None = None,
     topk: int = 10,
-    stages: list[str] | None = None,
     main_photos_only: bool = False,
-    catboost: bool = False,
 ) -> dict:
     """Выполняет поиск по картинке и возвращает JSON-ответ."""
     mime = MIME_BY_EXT.get(image_path.suffix.lower(), "image/jpeg")
-    # не засорять историю поиска; debug — пул кандидатов для scripts/ocr_lab
+    # не засорять историю поиска; debug — пул кандидатов для офлайн-анализа
     params: dict = {"limit": topk, "save_history": False, "debug": True}
-    if stages:
-        params["stages"] = stages
     if views:
         params["views"] = views
     if main_photos_only:
         params["main_photos_only"] = True
     with image_path.open("rb") as f:
         files = {"image": (image_path.name, f, mime)}
-        endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else SEARCH_ENDPOINT
         resp = await client.post(
-            f"{api_url}{endpoint}",
+            f"{api_url}{SEARCH_ENDPOINT}",
             files=files,
             params=params,
             timeout=120.0,
@@ -110,7 +104,7 @@ async def search_image(
 
 
 def normalize_response(data: dict) -> dict:
-    """Ответ /extended или /catboost -> общий вид для отчёта."""
+    """Ответ /extended -> общий вид для отчёта."""
     results = [
         {
             "wine_id": str(match.get("wine_id")),
@@ -145,9 +139,7 @@ async def run(
     expected_id: str | None = None,
     views: list[str] | None = None,
     topk: int = 10,
-    stages: list[str] | None = None,
     main_photos_only: bool = False,
-    catboost: bool = False,
     eval_dir: Path | None = None,
     image_name: str | None = None,
     responses_output: Path | None = None,
@@ -173,15 +165,13 @@ async def run(
         images = images[:limit]
 
     print(f"Всего изображений для оценки: {len(images)}")
-    endpoint = CATBOOST_SEARCH_ENDPOINT if catboost else SEARCH_ENDPOINT
-    print(f"API: {api_url}{endpoint}")
+    print(f"API: {api_url}{SEARCH_ENDPOINT}")
     print(f"Views: {views or 'runtime active views'}")
-    print(f"Stages: {'catboost' if catboost else stages or ['global']}")
     print(f"Main photos only: {main_photos_only}")
     print(f"Top-K: {topk}\n")
 
     rows: list[dict] = []
-    # Полные ответы API (кандидаты, OCR-текст, пул до реранка) — датасет для scripts/ocr_lab.
+    # Полные ответы API (кандидаты, OCR-текст, пул до реранка) — для офлайн-анализа.
     responses: list[dict] = []
 
     def save_responses() -> None:
@@ -198,9 +188,7 @@ async def run(
                     img_path,
                     views=views,
                     topk=topk,
-                    stages=stages,
                     main_photos_only=main_photos_only,
-                    catboost=catboost,
                 )
             except Exception as exc:  # noqa: BLE001
                 print(f"[{idx}/{len(images)}] ОШИБКА {img_path.name}: {exc}")
@@ -208,7 +196,6 @@ async def run(
                     {
                         "expected": expected_id,
                         "image": img_path.name,
-                        "stages": ["catboost"] if catboost else stages or ["global"],
                         "main_photos_only": main_photos_only,
                         "error": str(exc),
                     }
@@ -231,7 +218,6 @@ async def run(
                 {
                     "expected": expected_id,
                     "image": img_path.name,
-                    "stages": ["catboost"] if catboost else stages or ["global"],
                     "main_photos_only": main_photos_only,
                     "active_views": parsed["active_views"],
                     "ocr_source_view": parsed["ocr_source_view"],
@@ -357,7 +343,7 @@ async def run(
     print(f"\nПолные результаты сохранены в {out_path}")
     save_responses()
     if responses_output is not None:
-        print(f"Ответы API (для scripts/ocr_lab) сохранены в {responses_output}")
+        print(f"Ответы API сохранены в {responses_output}")
 
 
 def main() -> None:
@@ -418,36 +404,21 @@ def main() -> None:
         help="Максимальное число результатов, запрашиваемых у API (для Recall@k). По умолчанию 50.",
     )
     parser.add_argument(
-        "--stages",
-        action="append",
-        default=None,
-        help=(
-            "Стадии pipeline: global (визуальный поиск + OCR-реранк, всегда), "
-            "llm (опциональный выбор кандидата vision-LLM). По умолчанию global."
-        ),
-    )
-    parser.add_argument(
         "--main-photos-only",
         action="store_true",
         help="Искать только по векторам main-фото, исключая yandex_* фото.",
-    )
-    parser.add_argument(
-        "--catboost",
-        action="store_true",
-        help="Оценивать экспериментальный CatBoost endpoint /search/image/catboost.",
     )
     parser.add_argument(
         "--responses-output",
         type=Path,
         default=None,
         help=(
-            "Куда сохранить полные ответы API для офлайн-анализа OCR (scripts/ocr_lab). "
+            "Куда сохранить полные ответы API для офлайн-анализа OCR. "
             "По умолчанию data/eval_responses_<имя eval-папки>.json; --no-save-responses — не сохранять."
         ),
     )
     parser.add_argument("--no-save-responses", action="store_true")
     args = parser.parse_args()
-    stages = normalize_stages_arg(args.stages)
     responses_output = None
     if not args.no_save_responses:
         responses_output = args.responses_output or (
@@ -461,26 +432,12 @@ def main() -> None:
             expected_id=args.expected_id,
             views=args.view,
             topk=args.topk,
-            stages=stages,
             main_photos_only=args.main_photos_only,
-            catboost=args.catboost,
             eval_dir=args.eval_dir,
             image_name=args.image_name,
             responses_output=responses_output,
         )
     )
-
-
-def normalize_stages_arg(values: list[str] | None) -> list[str] | None:
-    if not values:
-        return None
-    result: list[str] = []
-    for value in values:
-        for part in value.split(","):
-            item = part.strip()
-            if item:
-                result.append(item)
-    return result
 
 
 if __name__ == "__main__":

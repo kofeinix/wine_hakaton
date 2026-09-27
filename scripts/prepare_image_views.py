@@ -17,7 +17,7 @@ from src.ml.yolo import YoloBottleCropper, YoloLabelCropper
 from src.settings.settings import YoloSettings
 
 
-DEFAULT_IMAGES_DIR = Path("data/images")
+DEFAULT_IMAGES_DIR = Path("data/images_extended")
 DEFAULT_BOTTLE_MODEL = "models/yolo/yolo26x.pt"
 DEFAULT_LABEL_MODEL = "models/yolo/label.pt"
 
@@ -179,6 +179,8 @@ def process_image(
             save_jpeg(bottle_crop.image, view_dir / "bottle_crop.jpg", quality)
             result["bottle_confidence"] = round(bottle_crop.confidence, 4)
         else:
+            # при повторной подготовке не оставляем устаревший кроп от прошлого прогона
+            (view_dir / "bottle_crop.jpg").unlink(missing_ok=True)
             result["bottle_confidence"] = None
 
     if label_cropper is not None:
@@ -190,6 +192,8 @@ def process_image(
             save_jpeg(normalized, view_dir / "normalized_label_crop.jpg", quality)
             result["label_confidence"] = round(label_crop.confidence, 4)
         else:
+            (view_dir / "label_crop.jpg").unlink(missing_ok=True)
+            (view_dir / "normalized_label_crop.jpg").unlink(missing_ok=True)
             result["label_confidence"] = None
 
     if crop_source_image is not image:

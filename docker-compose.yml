@@ -30,10 +30,23 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
+    # адреса сервисов внутри docker-сети фиксированы: порты в .env меняют только проброс на хост
+    environment: &internal-services
       DATABASE__HOST: postgres
       DATABASE__PORT: 5432
+      QDRANT__HOST: qdrant
+      QDRANT__PORT: 6333
+      QDRANT__GRPC_PORT: 6334
+      MINIO__HOST: minio
+      MINIO__PORT: 9000
+      REDIS__HOST: redis
+      REDIS__PORT: 6379
+    # LLM (LM Studio / Ollama) запущена на хосте; на Linux имя host.docker.internal нужно задать явно
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
+      models-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       db-init:
@@ -53,6 +66,29 @@ services:
     volumes:
       - ./models:/models:ro
       - ./data:/data:ro
+
+  # разовые сервисы подготовки: скачивают то, чего нет в репозитории; повторно — пропускают
+  models-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wine_hakaton_models_init
+    restart: "no"
+    user: root  # пишет в ./models на хосте (на Linux владелец папки может быть любым)
+    volumes:
+      - ./models:/models
+    command: ["python", "scripts/prepare_models.py", "--model-root", "/models"]
+
+  data-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wine_hakaton_data_init
+    restart: "no"
+    user: root
+    volumes:
+      - ./data:/app/data
+    command: ["python", "scripts/download_data.py", "--data-dir", "/app/data"]
 
   postgres:
     image: postgres:16-alpine
@@ -84,12 +120,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      DATABASE__HOST: postgres
-      DATABASE__PORT: 5432
-      DATABASE__DB_NAME: ${DATABASE__DB_NAME:-wine_hakaton}
-      DATABASE__USER: ${DATABASE__USER:-wine}
-      DATABASE__PASSWORD: ${DATABASE__PASSWORD:-wine}
+    environment: *internal-services
     volumes:
       - ./data:/data:ro
     command:
@@ -127,6 +158,8 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+      data-init:
+        condition: service_completed_successfully
     environment:
       MINIO__ACCESS_KEY: ${MINIO__ACCESS_KEY:-minio}
       MINIO__SECRET_KEY: ${MINIO__SECRET_KEY:-miniosecret}
@@ -189,14 +222,12 @@ services:
     depends_on:
       qdrant:
         condition: service_healthy
-    environment:
-      QDRANT__HOST: qdrant
-      QDRANT__PORT: ${QDRANT__PORT:-6333}
-      QDRANT__GRPC_PORT: ${QDRANT__GRPC_PORT:-6334}
-      QDRANT__COLLECTION_NAME: ${QDRANT__COLLECTION_NAME:-wine_vectors}
-      QDRANT__API_KEY: ${QDRANT__API_KEY:-}
+      data-init:
+        condition: service_completed_successfully
+    environment: *internal-services
     volumes:
       - ./data:/data:ro
+    # коллекции уже загружены -> пропускает; перезалить: docker compose run --rm qdrant-init python scripts/init_qdrant.py --recreate
     command:
       - python
       - scripts/init_qdrant.py

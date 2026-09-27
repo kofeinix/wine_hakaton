@@ -1,35 +1,45 @@
+# Python / окружение
 __pycache__/
 .venv/
+.venv-*/
 .env
-.idea/
 .ruff_cache/
 .uv-cache/
+.cache/
+.local/
+
+# IDE и служебное
+.idea/
+.vscode/
+.ai/
+.DS_Store
+.playwright-mcp/
+docs/
+
+# frontend
 frontend/node_modules/
 frontend/dist/
 frontend/.nuxt/
 frontend/.output/
+
+# модели скачивает ./prepare_models; в репозитории только своя модель этикеток
 models/*
 !models/yolo/
-!models/yolo/best.onnx
+models/yolo/*
+!models/yolo/label.pt
+
+# данные: большие артефакты скачиваются отдельно (см. README), в репозитории — только data/db
 data/photos.tar.gz
-data/images/*
-data/images_w_vivino/*
-data/images_extended/*
-data/eval/*
-.DS_Store
-*.zip
-generated/
 data/embeddings/
-
-# офлайн-эксперименты OCR (scripts/ocr_lab)
-data/ocr_lab_cache/
-data/eval_responses_*.json
+data/embeddings_old/
+data/images/
+data/images_w_vivino/
+data/eval_runs/
+data/images_extended/
+data/eval/
 data/catboost/
-
-# служебные снимки Playwright MCP
-.playwright-mcp/
-
-docs/
-
-# сырые ответы vino-svoe.ru (scripts/enrich_wines_from_site.py)
+data/ocr_lab_cache/
 data/site_cache/
+data/eval_responses_*.json
+generated/
+*.zip

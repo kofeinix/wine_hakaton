@@ -16,7 +16,6 @@ from pydantic import BaseModel
 
 from langchain_openai import ChatOpenAI
 from src.connections.rate_limiter import RateLimiterManager
-from src.llm.models import WineSelectionOutput
 
 from src.settings.settings import LlmSettings
 
@@ -158,9 +157,6 @@ class ChatOpenAIWrapper:
             raise RuntimeError("ChatOpenAIWrapper not started. Call start() first.")
         return self._chat
 
-    def _is_ollama(self) -> bool:
-        return self.config.is_ollama_infer
-
     @staticmethod
     def _image_data_url(image_bytes: bytes, max_side: int = 1024) -> str:
 
@@ -210,35 +206,3 @@ class ChatOpenAIWrapper:
         else:
             content = str(content or "")
         return self._strip_empty_think(content).strip()
-
-    async def choose_wine_from_image(
-        self,
-        image_bytes: bytes,
-        candidates: list[dict],
-    ) -> WineSelectionOutput:
-        llm = self.chat.with_structured_output(WineSelectionOutput)
-        candidate_lines = "\n".join(
-            (
-                f"{item['number']}. wine_id={item['wine_id']} | "
-                f"name={item.get('name') or ''} | producer={item.get('producer_name') or ''} | "
-                f"region={item.get('region_name') or ''} | grapes={item.get('grape_name') or ''} | "
-                f"color={item.get('color') or ''} | sugar={item.get('sugar') or ''} | "
-                f"alcohol={item.get('alcohol') or ''}"
-            )
-            for item in candidates
-        )
-        prompt = (
-            "You are matching a user's wine label/bottle photo to one item from a candidate list.\n"
-            "Use the image text, label design, producer, region, grape, color, sugar, and alcohol when visible.\n"
-            "Return structured JSON only. Choose exactly one candidate number from the list. "
-            "If uncertain, still choose the most likely candidate and lower confidence.\n\n"
-            f"Candidates:\n{candidate_lines}"
-        )
-        message = HumanMessage(
-            content=[
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": self._image_data_url(image_bytes)}},
-            ]
-        )
-        result = await llm.ainvoke([message])
-        return result

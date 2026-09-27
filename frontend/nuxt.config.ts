@@ -1,4 +1,8 @@
 const apiTarget = process.env.VITE_API_TARGET || process.env.NUXT_API_TARGET || "http://localhost:8000";
+// домены/IP, с которых можно открыть dev-сервер (кроме localhost), через запятую; "*" — любые
+const allowedHostsEnv = (process.env.VITE_ALLOWED_HOSTS || "").trim();
+const allowedHosts =
+  allowedHostsEnv === "*" ? true : allowedHostsEnv.split(",").map((host) => host.trim()).filter(Boolean);
 
 export default defineNuxtConfig({
   ssr: false,
@@ -32,6 +36,9 @@ export default defineNuxtConfig({
       "/api/**": { proxy: `${apiTarget}/api/**` },
       "/health": { proxy: `${apiTarget}/health` },
     },
+  },
+  vite: {
+    server: { allowedHosts },
   },
   devServer: {
     host: "0.0.0.0",

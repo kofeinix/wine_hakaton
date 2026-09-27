@@ -155,13 +155,7 @@
         </article>
 
         <article class="diag-card">
-          <template v-if="llm.requested">
-            <h4>Выбор vision-LLM</h4>
-            <p class="diag-muted">Дополнительный этап (stages=llm): LLM смотрит на фото и выбирает вино из топа кандидатов.</p>
-            <pre class="diag-text small">{{ JSON.stringify(llm, null, 2) }}</pre>
-            <h4 class="diag-subtitle">Сырой ответ</h4>
-          </template>
-          <h4 v-else>Сырой ответ</h4>
+          <h4>Сырой ответ</h4>
           <details class="diag-raw">
             <summary>Показать JSON диагностики</summary>
             <pre class="diag-text small">{{ rawJson }}</pre>
@@ -184,7 +178,6 @@ const imageUrl = computed(() => app.searchedImageUrl.value);
 const diagnostics = computed(() => response.value?.diagnostics || {});
 const rerank = computed(() => diagnostics.value.ocr_rerank || {});
 const visual = computed(() => diagnostics.value.visual || {});
-const llm = computed(() => diagnostics.value.llm_rerank || {});
 const timings = computed(() => response.value?.timings_ms || {});
 const crops = computed(() => response.value?.crops || {});
 const original = computed(() => response.value?.image || (crops.value.original?.available ? crops.value.original : null));
@@ -304,7 +297,6 @@ const timingRows = computed(() => {
     { key: "vector_search_ms", label: "Qdrant" },
     { key: "ocr_ms", label: "OCR (параллельно)", parallel: true },
     { key: "rerank_ms", label: "OCR-реранк" },
-    { key: "llm_ms", label: "LLM" },
   ]
     .filter((row) => typeof t[row.key] === "number")
     .map((row) => ({ ...row, value: t[row.key], share: Math.min(100, (t[row.key] / total) * 100) }));

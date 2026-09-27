@@ -136,7 +136,6 @@ class LlmSettings(BaseModel):
         default=20, description="Max keepalive connections"
     )
     keepalive_expiry: float = Field(default=30.0, description="Keepalive expiry")
-    is_ollama_infer: bool = Field(default=False, description="Inference mode - default is vllm")
 
 class MinioSettings(BaseModel):
     host: str | None = Field(default=None, description="Minio host")
