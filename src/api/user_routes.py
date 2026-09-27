@@ -1,9 +1,12 @@
 """Аккаунт, история поиска, избранное и напоминания."""
 
+import base64
+import io
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
+from PIL import Image, ImageOps
 
 from src.api.auth import (
     CurrentUserId,
@@ -18,6 +21,8 @@ from src.api.schemas import (
     FavoritesResponse,
     NotificationDetail,
     NotificationsResponse,
+    ProfileUpdateRequest,
+    ReviewReactionRequest,
     ReviewRequest,
     ReviewResponse,
     ReviewsResponse,
@@ -40,7 +45,30 @@ UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 
 
 def _user_response(user) -> UserResponse:
-    return UserResponse(id=str(user.id), email=user.email, created_at=user.created_at)
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        avatar_url=user.avatar_url,
+        review_notification_period_minutes=user.review_notification_period_minutes,
+        created_at=user.created_at,
+    )
+
+
+AVATAR_MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+AVATAR_SIZE = 256
+
+
+def _avatar_data_url(data: bytes) -> str:
+    """Квадратная миниатюра 256×256 в JPEG: аватар приходит в каждом отзыве, поэтому держим его маленьким."""
+    try:
+        with Image.open(io.BytesIO(data)) as source:
+            image = ImageOps.exif_transpose(source).convert("RGB")
+    except Exception as exc:  # ultralytics подменяет Image.open, и ошибки бывают не только PIL-овые
+        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Не удалось прочитать изображение") from exc
+    image = ImageOps.fit(image, (AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS)
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG", quality=85)
+    return f"data:image/jpeg;base64,{base64.b64encode(buffer.getvalue()).decode('ascii')}"
 
 
 def _token_response(request: Request, user) -> TokenResponse:
@@ -97,6 +125,35 @@ async def login(body: Credentials, request: Request, response: Response, users: 
 @router.get("/auth/me", response_model=UserResponse, tags=["auth"], summary="Текущий пользователь")
 async def me(user_id: CurrentUserId, users: UserServiceDep) -> UserResponse:
     user = await users.get_user(user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    return _user_response(user)
+
+
+@router.patch("/profile", response_model=UserResponse, tags=["auth"], summary="Настройки профиля")
+async def update_profile(body: ProfileUpdateRequest, user_id: CurrentUserId, users: UserServiceDep) -> UserResponse:
+    user = await users.update_profile(
+        user_id,
+        review_notification_period_minutes=body.review_notification_period_minutes,
+    )
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    return _user_response(user)
+
+
+@router.post("/profile/avatar", response_model=UserResponse, tags=["auth"], summary="Загрузить аватар")
+async def upload_avatar(
+    user_id: CurrentUserId,
+    users: UserServiceDep,
+    image: UploadFile = File(description="Изображение аватара"),
+) -> UserResponse:
+    data = await image.read()
+    if not data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Файл пустой")
+    if len(data) > AVATAR_MAX_UPLOAD_BYTES:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Файл больше 10 МБ")
+    avatar_url = _avatar_data_url(data)
+    user = await users.update_profile(user_id, avatar_url=avatar_url)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
     return _user_response(user)
@@ -268,6 +325,52 @@ async def put_review(wine_id: str, body: ReviewRequest, user_id: CurrentUserId, 
 async def delete_review(wine_id: str, user_id: CurrentUserId, users: UserServiceDep) -> Response:
     if not await users.delete_review(user_id, _require_uuid(wine_id, "Review")):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/wines/{wine_id}/reviews/{review_user_id}/reaction",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["reviews"],
+    summary="Лайкнуть или дизлайкнуть комментарий",
+    responses={404: {"description": "Комментарий не найден"}},
+)
+async def put_review_reaction(
+    wine_id: str,
+    review_user_id: str,
+    body: ReviewReactionRequest,
+    user_id: CurrentUserId,
+    users: UserServiceDep,
+) -> Response:
+    if body.value not in (-1, 1):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Reaction must be 1 or -1")
+    if not await users.set_review_reaction(
+        user_id,
+        _require_uuid(wine_id, "Wine"),
+        _require_uuid(review_user_id, "Review"),
+        body.value,
+    ):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/wines/{wine_id}/reviews/{review_user_id}/reaction",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["reviews"],
+    summary="Убрать реакцию с комментария",
+)
+async def delete_review_reaction(
+    wine_id: str,
+    review_user_id: str,
+    user_id: CurrentUserId,
+    users: UserServiceDep,
+) -> Response:
+    await users.delete_review_reaction(
+        user_id,
+        _require_uuid(wine_id, "Wine"),
+        _require_uuid(review_user_id, "Review"),
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

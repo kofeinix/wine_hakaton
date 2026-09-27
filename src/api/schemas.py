@@ -131,6 +131,8 @@ class Credentials(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: str
+    avatar_url: str | None = None
+    review_notification_period_minutes: int = Field(default=24 * 60, ge=1)
     created_at: datetime
 
 
@@ -196,10 +198,17 @@ class ReviewsResponse(BaseModel):
 
 
 class PublicReview(BaseModel):
+    user_id: str = Field(description="ID автора отзыва для реакций")
     author: str = Field(description="Замаскированный автор (email не раскрываем)")
+    avatar_url: str | None = None
+    author_review_count: int = Field(default=0, description="Сколько комментариев оставил автор")
+    author_frame: str = Field(default="none", description="none / bronze / silver / gold / diamond")
     is_mine: bool = False
     rating: int | None = None
     comment: str | None = None
+    likes: int = 0
+    dislikes: int = 0
+    my_reaction: int | None = Field(default=None, description="1 — лайк, -1 — дизлайк")
     created_at: datetime
     updated_at: datetime
 
@@ -245,3 +254,11 @@ class NotificationDetail(NotificationItem):
 class NotificationsResponse(BaseModel):
     items: list[NotificationItem]
     unread: int
+
+
+class ProfileUpdateRequest(BaseModel):
+    review_notification_period_minutes: int | None = Field(default=None, ge=1, le=60 * 24 * 30)
+
+
+class ReviewReactionRequest(BaseModel):
+    value: int = Field(description="1 — лайк, -1 — дизлайк")
