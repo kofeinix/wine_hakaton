@@ -55,7 +55,7 @@
             :key="photo.id || photo.url"
             type="button"
             :class="{ active: app.selectedPhotos.value[match.wine_id] === photo.url }"
-            @click="app.selectedPhotos.value = { ...app.selectedPhotos.value, [match.wine_id]: photo.url }"
+            @click="app.selectedPhotos.value = { ...app.selectedPhotos.value, [match.wine_id]: photo.url }; app.saveSearch()"
           >
             <img :src="photo.url" :alt="match.wine?.name" />
           </button>

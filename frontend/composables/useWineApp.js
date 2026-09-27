@@ -1,4 +1,10 @@
 const CAMERA_FRESH_MS = 2 * 60 * 1000;
+// последний поиск в sessionStorage: мобильный браузер выгружает свёрнутую вкладку и при возврате
+// перезагружает страницу — без этого результат скана пропадал
+const LAST_SEARCH_KEY = "wine.lastSearch";
+const SAVED_PHOTO_SIDE = 1600; // хватает и для показа, и для повторной вырезки бутылки
+const SAVED_CROP_SIDE = 1024;
+const savedImages = new Map(); // object URL -> data URL, чтобы не перекодировать одно фото повторно
 
 export function useWineApp() {
   const activeView = useState("wine.activeView", () => "scanner");
@@ -70,6 +76,7 @@ export function useWineApp() {
   async function initialize() {
     if (initialized.value) return;
     initialized.value = true;
+    restoreSearch();
     token.value = localStorage.getItem("wine_token") || "";
     if (token.value) {
       await loadMe();
@@ -285,9 +292,89 @@ export function useWineApp() {
     pick.value = null;
     setSearchedImage(url);
     revokeIfUnused(previousSource);
+    saveSearch();
   }
 
   // вырезаем область исходного фото в браузере и ищем по ней как по обычной картинке
+  // --- сохранение последнего поиска --------------------------------------------------
+
+  async function toDataUrl(url, maxSide) {
+    if (!url || url.startsWith("data:")) return url || null;
+    const key = `${url}|${maxSide}`;
+    if (savedImages.has(key)) return savedImages.get(key);
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("image load failed"));
+      img.src = url;
+    });
+    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(image.naturalWidth * scale);
+    canvas.height = Math.round(image.naturalHeight * scale);
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    savedImages.set(key, dataUrl);
+    return dataUrl;
+  }
+
+  async function saveSearch() {
+    if (!searchResponse.value) return;
+    const state = {
+      response: searchResponse.value,
+      pick: pick.value,
+      selectedPhotos: selectedPhotos.value,
+      fromCamera: selectedFromCamera.value,
+      source: null,
+      searched: null,
+    };
+    try {
+      const source = photoSource.value;
+      if (source) state.source = { ...source, url: await toDataUrl(source.url, SAVED_PHOTO_SIDE) };
+      // по всему фото искали исходник — второй раз его не храним
+      if (searchedImageUrl.value && searchedImageUrl.value !== source?.url) {
+        state.searched = await toDataUrl(searchedImageUrl.value, SAVED_CROP_SIDE);
+      }
+    } catch {
+      // фото не перекодировалось — сохраним хотя бы результат
+    }
+    for (const candidate of [state, { ...state, source: null, searched: null }]) {
+      try {
+        sessionStorage.setItem(LAST_SEARCH_KEY, JSON.stringify(candidate));
+        return;
+      } catch {
+        // не влезло в квоту — пробуем без фото
+      }
+    }
+  }
+
+  function restoreSearch() {
+    let state = null;
+    try {
+      state = JSON.parse(sessionStorage.getItem(LAST_SEARCH_KEY) || "null");
+    } catch {
+      return;
+    }
+    if (!state?.response || searchResponse.value) return;
+    searchResponse.value = state.response;
+    pick.value = state.pick || null;
+    selectedPhotos.value = state.selectedPhotos || {};
+    selectedFromCamera.value = Boolean(state.fromCamera);
+    if (state.source?.url) {
+      photoSource.value = state.source;
+      previewUrl.value = state.source.url;
+      // файл — чтобы работали «Найти вино» и выбор другой бутылки на том же фото
+      try {
+        const [meta, data] = state.source.url.split(",");
+        const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
+        selectedFile.value = new File([bytes], "photo.jpg", { type: meta.match(/:(.*?);/)?.[1] || "image/jpeg" });
+      } catch {
+        selectedFile.value = null;
+      }
+    }
+    searchedImageUrl.value = state.searched || state.source?.url || "";
+  }
+
   async function cropToFile(source, [x1, y1, x2, y2]) {
     // onload, а не image.decode(): decode не завершается, пока вкладка скрыта
     const image = await new Promise((resolve, reject) => {
@@ -328,6 +415,7 @@ export function useWineApp() {
     }
     pick.value = { box, kind, ...extra };
     setSearchedImage(url);
+    saveSearch();
   }
 
   function requireAuth(action) {
@@ -510,6 +598,7 @@ export function useWineApp() {
     isDragging,
     isSearching,
     loadNotifications,
+    saveSearch,
     deleteNotification,
     deleteAllNotifications,
     loadReviews,
