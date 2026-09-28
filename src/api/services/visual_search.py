@@ -90,6 +90,11 @@ def select_views(query_views, allowed: list[str] | None = None) -> ViewSelection
         and query_views.crops.get(view) is not None
         and query_views.crops[view].available
     ]
+    label = query_views.crops.get("label_crop")
+    if label is not None and getattr(label, "source_view", None) == "original_fallback" and len(active_views) > 1:
+        # этикетка не найдена: на месте кропа всё фото — искать его среди кропов этикеток хуже, чем среди
+        # полных фото каталога (реальные фото: 6 из 6 против 2 из 6; Vivino вплотную: 82% против 79%)
+        active_views = [view for view in active_views if view != "label_crop"]
     label_area_ratio = _label_crop_area_ratio(query_views.crops)
     label_confidence = _label_crop_confidence(query_views.crops)
     label_photo_mode = (
@@ -262,7 +267,8 @@ def _label_crop_area_ratio(crops: dict[str, Any]) -> float:
     original = crops.get("original")
     if label is None or original is None or not getattr(label, "available", False):
         return 0.0
-    if getattr(label, "source_view", "original") not in {"original", "original_fallback"}:
+    # original_fallback — этикетка не найдена, рамка «на весь кадр» не значит «крупный план»
+    if getattr(label, "source_view", "original") != "original":
         return 0.0
     label_box = getattr(label, "box", None)
     width = getattr(original, "width", None)
@@ -277,7 +283,7 @@ def _label_crop_confidence(crops: dict[str, Any]) -> float:
     label = crops.get("label_crop")
     if label is None or not getattr(label, "available", False):
         return 0.0
-    if getattr(label, "source_view", "original") not in {"original", "original_fallback"}:
+    if getattr(label, "source_view", "original") != "original":
         return 0.0
     try:
         return float(getattr(label, "confidence", None) or 0.0)
