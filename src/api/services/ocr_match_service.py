@@ -61,6 +61,10 @@ class OcrMatchService:
         return {score.wine_id: score for score in scores}
 
 
+# заглушки вместо производителя: для OCR это «производитель не указан» — без бонуса и без штрафа
+PLACEHOLDER_PRODUCERS = frozenset({normalize_match_text("Неизвестный производитель")})
+
+
 def to_ocr_candidate(wine_id: str, wine: Wine | None) -> OcrCandidate:
     if wine is None:  # карточки нет: сравнивать нечего, бонусов не будет
         return OcrCandidate(wine_id, None, None, {}, None, None, None)
@@ -72,7 +76,11 @@ def to_ocr_candidate(wine_id: str, wine: Wine | None) -> OcrCandidate:
     return OcrCandidate(
         wine_id=wine_id,
         name=wine.name,
-        producer=wine.producer.name if wine.producer is not None else None,
+        producer=(
+            wine.producer.name
+            if wine.producer is not None and normalize_match_text(wine.producer.name) not in PLACEHOLDER_PRODUCERS
+            else None
+        ),
         grapes=grapes,
         color=wine.color,
         sugar=wine.sugar,

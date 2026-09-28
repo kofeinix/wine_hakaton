@@ -401,8 +401,14 @@ def score_candidates(
         grape_contra = bool(own_grapes) and grape_extra > 0 and grape_hit == 0
 
         producer_key = normalize_match_text(candidate.producer) if candidate.producer else ""
-        producer_detected = producer_key in query.detected_producers
-        producer_contra = bool(query.detected_producers - {producer_key}) and not producer_detected
+        # производитель с этикетки упомянут в названии вина («Golubitskoe Estate Chardonnay») — это совпадение
+        name_key = f" {normalize_match_text(candidate.name)} " if candidate.name else ""
+        producer_in_name = any(f" {detected} " in name_key for detected in query.detected_producers)
+        producer_detected = producer_key in query.detected_producers or producer_in_name
+        # «другой производитель» — только если производитель вина известен и на этикетке его нет
+        producer_contra = (
+            bool(producer_key) and bool(query.detected_producers - {producer_key}) and not producer_detected
+        )
 
         alcohol_match = alcohol_miss = False
         candidate_alcohol_values = _alcohol_numbers(candidate.alcohol)
