@@ -12,7 +12,7 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.outputs import LLMResult
 from limiters import AsyncSemaphore, AsyncTokenBucket
 from PIL import Image, ImageOps
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from langchain_openai import ChatOpenAI
 from src.connections.rate_limiter import RateLimiterManager
@@ -114,11 +114,15 @@ class ChatOpenAIWrapper:
             follow_redirects=True,
         )
 
+        api_key = self.config.api_key
+        if isinstance(api_key, SecretStr):
+            api_key = api_key.get_secret_value()
         # Create ChatOpenAI with dynamic api_key callable, custom http_async_client, etc.
         self._chat = SemaphoredOpenAI(
             rate_limiter=self._rate_limiter,
             model=self.config.model_name,
-            api_key=self.config.api_key,
+            # локальным серверам (LM Studio, Ollama, vLLM) ключ не нужен, но клиент OpenAI требует непустой
+            api_key=api_key or "none",
             temperature=self.config.temperature,
             max_tokens=min(self.config.max_tokens, 1000),
             base_url=self.config.base_url,

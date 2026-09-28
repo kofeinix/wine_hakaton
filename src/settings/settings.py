@@ -85,6 +85,9 @@ class YoloSettings(BaseModel):
         default="/models/yolo/label.pt",
         description="Path or Ultralytics reference for label crop model",
     )
+    device: str = Field(
+        default="auto", description="YOLO device: auto (cuda -> mps -> cpu), cpu, cuda, or mps"
+    )
 
 
 class EmbeddingSettings(BaseModel):
@@ -149,9 +152,14 @@ class LlmSettings(BaseModel):
     """Remote LLM API configuration."""
 
     base_url: str = Field(
-        default="http://localhost:1234/v1", description="LLM base URL"
+        default="",
+        description="LLM base URL; пусто — распознавание текста этикеток выключено, поиск только по изображению",
     )
-    model_name: str = Field(default="gpt", description="LLM model name")
+    model_name: str = Field(default="", description="LLM model name; пусто — OCR выключен")
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.base_url.strip() and self.model_name.strip())
     api_key: SecretStr = Field(default="", description="LLM API key")
     max_tokens: int = Field(default=20000)
     temperature: float = Field(default=1)

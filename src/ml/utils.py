@@ -1,5 +1,18 @@
 from io import BytesIO
+
+import torch
 from PIL import Image, ImageOps
+
+
+def resolve_device(setting: str = "auto") -> str:
+    """Устройство для моделей: явное из настроек или auto — cuda, затем mps (Apple), затем cpu."""
+    if setting and setting != "auto":
+        return setting
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 def open_rgb_image(image_bytes: bytes) -> Image.Image:

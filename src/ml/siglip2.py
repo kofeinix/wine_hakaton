@@ -5,6 +5,7 @@ import torch
 from PIL import Image
 from transformers import AutoModel, AutoProcessor
 
+from src.ml.utils import resolve_device
 from src.ml.vision_features import extract_global_vector
 from src.settings.settings import EmbeddingSettings
 
@@ -25,14 +26,7 @@ class SiglipImageEmbedder:
 
         model_path = Path(self.settings.model_dir)
         model_id = str(model_path if model_path.exists() else self.settings.model_id)
-        if self.settings.device != "auto":
-            device = torch.device(self.settings.device)
-        elif torch.cuda.is_available():
-            device = torch.device("cuda")
-        elif torch.backends.mps.is_available():
-            device = torch.device("mps")
-        else:
-            device = torch.device("cpu")
+        device = torch.device(resolve_device(self.settings.device))
 
         logger.info("Loading SigLIP2 model %s on %s", model_id, device)
         self._processor = AutoProcessor.from_pretrained(model_id)

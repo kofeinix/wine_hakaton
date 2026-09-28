@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 
+from src.ml.utils import resolve_device
 from src.settings.settings import YoloSettings
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,8 @@ class UltralyticsCropper:
 
     def __init__(self, settings: YoloSettings) -> None:
         self.model_ref = settings.model_path
+        self.device_setting = settings.device
+        self.device: str | None = None
         self._model: YOLO | None = None
         logger.info("YOLO cropper initialized for %s", self.model_ref)
 
@@ -45,7 +48,8 @@ class UltralyticsCropper:
         if self._model is not None:
             return
         self._model = YOLO(self.model_ref)
-        logger.info("YOLO model loaded: %s", self.model_ref)
+        self.device = resolve_device(self.device_setting)
+        logger.info("YOLO model loaded: %s on %s", self.model_ref, self.device)
 
     async def stop(self) -> None:
         self._model = None
@@ -67,7 +71,7 @@ class UltralyticsCropper:
             conf=self.confidence_threshold,
             retina_masks=True,
             verbose=False,
-            device="mps",
+            device=self.device,
         )
         if not results:
             return None
