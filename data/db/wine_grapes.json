@@ -17454,6 +17454,12 @@
   "percentage": null
  },
  {
+  "id": "96e0b2de-b3f9-59bd-a450-5df96c5d2e20",
+  "wine_id": "4ea670af-754b-5949-b9a9-aae3fd4f81ca",
+  "grape_id": "f31c556b-fb34-58e2-a958-effb377062d0",
+  "percentage": null
+ },
+ {
   "id": "b608b1aa-412a-53c6-a1ae-8cfcef639246",
   "wine_id": "ec167c74-a4fa-5a6b-b822-a853b1a186e7",
   "grape_id": "bb2cd291-0ce7-5ded-ae2c-ee5d651b6069",
