@@ -2,7 +2,8 @@
   <aside class="side-panel">
     <div class="stat-row">
       <span>История</span>
-      <strong>{{ app.history.value.items.length }}</strong>
+      <!-- загружена только первая страница истории; всего записей — total из API -->
+      <strong>{{ app.history.value.total || app.history.value.items.length }}</strong>
     </div>
     <div class="stat-row">
       <span>Избранное</span>

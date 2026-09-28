@@ -81,12 +81,12 @@
             </div>
           </dl>
           <div v-if="viewWeights.length" class="weight-list">
-            <div v-for="view in viewWeights" :key="view.key" class="weight-row" :title="`${view.label}: вес ${view.weight}`">
+            <div v-for="view in viewWeights" :key="view.key" class="weight-row" :title="`${view.label}: вес ${formatPercent(view.weight)}`">
               <span>{{ view.label }}</span>
               <div class="timing-track">
                 <div class="timing-bar" :class="{ inactive: !view.active }" :style="{ width: `${view.weight * 100}%` }" />
               </div>
-              <strong>{{ view.weight }}</strong>
+              <strong>{{ formatPercent(view.weight) }}</strong>
             </div>
           </div>
         </article>
@@ -157,7 +157,7 @@
         <article class="diag-card">
           <h4>Сырой ответ</h4>
           <details class="diag-raw">
-            <summary>Показать JSON диагностики</summary>
+            <summary>Показать полный JSON ответа</summary>
             <pre class="diag-text small">{{ rawJson }}</pre>
           </details>
         </article>
@@ -181,10 +181,21 @@ const visual = computed(() => diagnostics.value.visual || {});
 const timings = computed(() => response.value?.timings_ms || {});
 const crops = computed(() => response.value?.crops || {});
 const original = computed(() => response.value?.image || (crops.value.original?.available ? crops.value.original : null));
-const rawJson = computed(() => JSON.stringify(diagnostics.value, null, 2));
+// весь ответ /search/image/extended: результаты с карточками, OCR, кропы, тайминги и diagnostics
+const rawJson = computed(() => JSON.stringify(response.value, null, 2));
 const formula = computed(() => (rerank.value.formula ? `${rerank.value.formula.split(" (")[0]}.` : "final = visual + OCR."));
 
 const VIEW_LABELS = { original: "Всё фото", bottle_crop: "Бутылка", label_crop: "Этикетка" };
+
+// ocr.reason из API: коротко для плашки (value) и почему OCR не участвовал в ранжировании (note)
+const OCR_STATUS = {
+  skipped_confident_visual: { value: "пропущен", note: "не нужен: визуальный top-1 уверенно впереди" },
+  timeout_budget: { value: "не успел", note: "LLM не уложилась в бюджет времени" },
+  llm_unavailable: { value: "выключен", note: "LLM не подключена: не задана или недоступна" },
+  ocr_failed: { value: "ошибка", note: "LLM вернула ошибку" },
+  empty_ocr_text: { value: "нет текста", note: "LLM не нашла текста на фото" },
+  no_source_image: { value: "не применён", note: "нет кропа для распознавания" },
+};
 
 function ms(value) {
   if (typeof value !== "number") return "—";
@@ -260,10 +271,10 @@ const stats = computed(() => {
   const ocr = response.value?.ocr || {};
   const gap = rerank.value.visual_gap;
   const threshold = rerank.value.ocr_skip_visual_gap;
-  let ocrValue = "не применён";
-  if (ocr.reason === "timeout_budget") ocrValue = "не успел";
-  else if (ocr.skipped) ocrValue = "пропущен";
-  else if (ocr.applied) ocrValue = ocr.cached ? "из кеша" : "применён";
+  const ocrStatus = ocr.applied
+    ? { value: ocr.cached ? "из кеша" : "применён", note: "" }
+    : OCR_STATUS[ocr.reason] || (ocr.skipped ? OCR_STATUS.skipped_confident_visual : { value: "не применён", note: "" });
+  const ocrSource = ocr.source_view ? `читали: ${VIEW_LABELS[ocr.source_view] || ocr.source_view}` : "";
   return [
     {
       label: "Статус",
@@ -277,8 +288,9 @@ const stats = computed(() => {
     },
     {
       label: "OCR",
-      value: ocrValue,
-      note: ocr.source_view ? `читали: ${VIEW_LABELS[ocr.source_view] || ocr.source_view}` : "",
+      value: ocrStatus.value,
+      // почему OCR не участвовал; если применён — с какого кропа читали
+      note: ocrStatus.note || ocrSource,
     },
     {
       label: "Кандидатов",
@@ -394,9 +406,12 @@ const ocrNote = computed(() => {
   const reasons = {
     timeout_budget: "OCR не уложился во время: распознавание текста не успело, ответ — только по изображению.",
     skipped_confident_visual: "OCR не понадобился: визуальный результат достаточно уверенный.",
-    llm_unavailable: "OCR недоступен: модель распознавания текста не подключена, ответ — только по изображению.",
+    llm_unavailable:
+      "OCR выключен: LLM не подключена — LLM__BASE_URL / LLM__MODEL_NAME не заданы или сервер был недоступен " +
+      "при старте сервиса. Ответ — только по изображению; после запуска LLM перезапустите app.",
     ocr_failed: "OCR завершился ошибкой: ответ — только по изображению.",
     empty_ocr_text: "OCR не нашёл текста на этикетке.",
+    no_source_image: "OCR не применён: не из чего читать текст (нет кропа).",
   };
   if (reasons[ocr.reason]) return reasons[ocr.reason];
   if (ocr.skipped) return reasons.skipped_confident_visual;
