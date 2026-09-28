@@ -20,13 +20,11 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-# публичная папка Яндекс Диска: siglip2_384_<view>.npz, photos.tar.gz, photos_webp.tar.gz
+# публичная папка Яндекс Диска: original.npz, bottle_crop.npz, label_crop.npz (SigLIP2-384), photos.tar.gz, photos_webp.tar.gz
 DATA_URL = "https://disk.yandex.ru/d/TW3su5DtKTNtfQ"
 
 # файл на Диске -> путь в data/embeddings (scripts/index_siglip2_views_qdrant.py --output-dir data/embeddings/siglip2_384)
-NPZ_FILES = {
-    f"siglip2_384_{view}.npz": Path("siglip2_384") / f"{view}.npz" for view in ("original", "bottle_crop", "label_crop")
-}
+NPZ_FILES = {f"{view}.npz": Path("siglip2_384") / f"{view}.npz" for view in ("original", "bottle_crop", "label_crop")}
 PHOTOS_FILE = "photos.tar.gz"
 WEBP_FILE = "photos_webp.tar.gz"  # необязательный
 API = "https://cloud-api.yandex.net/v1/disk/public/resources"

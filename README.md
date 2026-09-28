@@ -159,8 +159,7 @@ docker compose up -d --build                                                  # 
 - **Порт занят.** Поменяйте нужный порт в `.env` (`APP_PORT`, `FRONTEND_PORT`, `DATABASE__PORT`,
   `QDRANT__PORT`, `MINIO__PORT`, `REDIS__PORT`) и выполните `docker compose up -d`.
 - **Данные не скачались.** Скачайте вручную из [папки на Яндекс Диске](https://disk.yandex.ru/d/TW3su5DtKTNtfQ)
-  и положите: `siglip2_384_original.npz`, `siglip2_384_bottle_crop.npz`, `siglip2_384_label_crop.npz` —
-  в `data/embeddings/siglip2_384/` под именами `original.npz`, `bottle_crop.npz`, `label_crop.npz`,
+  и положите: `original.npz`, `bottle_crop.npz`, `label_crop.npz` — в `data/embeddings/siglip2_384/`,
   `photos.tar.gz` и `photos_webp.tar.gz` (главные фото в webp, необязательный) — в `data/`.
   Затем `docker compose up -d`.
 - **Модели не скачались.** Повторите `docker compose up models-init` и посмотрите его лог.
