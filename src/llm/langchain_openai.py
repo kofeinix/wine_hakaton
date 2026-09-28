@@ -1,4 +1,4 @@
-import logging
+import time
 from contextlib import nullcontext
 from http import HTTPMethod
 from io import BytesIO
@@ -8,6 +8,7 @@ import base64
 import httpx
 from httpx import AsyncHTTPTransport
 from httpx_retries import Retry, RetryTransport
+import structlog
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.outputs import LLMResult
 from limiters import AsyncSemaphore, AsyncTokenBucket
@@ -19,7 +20,7 @@ from src.connections.rate_limiter import RateLimiterManager
 
 from src.settings.settings import LlmSettings
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class SemaphoredOpenAI(ChatOpenAI):
@@ -40,14 +41,26 @@ class SemaphoredOpenAI(ChatOpenAI):
         if metadata and response_format and issubclass(response_format, BaseModel):
             metadata["schema"] = response_format.model_json_schema()
         async with self._rate_limiter:
-            logger.info("Invoking ChatOpenAI")
+            started = time.perf_counter()
             try:
                 result = await super().agenerate(messages, *args, **kwargs)
-                logger.info("Successful generation")
-                return result
             except Exception:
-                logger.exception("ChatOpenAI invoke failed")
+                logger.exception("llm_call", model=self.model_name, ok=False, duration_ms=round(_ms(started), 1))
                 raise
+            usage = (result.llm_output or {}).get("token_usage") or {}
+            logger.info(
+                "llm_call",
+                model=self.model_name,
+                ok=True,
+                duration_ms=round(_ms(started), 1),
+                prompt_tokens=usage.get("prompt_tokens"),
+                completion_tokens=usage.get("completion_tokens"),
+            )
+            return result
+
+
+def _ms(started: float) -> float:
+    return (time.perf_counter() - started) * 1000
 
 class ChatOpenAIWrapper:
     """
@@ -211,4 +224,6 @@ class ChatOpenAIWrapper:
             content = "\n".join(parts)
         else:
             content = str(content or "")
-        return self._strip_empty_think(content).strip()
+        text = self._strip_empty_think(content).strip()
+        logger.debug("ocr_request", image_bytes=len(image_bytes), text_chars=len(text))
+        return text

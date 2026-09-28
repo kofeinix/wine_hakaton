@@ -5,6 +5,7 @@ import io
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from PIL import Image, ImageOps
 
@@ -47,8 +48,10 @@ from src.api.services.user_service import (
     parse_uuid,
     valid_nickname,
 )
+from src.settings.logging_setup import set_actor
 
 router = APIRouter()
+logger = structlog.get_logger(__name__)
 
 
 def get_user_service(request: Request) -> UserService:
@@ -139,7 +142,10 @@ async def register(body: Credentials, request: Request, response: Response, user
     try:
         user = await users.register(body.email, body.password, read_anon_id(request))
     except EmailTakenError:
+        logger.info("register", ok=False)
         raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered") from None
+    set_actor(f"user:{user.id}")
+    logger.info("register", ok=True, user_id=str(user.id))
     clear_anon_cookie(request, response)
     return _token_response(request, user)
 
@@ -155,7 +161,10 @@ async def register(body: Credentials, request: Request, response: Response, user
 async def login(body: Credentials, request: Request, response: Response, users: UserServiceDep) -> TokenResponse:
     user = await users.login(body.email, body.password, read_anon_id(request))
     if user is None:
+        logger.info("login", ok=False)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
+    set_actor(f"user:{user.id}")
+    logger.info("login", ok=True, user_id=str(user.id))
     clear_anon_cookie(request, response)
     return _token_response(request, user)
 
@@ -183,9 +192,12 @@ async def update_profile(body: ProfileUpdateRequest, user_id: CurrentUserId, use
             nickname=nickname,
         )
     except NicknameTakenError as exc:
+        logger.info("profile_update", ok=False)
         raise HTTPException(status.HTTP_409_CONFLICT, "Этот ник уже занят") from exc
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    fields = list(body.model_dump(exclude_unset=True))
+    logger.info("profile_update", ok=True, fields=fields)
     return _user_response(user)
 
 
@@ -201,6 +213,7 @@ async def upload_avatar(
     user = await users.update_profile(user_id, avatar_url=avatar_url)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    logger.info("avatar_update", bytes=len(jpeg))
     return _user_response(user)
 
 
@@ -266,6 +279,7 @@ async def delete_history(search_id: str, request: Request, user_id: OptionalUser
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Search not found")
     if not await users.delete_history(owner, _require_uuid(search_id, "Search")):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Search not found")
+    logger.info("history_delete", search_id=search_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -289,6 +303,7 @@ async def add_favorite(body: FavoriteRequest, user_id: CurrentUserId, users: Use
     wine_id = _require_uuid(body.wine_id, "Wine")
     if not await users.add_favorite(user_id, wine_id, parse_uuid(body.search_id)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Wine not found")
+    logger.info("favorite_add", wine_id=str(wine_id), search_id=body.search_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -301,6 +316,7 @@ async def add_favorite(body: FavoriteRequest, user_id: CurrentUserId, users: Use
 async def remove_favorite(wine_id: str, user_id: CurrentUserId, users: UserServiceDep) -> Response:
     if not await users.remove_favorite(user_id, _require_uuid(wine_id, "Favorite")):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Favorite not found")
+    logger.info("favorite_remove", wine_id=wine_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -358,6 +374,14 @@ async def put_review(wine_id: str, body: ReviewRequest, user_id: CurrentUserId, 
     )
     if review is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Wine not found")
+    # текст комментария в лог не пишем — только его длину
+    logger.info(
+        "review_save",
+        wine_id=wine_id,
+        rating=body.rating,
+        comment_chars=len((body.comment or "").strip()),
+        from_notification=bool(body.notification_id),
+    )
     return review
 
 
@@ -370,6 +394,7 @@ async def put_review(wine_id: str, body: ReviewRequest, user_id: CurrentUserId, 
 async def delete_review(wine_id: str, user_id: CurrentUserId, users: UserServiceDep) -> Response:
     if not await users.delete_review(user_id, _require_uuid(wine_id, "Review")):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
+    logger.info("review_delete", wine_id=wine_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -392,9 +417,11 @@ async def add_review_photo(
     try:
         photo = await users.add_review_photo(user_id, _require_uuid(wine_id, "Wine"), jpeg)
     except ValueError as exc:
+        logger.info("review_photo_add", ok=False, wine_id=wine_id, reason=str(exc))
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     if photo is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
+    logger.info("review_photo_add", ok=True, wine_id=wine_id, photo_id=photo.id, bytes=len(jpeg))
     return photo
 
 
@@ -409,6 +436,7 @@ async def delete_review_photo(wine_id: str, photo_id: str, user_id: CurrentUserI
         user_id, _require_uuid(wine_id, "Wine"), _require_uuid(photo_id, "Photo")
     ):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Photo not found")
+    logger.info("review_photo_delete", wine_id=wine_id, photo_id=photo_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -454,6 +482,7 @@ async def put_review_reaction(
         body.value,
     ):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Review not found")
+    logger.info("review_reaction_set", wine_id=wine_id, review_author=review_user_id, value=body.value)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -474,6 +503,7 @@ async def delete_review_reaction(
         _require_uuid(wine_id, "Wine"),
         _require_uuid(review_user_id, "Review"),
     )
+    logger.info("review_reaction_remove", wine_id=wine_id, review_author=review_user_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -494,7 +524,11 @@ async def delete_review_reaction(
 async def check_achievements(
     body: AchievementCheckRequest, user_id: CurrentUserId, achievements: AchievementServiceDep
 ) -> AchievementCheckResponse:
-    return AchievementCheckResponse(updates=await achievements.check(user_id, body.timezone))
+    updates = await achievements.check(user_id, body.timezone)
+    earned = [update.code for update in updates if update.type == "earned"]
+    if earned:
+        logger.info("achievements_earned", codes=earned)
+    return AchievementCheckResponse(updates=updates)
 
 
 @router.get(
@@ -584,6 +618,7 @@ async def read_notification(notification_id: str, user_id: CurrentUserId, users:
 )
 async def read_all_notifications(user_id: CurrentUserId, users: UserServiceDep) -> Response:
     await users.mark_notifications_read(user_id)
+    logger.info("notifications_read_all")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -595,6 +630,7 @@ async def read_all_notifications(user_id: CurrentUserId, users: UserServiceDep) 
 )
 async def delete_all_notifications(user_id: CurrentUserId, users: UserServiceDep) -> Response:
     await users.delete_notifications(user_id)
+    logger.info("notifications_delete_all")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -608,4 +644,5 @@ async def delete_all_notifications(user_id: CurrentUserId, users: UserServiceDep
 async def delete_notification(notification_id: str, user_id: CurrentUserId, users: UserServiceDep) -> Response:
     if not await users.delete_notifications(user_id, _require_uuid(notification_id, "Notification")):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Notification not found")
+    logger.info("notification_delete", notification_id=notification_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

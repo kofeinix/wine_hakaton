@@ -1,6 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
+import structlog
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 
 from src.api.auth import OptionalUserId, ensure_anon_id
@@ -20,6 +21,7 @@ from src.api.services.wine_service import SearchOutcome
 from src.api.utils import _read_image_upload
 
 router = APIRouter()
+logger = structlog.get_logger(__name__)
 # проверочный скрипт организаторов (eval/participant_test.sh): POST /v1/eval/predict, поле image → {"slug": ...}
 eval_router = APIRouter()
 
@@ -60,12 +62,15 @@ async def _record_search(
 ) -> str | None:
     owner = Owner(user_id=user_id, anon_id=None if user_id else ensure_anon_id(request, response))
     candidates = outcome.candidates
-    return await request.app.state.user_service.record_search(
+    search_id = await request.app.state.user_service.record_search(
         owner,
         [(candidate.wine_id, candidate.score) for candidate in candidates],
         outcome.similarities[0] if outcome.similarities else None,  # сходство top-1, как в интерфейсе
         from_camera=source == "camera",
     )
+    if search_id:
+        logger.info("history_record", search_id=search_id, source=source)
+    return search_id
 
 
 @router.post(
@@ -195,7 +200,18 @@ async def sommelier_search(
     limit: Annotated[int, Query(ge=1, le=60)] = 12,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> SommelierSearchResponse:
-    return await sommelier.search(
+    filters = {
+        "occasion": occasion,
+        "dish": dish,
+        "taste": taste,
+        "type": type,
+        "color": color,
+        "sugar": sugar,
+        "region": region,
+        "grape": grape,
+        "min_rating": min_rating,
+    }
+    result = await sommelier.search(
         SommelierQuery(
             text=q,
             occasion=occasion,
@@ -212,6 +228,15 @@ async def sommelier_search(
             offset=offset,
         )
     )
+    logger.info(
+        "sommelier_search",
+        query=q[:80],
+        filters={key: value for key, value in filters.items() if value},
+        sort=sort,
+        offset=offset,
+        total=result.total,
+    )
+    return result
 
 
 # --- словарь терминов ------------------------------------------------------------------------

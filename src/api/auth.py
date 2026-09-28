@@ -14,9 +14,13 @@ from uuid import UUID
 import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, Request, Response, status
+import structlog
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from src.settings.logging_setup import anon_actor, set_actor
 from src.settings.settings import AuthSettings
+
+logger = structlog.get_logger(__name__)
 
 _bearer = HTTPBearer(auto_error=False, description="JWT из /api/v1/auth/login или /auth/register")
 
@@ -63,7 +67,9 @@ async def optional_user_id(
         return None
     user_id = decode_access_token(credentials.credentials, _auth_settings(request))
     if user_id is None:
+        logger.info("auth_token_invalid")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
+    set_actor(f"user:{user_id}")
     return user_id
 
 
@@ -99,6 +105,8 @@ def ensure_anon_id(request: Request, response: Response) -> str:
             httponly=True,
             samesite="lax",
         )
+        set_actor(anon_actor(anon_id))
+        logger.info("anon_cookie_issued")
     return anon_id
 
 

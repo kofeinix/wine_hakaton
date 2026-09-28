@@ -21,11 +21,14 @@ class FastApiServer:
             host=host,
             port=port,
             log_level="info",
+            # без своего log_config uvicorn пишет через корневой логгер в общем формате (setup_logging)
+            log_config=None,
+            access_log=False,
         )
         self._server = uvicorn.Server(self._config)
 
     async def start(self) -> None:
-        logger.info("Starting FastAPI server")
+        logger.info("Starting FastAPI server on %s:%s", self._config.host, self._config.port)
         await self._server.serve()
 
     async def stop(self) -> None:

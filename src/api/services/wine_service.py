@@ -8,14 +8,16 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import hashlib
 from contextlib import suppress
-import logging
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from time import perf_counter
 from typing import Any
+
+import structlog
 
 from src.api.repositories.wine_repository import WineRepository
 from src.api.schemas import (
@@ -50,7 +52,7 @@ from src.connections.database.models import Wine
 from src.ml.text_normalization import normalize_match_text
 from src.ml.view_adapter import ViewAdapter
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 OCR_RERANK_LIMIT = 50
 OCR_CACHE_SIZE = 512  # распознанный текст по хешу кропа: повторный поиск того же фото без LLM
@@ -108,7 +110,9 @@ class WineService:
         self._ocr_cache: OrderedDict[str, str] = OrderedDict()
 
     async def _cv(self, fn, *args):
-        return await asyncio.get_running_loop().run_in_executor(self._cv_executor, fn, *args)
+        # copy_context: логи из потока CV тоже с request_id (run_in_executor контекст не переносит)
+        context = contextvars.copy_context()
+        return await asyncio.get_running_loop().run_in_executor(self._cv_executor, context.run, fn, *args)
 
     # --- публичные методы (routes.py) ------------------------------------------
 
@@ -227,7 +231,7 @@ class WineService:
             raise
         global_limit = max(limit, GLOBAL_CANDIDATE_LIMIT)
         candidates = group_by_wine(matches, limit=global_limit)
-        logger.info("Global search found top_%s candidates. %s", len(candidates), _format_top_gap(candidates))
+        logger.info("visual_search", candidates=len(candidates), **_top_gap(candidates))
 
         visual_gap = _relative_gap(candidates)
         top_score = candidates[0].score if candidates else 0.0
@@ -264,6 +268,17 @@ class WineService:
                 "formula": "final = visual_score + ocr_bonus (src/ml/ocr_matching.py)",
             },
         }
+        top = candidates[0] if candidates else None
+        logger.info(
+            "image_search",
+            image_bytes=len(image_bytes),
+            views=selection.active_views,
+            top1_slug=top.slug if top else None,
+            top1_score=round(top.score, 4) if top else None,
+            ocr_status=ocr["reason"],
+            candidates=len(candidates),
+            timings_ms=timings,
+        )
         return SearchOutcome(
             similarities=similarities(
                 [candidate.score for candidate in candidates[:limit]], matches.weights, bool(ocr["applied"])
@@ -308,7 +323,7 @@ class WineService:
             return await asyncio.wait_for(asyncio.shield(ocr_task), timeout=max(remaining, 0.0))
         except TimeoutError:
             await _cancel(ocr_task)
-            logger.warning("OCR did not finish within %.1fs budget; answering by image only", self.ocr_budget_seconds)
+            logger.warning("ocr_timeout", budget_s=self.ocr_budget_seconds)
             timings["ocr_ms"] = round((perf_counter() - started) * 1000, 1)
             return _ocr_result("timeout_budget", ocr_source_view(query_views), skipped=True)
 
@@ -330,20 +345,14 @@ class WineService:
         try:
             text = await llm.ocr_image_text(jpeg)
         except Exception:
-            logger.exception("OCR extraction failed for source view %s", source_view)
+            logger.exception("ocr_failed", source_view=source_view)
             return _ocr_result("ocr_failed", source_view)
         self._ocr_cache[key] = text
         while len(self._ocr_cache) > OCR_CACHE_SIZE:
             self._ocr_cache.popitem(last=False)
 
         normalized = normalize_match_text(text)
-        logger.info(
-            "OCR source=%s applied=%s raw_text=%r normalized_text=%r",
-            source_view,
-            bool(normalized),
-            text,
-            normalized,
-        )
+        logger.info("ocr_text", source_view=source_view, applied=bool(normalized), raw_text=text, normalized_text=normalized)
         return _ocr_result("ok" if normalized else "empty_ocr_text", source_view, text, normalized)
 
     async def _rerank_with_ocr(
@@ -381,10 +390,10 @@ class WineService:
             for candidate in reranked[:10]
         ]
         logger.info(
-            "OCR rerank applied for %s candidates. Top: %s",
-            len(candidates),
-            [
-                (item["wine_id"][:8], item["visual_score"], item["ocr_bonus"], item["final_score"])
+            "ocr_rerank",
+            candidates=len(candidates),
+            top=[
+                {key: item[key] for key in ("wine_id", "visual_score", "ocr_bonus", "final_score")}
                 for item in candidate_scores[:5]
             ],
         )
@@ -478,15 +487,15 @@ def _relative_gap(candidates: list[WineCandidate]) -> float:
     return (candidates[0].score - candidates[1].score) / candidates[1].score
 
 
-def _format_top_gap(candidates: list[WineCandidate]) -> str:
-    if not candidates:
-        return "no candidates"
-    top1 = candidates[0]
-    if len(candidates) < 2:
-        return f"top1 wine_id={top1.wine_id} confidence={top1.score:.4f}; no top2"
-    top2 = candidates[1]
-    return (
-        f"top1 wine_id={top1.wine_id} confidence={top1.score:.4f}; "
-        f"top2 wine_id={top2.wine_id} confidence={top2.score:.4f}; "
-        f"gap={top1.score - top2.score:.4f}"
-    )
+def _top_gap(candidates: list[WineCandidate]) -> dict[str, Any]:
+    """top-1, top-2 и отрыв между ними — поля для лога визуального поиска."""
+    fields: dict[str, Any] = {}
+    if candidates:
+        fields.update(top1_wine_id=candidates[0].wine_id, top1_score=round(candidates[0].score, 4))
+    if len(candidates) > 1:
+        fields.update(
+            top2_wine_id=candidates[1].wine_id,
+            top2_score=round(candidates[1].score, 4),
+            gap=round(candidates[0].score - candidates[1].score, 4),
+        )
+    return fields

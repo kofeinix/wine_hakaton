@@ -260,6 +260,21 @@ bash participant_test.sh --images-dir ./queries --manifest ./queries.tsv \
 запятую; `*` — любые (нужно, например, чтобы открыть сайт с телефона по IP компьютера). `LOG_LEVEL` —
 уровень логов API (`INFO`).
 
+**Логи API** — [structlog](https://www.structlog.org/), по умолчанию одна строка JSON на запись
+(`LOG_FORMAT=json`; `LOG_FORMAT=text` — читаемый текст). Логи uvicorn и библиотек идут в том же формате.
+Поля: `ts` (UTC), `level`, `logger`, `event` — имя события (`http_request`, `image_search`, `visual_search`,
+`ocr_text`, `ocr_rerank`, `llm_call`, `login`, `register`, `favorite_add`, `review_save`, `http_error`, …),
+внутри запроса — `request_id` и `actor`, дальше данные события отдельными полями (`status`, `duration_ms`,
+`top1_slug`, `timings_ms`, …), у ошибок — `exception` (трассировка без локальных переменных).
+Пример: `docker compose logs app --no-log-prefix | jq 'select(.event=="image_search")'`.
+У каждого запроса свой `request_id` (приходит в заголовке ответа `X-Request-ID`; свой id
+можно передать тем же заголовком) и автор: `user:<uuid>` или `anon:<хеш cookie>`. По одному `request_id` видно
+всё, что было в запросе: строка доступа (метод, путь, имена параметров, статус, время, размер
+запроса и ответа), итог поиска (top-1, скор, OCR, время этапов), вызов LLM, действия пользователя
+(регистрация, вход, избранное, отзывы, достижения) и причины ошибок 4xx.
+Личные данные не пишутся: ни IP, ни email, ни пароли, ни тексты комментариев. Запросы `/health` и
+фото каталога — на уровне `DEBUG`.
+
 ## Дообучение: адаптер векторов SigLIP2
 
 SigLIP2 обучен на общих картинках: фото бутылки «из жизни» (полка, руки, свет) и фото того же вина

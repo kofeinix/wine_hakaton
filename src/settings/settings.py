@@ -241,6 +241,7 @@ class AllSettings(BaseSettings):
         env_nested_delimiter="__",
     )
     log_level: str = Field(default="INFO")
+    log_format: str = Field(default="json", description="json — строка JSON на запись, text — читаемый текст")
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)

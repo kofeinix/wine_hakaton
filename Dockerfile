@@ -15,9 +15,14 @@ RUN uv sync --frozen --no-install-project --no-dev
 # ---------- Runtime stage ----------
 FROM python:3.13-slim-bookworm AS runtime
 
+# YOLO_AUTOINSTALL=false: Ultralytics не пытается ставить пакеты pip'ом во время запроса (pip в образе нет,
+# попытка стоила ~2 с на каждом файле, который не открылся как картинка); pi-heif для HEIC — в зависимостях.
+# YOLO_CONFIG_DIR=/tmp — настройки Ultralytics в /tmp/Ultralytics (домашняя папка appuser для него не пишется)
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/app/.venv/bin:$PATH" \
+    YOLO_AUTOINSTALL=false \
+    YOLO_CONFIG_DIR=/tmp
 
 WORKDIR /app
 

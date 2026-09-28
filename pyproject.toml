@@ -31,6 +31,8 @@ dependencies = [
     "transliterate>=1.10.2",
     "pyjwt>=2.10",
     "bcrypt>=4.2",
+    "structlog>=25.4",
+    "pi-heif>=1.1",
 ]
 
 [[tool.uv.index]]

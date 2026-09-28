@@ -1,12 +1,15 @@
 import asyncio
 import io
-import logging
 import time
 from contextlib import asynccontextmanager, suppress
 
-from fastapi import FastAPI
+import structlog
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import RedirectResponse
 from PIL import Image
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.api.routes import eval_router, router
 from src.api.services import WineService
@@ -15,11 +18,12 @@ from src.api.services.notification_worker import ReminderWorker
 from src.api.services.sommelier_service import SommelierService
 from src.api.services.term_service import TermService
 from src.api.services.user_service import UserService
+from src.api.middleware import RequestLoggingMiddleware
 from src.api.user_routes import router as user_router
 from src.container.manager import ConnectionManager
 from src.settings.settings import DEFAULT_JWT_SECRET
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def create_app(connection_manager: ConnectionManager) -> FastAPI:
@@ -121,6 +125,25 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
     app.include_router(router, prefix="/api/v1")
     app.include_router(eval_router)
     app.include_router(user_router, prefix="/api/v1")
+    app.add_middleware(RequestLoggingMiddleware, anon_cookie_name=settings.auth.anon_cookie_name)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def log_http_exception(request: Request, exc: StarletteHTTPException):
+        # строка доступа покажет статус, здесь — почему (detail не содержит пользовательских данных)
+        if exc.status_code != 404 or request.url.path.startswith("/api/"):
+            logger.info("http_error", status=exc.status_code, path=request.url.path, detail=exc.detail)
+        return await http_exception_handler(request, exc)
+
+    @app.exception_handler(RequestValidationError)
+    async def log_validation_error(request: Request, exc: RequestValidationError):
+        # только где и что не так, без присланных значений (там могут быть email и пароль)
+        problems = [
+            {"field": ".".join(str(part) for part in error.get("loc", ())), "type": error.get("type")}
+            for error in exc.errors()
+        ]
+        logger.info("validation_error", path=request.url.path, problems=problems)
+        return await request_validation_exception_handler(request, exc)
+
     return app
 
 

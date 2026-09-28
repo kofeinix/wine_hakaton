@@ -21,7 +21,7 @@ async def main() -> int:
         Exit code: 0 for success, 1 for error
     """
     settings = all_settings
-    setup_logging(settings.log_level)
+    setup_logging(settings.log_level, settings.log_format)
     app = AppContainer(settings)
     await app.run_app()
     return 0
