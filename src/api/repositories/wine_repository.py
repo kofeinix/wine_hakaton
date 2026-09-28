@@ -122,15 +122,15 @@ class WineRepository:
         async with self.database.session() as session:
             return await session.get(WineImage, id_)
 
-    async def load_ocr_vocabulary(self) -> tuple[list[str], list[str], dict[str, list[str]]]:
-        """Названия вин, производители и сорта (id -> название + синонимы) для OCR-матчинга."""
+    async def load_ocr_vocabulary(self) -> tuple[list[str], dict[str, list[str]], dict[str, list[str]]]:
+        """Названия вин, производители (название -> синонимы) и сорта (id -> название + синонимы) для OCR."""
         async with self.database.session() as session:
             wine_names = list((await session.scalars(select(Wine.name))).all())
-            producer_names = list((await session.scalars(select(Producer.name))).all())
+            producers = (await session.scalars(select(Producer).options(selectinload(Producer.aliases)))).all()
             grapes = (await session.scalars(select(Grape).options(selectinload(Grape.aliases)))).all()
         return (
             wine_names,
-            producer_names,
+            {producer.name: [alias.alias for alias in producer.aliases] for producer in producers},
             {str(grape.id): [grape.name, *(alias.alias for alias in grape.aliases)] for grape in grapes},
         )
 
@@ -147,6 +147,6 @@ class WineRepository:
     @staticmethod
     def _with_ocr_options(statement):
         return statement.options(
-            selectinload(Wine.producer),
+            selectinload(Wine.producer).selectinload(Producer.aliases),
             selectinload(Wine.grape_links).selectinload(WineGrape.grape).selectinload(Grape.aliases),
         )

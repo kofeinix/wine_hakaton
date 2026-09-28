@@ -209,7 +209,7 @@ class OcrCatalog:
     producer_idf: TokenIdf
     grape_idf: TokenIdf
     grapes: dict[str, tuple[str, ...]]  # ключ сорта -> название и синонимы
-    producers: tuple[str, ...]
+    producers: dict[str, tuple[str, ...]]  # название производителя -> название и синонимы
     color_variants: dict[str, list[str]]
     sugar_variants: dict[str, list[str]]
 
@@ -222,11 +222,16 @@ class OcrCatalog:
         grapes: dict[str, list[str]],
         color_variants: dict[str, list[str]],
         sugar_variants: dict[str, list[str]],
+        producer_aliases: dict[str, list[str]] | None = None,
     ) -> OcrCatalog:
-        producers = tuple(dict.fromkeys(name for name in producer_names if name))
+        aliases = producer_aliases or {}
+        producers = {
+            name: tuple(dict.fromkeys([name, *aliases.get(name, [])]))
+            for name in dict.fromkeys(name for name in producer_names if name)
+        }
         return cls(
             name_idf=TokenIdf.build(name for name in wine_names if name),
-            producer_idf=TokenIdf.build(producers),
+            producer_idf=TokenIdf.build(spelling for spellings in producers.values() for spelling in spellings),
             grape_idf=TokenIdf.build(name for names in grapes.values() for name in names),
             grapes={key: tuple(names) for key, names in grapes.items()},
             producers=producers,
@@ -260,8 +265,8 @@ class OcrQuery:
             ),
             detected_producers=frozenset(
                 normalize_match_text(name)
-                for name in catalog.producers
-                if window_match(_variants_of([name]), views) >= DETECTION_THRESHOLD
+                for name, spellings in catalog.producers.items()
+                if window_match(_variants_of(spellings), views) >= DETECTION_THRESHOLD
             ),
             color_scores={
                 key: window_match(_variants_of(values), views)
@@ -284,6 +289,7 @@ class OcrCandidate:
     color: str | None
     sugar: str | None
     alcohol: str | None
+    producer_aliases: tuple[str, ...] = ()  # написания производителя как на этикетке («Chateau Pinot»)
 
 
 @dataclass(frozen=True)
@@ -381,7 +387,7 @@ def score_candidates(
             if candidate.name else -1.0
         )
         producer = (
-            entity_coverage(text_variants(candidate.producer), views, catalog.producer_idf)
+            entity_coverage(_variants_of((candidate.producer, *candidate.producer_aliases)), views, catalog.producer_idf)
             if candidate.producer else -1.0
         )
         grape_scores = [
@@ -441,7 +447,9 @@ def score_candidates(
             "ocr_grape_coverage_max": grape_max,
             "ocr_name_window": window_match(text_variants(candidate.name), views) if candidate.name else -1.0,
             "ocr_producer_window": (
-                window_match(text_variants(candidate.producer), views) if candidate.producer else -1.0
+                window_match(_variants_of((candidate.producer, *candidate.producer_aliases)), views)
+                if candidate.producer
+                else -1.0
             ),
             "ocr_unique_evidence": unique,
             "ocr_unique_evidence_share": unique_share,

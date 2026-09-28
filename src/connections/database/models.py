@@ -35,6 +35,26 @@ class Producer(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
 
     wines: Mapped[list[Wine]] = relationship(back_populates="producer")
+    aliases: Mapped[list[ProducerAlias]] = relationship(
+        back_populates="producer", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
+class ProducerAlias(Base):
+    """Другое написание производителя — как на этикетке: «Шато Пино» → «Chateau Pinot»."""
+
+    __tablename__ = "producer_aliases"
+
+    producer_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("producers.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+        index=True,
+    )
+    alias: Mapped[str] = mapped_column(String(255), nullable=False, primary_key=True, index=True)
+
+    producer: Mapped[Producer] = relationship(back_populates="aliases")
 
 
 class Region(Base):

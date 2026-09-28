@@ -27,7 +27,7 @@ class OcrMatchService:
 
     async def catalog(self) -> OcrCatalog:
         if self._catalog is None:
-            wine_names, producer_names, grapes = await self.repository.load_ocr_vocabulary()
+            wine_names, producers, grapes = await self.repository.load_ocr_vocabulary()
             raw_colors = await self.repository.load_color_aliases()
             color_variants = {
                 normalize_match_text(color): [color, *aliases]
@@ -36,7 +36,8 @@ class OcrMatchService:
             }
             self._catalog = OcrCatalog.build(
                 wine_names=wine_names,
-                producer_names=producer_names,
+                producer_names=list(producers),
+                producer_aliases=producers,
                 grapes=grapes,
                 color_variants=color_variants,
                 sugar_variants=self.sugar_variants,
@@ -68,6 +69,7 @@ PLACEHOLDER_PRODUCERS = frozenset({normalize_match_text("Неизвестный 
 def to_ocr_candidate(wine_id: str, wine: Wine | None) -> OcrCandidate:
     if wine is None:  # карточки нет: сравнивать нечего, бонусов не будет
         return OcrCandidate(wine_id, None, None, {}, None, None, None)
+    known_producer = wine.producer is not None and normalize_match_text(wine.producer.name) not in PLACEHOLDER_PRODUCERS
     grapes = {
         str(link.grape.id): (link.grape.name, *(alias.alias for alias in link.grape.aliases))
         for link in wine.grape_links
@@ -76,11 +78,8 @@ def to_ocr_candidate(wine_id: str, wine: Wine | None) -> OcrCandidate:
     return OcrCandidate(
         wine_id=wine_id,
         name=wine.name,
-        producer=(
-            wine.producer.name
-            if wine.producer is not None and normalize_match_text(wine.producer.name) not in PLACEHOLDER_PRODUCERS
-            else None
-        ),
+        producer=wine.producer.name if known_producer else None,
+        producer_aliases=tuple(alias.alias for alias in wine.producer.aliases) if known_producer else (),
         grapes=grapes,
         color=wine.color,
         sugar=wine.sugar,

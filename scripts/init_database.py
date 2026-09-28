@@ -18,6 +18,7 @@ from src.connections.database.models import (
     Grape,
     GrapeAlias,
     Producer,
+    ProducerAlias,
     Region,
     Wine,
     WineFood,
@@ -31,6 +32,7 @@ from src.connections.database.schemas import (
     FoodCreate,
     GrapeAliasCreate,
     GrapeCreate,
+    ProducerAliasCreate,
     ProducerCreate,
     RegionCreate,
     WineCreate,
@@ -118,6 +120,13 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             GrapeCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "grapes.json")
         ]
+        # синонимы производителей (scripts/build_producer_aliases.py) — необязательный файл
+        producer_aliases_path = db_dir / "producer_aliases.json"
+        producer_aliases = (
+            [ProducerAliasCreate.model_validate(row).model_dump() for row in load_json(producer_aliases_path)]
+            if producer_aliases_path.is_file()
+            else []
+        )
         grape_aliases = [
             GrapeAliasCreate.model_validate(row).model_dump()
             for row in load_json(db_dir / "grape_aliases.json")
@@ -159,6 +168,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             await upsert_rows(session, Region, regions)
             await upsert_rows(session, Grape, grapes)
             await upsert_rows(session, GrapeAlias, grape_aliases)
+            await upsert_rows(session, ProducerAlias, producer_aliases)
             await upsert_rows(session, ColorAlias, color_aliases)
             await upsert_rows(session, Wine, wines)
             await upsert_rows(session, WineGrape, wine_grapes)
@@ -173,6 +183,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
                     (WineFood, wine_food),
                     (WineGrape, wine_grapes),
                     (GrapeAlias, grape_aliases),
+                    (ProducerAlias, producer_aliases),
                     (ColorAlias, color_aliases),
                     (Wine, wines),
                     (Food, food),
@@ -189,7 +200,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
         logger.info(
             (
                 "Imported %s producers, %s regions, %s grapes, %s grape_aliases, %s color_aliases, "
-                "%s wines, %s wine_grapes, %s food, %s wine_food, %s wine_images, %s wine_terms."
+                "%s wines, %s wine_grapes, %s food, %s wine_food, %s wine_images, %s wine_terms, %s producer_aliases."
             ),
             len(producers),
             len(regions),
@@ -202,6 +213,7 @@ async def import_db(db_dir: Path, create_tables: bool, drop_existing: bool, prun
             len(wine_food),
             len(wine_images),
             len(wine_terms),
+            len(producer_aliases),
         )
     finally:
         await database.close()

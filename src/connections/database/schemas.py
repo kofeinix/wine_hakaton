@@ -137,3 +137,8 @@ class WineTermCreate(BaseModel):
     letter: str = Field(min_length=1)
     definition: str = Field(min_length=1)
     source_url: str | None = None
+
+
+class ProducerAliasCreate(BaseModel):
+    producer_id: UUID
+    alias: str = Field(min_length=1)
