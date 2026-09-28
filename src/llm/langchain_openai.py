@@ -126,7 +126,9 @@ class ChatOpenAIWrapper:
             max_retries=0,  # логикой управляет http_async_client
             timeout=httpx.Timeout(self.config.timeout),
             extra_body={
-                "repetition_penalty": 1.15
+                "repetition_penalty": 1.15,
+                # OpenRouter-совместимый параметр; локальные серверы без reasoning его не получают
+                **({"reasoning": {"enabled": False}} if self.config.disable_reasoning else {}),
             }
         )
         logger.info("ChatOpenAIWrapper created")
