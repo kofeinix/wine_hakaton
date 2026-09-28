@@ -225,8 +225,8 @@ async def history(
     offset: int = Query(default=0, ge=0),
 ) -> SearchHistoryResponse:
     owner = Owner(user_id=user_id, anon_id=None if user_id else read_anon_id(request))
-    items = await users.history(owner, limit=limit, offset=offset)
-    return SearchHistoryResponse(items=items, anonymous=owner.is_anonymous)
+    items, total = await users.history(owner, limit=limit, offset=offset)
+    return SearchHistoryResponse(items=items, total=total, anonymous=owner.is_anonymous)
 
 
 @router.get(
@@ -541,9 +541,10 @@ async def notifications(
     users: UserServiceDep,
     unread_only: bool = Query(default=False),
     limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> NotificationsResponse:
-    items, unread = await users.list_notifications(user_id, unread_only=unread_only, limit=limit)
-    return NotificationsResponse(items=items, unread=unread)
+    items, unread, total = await users.list_notifications(user_id, unread_only=unread_only, limit=limit, offset=offset)
+    return NotificationsResponse(items=items, unread=unread, total=total)
 
 
 @router.get(

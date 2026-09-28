@@ -1,5 +1,9 @@
 const CAMERA_FRESH_MS = 2 * 60 * 1000;
-const TOP_LEADERS = 5; // в кабинете — топ-5, полный рейтинг — в отдельном окне
+const TOP_LEADERS = 5;
+// история и уведомления в кабинете — страницами «Показать ещё»; максимумы — ограничения API
+const LIST_PAGE = 30;
+const HISTORY_MAX_PAGE = 100;
+const NOTIFICATIONS_MAX_PAGE = 200; // в кабинете — топ-5, полный рейтинг — в отдельном окне
 // последний поиск в sessionStorage: мобильный браузер выгружает свёрнутую вкладку и при возврате
 // перезагружает страницу — без этого результат скана пропадал
 const LAST_SEARCH_KEY = "wine.lastSearch";
@@ -37,10 +41,10 @@ export function useWineApp() {
   const showGenerated = useState("wine.showGenerated", () => false);
   const showDiagnostics = useState("wine.showDiagnostics", () => false);
 
-  const history = useState("wine.history", () => ({ items: [] }));
+  const history = useState("wine.history", () => ({ items: [], total: 0 }));
   const favorites = useState("wine.favorites", () => ({ items: [] }));
   const reviews = useState("wine.reviews", () => ({ items: [] }));
-  const notifications = useState("wine.notifications", () => ({ items: [], unread: 0 }));
+  const notifications = useState("wine.notifications", () => ({ items: [], unread: 0, total: 0 }));
   const notificationDetail = useState("wine.notificationDetail", () => null);
   // окно оценки: { wine, wineId, notificationId, rating, comment, existing }
   const ratingDialog = useState("wine.ratingDialog", () => null);
@@ -58,10 +62,10 @@ export function useWineApp() {
     (searchResponse.value?.results || []).filter((item) => item.wine_id !== bestMatch.value?.wine_id).slice(0, 12),
   );
   const profileTabs = computed(() => [
-    { id: "history", label: "История", count: history.value.items.length },
+    { id: "history", label: "История", count: history.value.total || history.value.items.length },
     { id: "favorites", label: "Избранное", count: favorites.value.items.length },
     { id: "reviews", label: "Отзывы", count: reviews.value.items.length },
-    { id: "notifications", label: "Уведомления", count: notifications.value.items.length },
+    { id: "notifications", label: "Уведомления", count: notifications.value.total || notifications.value.items.length },
     { id: "achievements", label: "Достижения", count: achievements.value?.earned_count || 0 },
   ]);
 
@@ -191,13 +195,20 @@ export function useWineApp() {
     leaderboard.value = top;
   }
 
+  // обновление после действия не схлопывает раскрытый «Показать ещё» список: берём столько, сколько уже видно
   async function loadPublicHistory() {
+    const limit = Math.min(Math.max(LIST_PAGE, history.value.items.length), HISTORY_MAX_PAGE);
     try {
-      const response = await apiFetch("/api/v1/history?limit=30");
-      history.value = { items: response.items || [] };
+      const response = await apiFetch(`/api/v1/history?limit=${limit}`);
+      history.value = { items: response.items || [], total: response.total || 0 };
     } catch {
-      history.value = { items: [] };
+      history.value = { items: [], total: 0 };
     }
+  }
+
+  async function loadMoreHistory() {
+    const response = await apiFetch(`/api/v1/history?limit=${LIST_PAGE}&offset=${history.value.items.length}`);
+    history.value = { items: [...history.value.items, ...(response.items || [])], total: response.total || 0 };
   }
 
   async function loadFavorites() {
@@ -214,8 +225,18 @@ export function useWineApp() {
 
   async function loadNotifications() {
     if (!user.value) return;
-    const response = await apiFetch("/api/v1/notifications");
-    notifications.value = { items: response.items || [], unread: response.unread || 0 };
+    const limit = Math.min(Math.max(LIST_PAGE, notifications.value.items.length), NOTIFICATIONS_MAX_PAGE);
+    const response = await apiFetch(`/api/v1/notifications?limit=${limit}`);
+    notifications.value = { items: response.items || [], unread: response.unread || 0, total: response.total || 0 };
+  }
+
+  async function loadMoreNotifications() {
+    const response = await apiFetch(`/api/v1/notifications?limit=${LIST_PAGE}&offset=${notifications.value.items.length}`);
+    notifications.value = {
+      items: [...notifications.value.items, ...(response.items || [])],
+      unread: response.unread || 0,
+      total: response.total || 0,
+    };
   }
 
   // camera — выбрано кнопкой «Камера». На компьютере она открывает обычный выбор файла, поэтому
@@ -604,6 +625,8 @@ export function useWineApp() {
     isDragging,
     isSearching,
     loadNotifications,
+    loadMoreHistory,
+    loadMoreNotifications,
     saveSearch,
     deleteNotification,
     deleteAllNotifications,

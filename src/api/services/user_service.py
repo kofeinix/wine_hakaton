@@ -254,20 +254,20 @@ class UserService:
             logger.exception("Failed to record search history")
             return None
 
-    async def history(self, owner: Owner, limit: int, offset: int) -> list[SearchHistoryItem]:
-        query = select(SearchHistory).order_by(SearchHistory.created_at.desc()).limit(limit).offset(offset)
+    async def history(self, owner: Owner, limit: int, offset: int) -> tuple[list[SearchHistoryItem], int]:
+        """Страница истории (новые первыми) и сколько записей всего."""
         if owner.user_id is not None:
-            query = query.where(SearchHistory.user_id == owner.user_id)
+            condition = [SearchHistory.user_id == owner.user_id]
         elif owner.anon_id is not None:
-            query = query.where(
-                SearchHistory.anon_id == owner.anon_id, SearchHistory.created_at >= self._anon_cutoff()
-            )
+            condition = [SearchHistory.anon_id == owner.anon_id, SearchHistory.created_at >= self._anon_cutoff()]
         else:
-            return []
+            return [], 0
+        query = select(SearchHistory).where(*condition).order_by(SearchHistory.created_at.desc()).limit(limit).offset(offset)
         async with self.database.session() as session:
             entries = list((await session.scalars(query)).all())
+            total = await session.scalar(select(func.count()).select_from(SearchHistory).where(*condition))
         cards = await self._wine_cards([entry.top_wine_id for entry in entries])
-        return [
+        items = [
             SearchHistoryItem(
                 id=str(entry.id),
                 created_at=entry.created_at,
@@ -277,6 +277,7 @@ class UserService:
             )
             for entry in entries
         ]
+        return items, int(total or 0)
 
     async def delete_history(self, owner: Owner, search_id: UUID) -> bool:
         condition = (
@@ -642,19 +643,29 @@ class UserService:
     # --- уведомления ---------------------------------------------------------------
 
     async def list_notifications(
-        self, user_id: UUID, unread_only: bool, limit: int
-    ) -> tuple[list[NotificationItem], int]:
-        query = select(Notification).options(selectinload(Notification.wines)).where(Notification.user_id == user_id)
+        self, user_id: UUID, unread_only: bool, limit: int, offset: int = 0
+    ) -> tuple[list[NotificationItem], int, int]:
+        """Страница уведомлений, сколько непрочитанных и сколько всего (с учётом unread_only)."""
+        condition = [Notification.user_id == user_id]
         if unread_only:
-            query = query.where(Notification.read_at.is_(None))
+            condition.append(Notification.read_at.is_(None))
+        query = (
+            select(Notification)
+            .options(selectinload(Notification.wines))
+            .where(*condition)
+            .order_by(Notification.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         async with self.database.session() as session:
-            rows = list((await session.scalars(query.order_by(Notification.created_at.desc()).limit(limit))).all())
+            rows = list((await session.scalars(query)).all())
             unread = await session.scalar(
                 select(func.count())
                 .select_from(Notification)
                 .where(Notification.user_id == user_id, Notification.read_at.is_(None))
             )
-        return [_notification_item(row) for row in rows], int(unread or 0)
+            total = await session.scalar(select(func.count()).select_from(Notification).where(*condition))
+        return [_notification_item(row) for row in rows], int(unread or 0), int(total or 0)
 
     async def open_notification(self, user_id: UUID, notification_id: UUID) -> NotificationDetail | None:
         """Детали напоминания (список вин с избранным и отзывами); отмечает прочитанным."""

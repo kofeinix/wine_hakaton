@@ -128,6 +128,16 @@
         </span>
         <ChevronRight v-if="item.top_wine" :size="20" class="notification-card-chevron" />
       </button>
+      <button
+        v-if="app.history.value.items.length < app.history.value.total"
+        class="ui-button secondary profile-more"
+        type="button"
+        :disabled="loadingMore"
+        @click="loadMore(app.loadMoreHistory)"
+      >
+        <LoaderCircle v-if="loadingMore" :size="18" class="spin" />
+        Показать ещё · {{ app.history.value.total - app.history.value.items.length }}
+      </button>
     </div>
 
     <div v-else-if="app.profileTab.value === 'favorites'" class="wine-grid">
@@ -229,6 +239,16 @@
           <Trash2 :size="18" />
         </button>
       </div>
+      <button
+        v-if="app.notifications.value.items.length < app.notifications.value.total"
+        class="ui-button secondary profile-more"
+        type="button"
+        :disabled="loadingMore"
+        @click="loadMore(app.loadMoreNotifications)"
+      >
+        <LoaderCircle v-if="loadingMore" :size="18" class="spin" />
+        Показать ещё · {{ app.notifications.value.total - app.notifications.value.items.length }}
+      </button>
     </div>
   </section>
 </template>
@@ -237,6 +257,16 @@
 import { Bell, Camera, Check, CheckCheck, ChevronRight, Clock3, LoaderCircle, Pencil, Save, ThumbsDown, ThumbsUp, Trash2, Trophy, X } from "@lucide/vue";
 
 const app = useWineApp();
+const loadingMore = ref(false);
+
+async function loadMore(fetchNextPage) {
+  loadingMore.value = true;
+  try {
+    await fetchNextPage();
+  } finally {
+    loadingMore.value = false;
+  }
+}
 const avatarInput = ref(null);
 const periodMinutes = ref(24 * 60);
 const basePeriodOptions = [

@@ -173,6 +173,7 @@ class SearchHistoryItem(BaseModel):
 
 class SearchHistoryResponse(BaseModel):
     items: list[SearchHistoryItem]
+    total: int = Field(default=0, description="Сколько записей всего (для «Показать ещё»)")
     anonymous: bool = Field(description="true — временная история по cookie, без аккаунта")
 
 
@@ -280,6 +281,7 @@ class NotificationDetail(NotificationItem):
 class NotificationsResponse(BaseModel):
     items: list[NotificationItem]
     unread: int
+    total: int = Field(default=0, description="Сколько уведомлений всего (для «Показать ещё»)")
 
 
 class ProfileUpdateRequest(BaseModel):

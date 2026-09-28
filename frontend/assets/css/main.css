@@ -3638,6 +3638,11 @@ main {
   background: var(--primary-soft);
 }
 
+.profile-more {
+  justify-self: center;
+  margin-top: 8px;
+}
+
 .site-footer {
   display: flex;
   justify-content: space-between;
