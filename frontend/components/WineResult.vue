@@ -7,7 +7,7 @@
 
     <article class="wine-hero">
       <div class="wine-info">
-        <p class="match-label">Лучшее совпадение · {{ formatPercent(match.final_score) }}</p>
+        <p class="match-label">Лучшее совпадение · {{ formatPercent(match.similarity) }}</p>
         <h3><TermText :text="match.wine?.name" /></h3>
         <a v-if="match.wine?.producer" class="producer-link" :href="match.wine?.source_url || '#'" target="_blank">
           {{ match.wine.producer }}
@@ -45,9 +45,18 @@
       </div>
 
       <div class="wine-visual">
-        <div class="photo-stage">
-          <img v-if="activePhoto" :src="activePhoto" :alt="match.wine?.name" />
-          <span v-else>Фото вина</span>
+        <button
+          v-if="activePhoto"
+          class="photo-stage photo-stage-open"
+          type="button"
+          :aria-label="`Открыть фото на весь экран: ${match.wine?.name}`"
+          @click="openViewer(photoList, Math.max(0, photoList.findIndex((photo) => photo.url === activePhoto)))"
+        >
+          <img :src="activePhoto" :alt="match.wine?.name" />
+          <span class="photo-stage-zoom" aria-hidden="true"><Maximize2 :size="16" /></span>
+        </button>
+        <div v-else class="photo-stage">
+          <span>Фото вина</span>
         </div>
         <div v-if="realPhotos(match.wine).length > 1" class="thumb-strip">
           <button
@@ -86,18 +95,29 @@
         {{ app.showGenerated.value ? "Скрыть сгенерированные изображения" : "Показать сгенерированные изображения" }}
       </button>
       <div v-if="app.showGenerated.value" class="generated-grid">
-        <img v-for="photo in generatedPhotos(match.wine)" :key="photo.id || photo.url" :src="photo.url" :alt="match.wine?.name" />
+        <button
+          v-for="(photo, index) in scenes"
+          :key="photo.url"
+          class="generated-open"
+          type="button"
+          :aria-label="`Открыть сцену ${index + 1} из ${scenes.length}`"
+          @click="openViewer(scenes, index)"
+        >
+          <img :src="photo.url" :alt="match.wine?.name" />
+        </button>
       </div>
     </div>
 
     <WineReviews v-if="match.wine" :wine="match.wine" />
+
+    <PhotoViewer v-model:index="viewerIndex" :photos="viewerPhotos" :label="match.wine?.name || 'Фото вина'" />
 
     <SearchDiagnostics />
   </section>
 </template>
 
 <script setup>
-import { Heart, Images, LoaderCircle, Percent, Thermometer, Utensils, Wine } from "@lucide/vue";
+import { Heart, Images, LoaderCircle, Maximize2, Percent, Thermometer, Utensils, Wine } from "@lucide/vue";
 
 const props = defineProps({
   match: {
@@ -123,6 +143,23 @@ const {
 } = useWineFormat();
 
 const favoriteBusy = ref(false);
+
+// просмотр на весь экран: настоящие фото — с того, что сейчас выбрано; сцены — отдельным списком
+const viewerPhotos = ref([]);
+const viewerIndex = ref(null);
+const photoList = computed(() => {
+  const photos = realPhotos(props.match?.wine).map((photo) => ({ url: photo.url }));
+  return photos.length ? photos : activePhoto.value ? [{ url: activePhoto.value }] : [];
+});
+const scenes = computed(() =>
+  generatedPhotos(props.match?.wine).map((photo) => ({ url: photo.url, caption: "Сцена сгенерирована по фото бутылки" })),
+);
+
+function openViewer(list, index) {
+  if (!list.length) return;
+  viewerPhotos.value = list;
+  viewerIndex.value = index;
+}
 const isFavorite = computed(() =>
   app.favorites.value.items.some((item) => item.wine?.id === props.match?.wine_id),
 );

@@ -762,6 +762,51 @@ main {
   color: white;
 }
 
+.photo-stage-open {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+/* значок «на весь экран» — появляется при наведении, на телефоне виден всегда */
+.photo-stage .photo-stage-zoom {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--primary);
+  opacity: 0;
+  transition: opacity 0.2s ease-in;
+}
+
+.photo-stage-open:hover .photo-stage-zoom,
+.photo-stage-open:focus-visible .photo-stage-zoom {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .photo-stage .photo-stage-zoom {
+    opacity: 1;
+  }
+}
+
+.generated-open {
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  cursor: zoom-in;
+}
+
 .thumb-strip,
 .generated-grid {
   display: flex;
@@ -1615,7 +1660,8 @@ main {
   overflow: hidden;
   border: 0;
   border-radius: 24px;
-  background: white;
+  /* главное фото — webp без фона: бутылка стоит прямо на карточке, как в каталоге */
+  background: transparent;
   cursor: zoom-in;
 }
 
@@ -2426,15 +2472,30 @@ main {
   align-items: center;
 }
 
+/* сортировка — как чип, без системного вида селекта */
 .sm-results-actions select {
-  height: 36px;
-  padding: 0 10px;
+  height: 32px;
+  padding: 0 34px 0 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-surface);
-  color: var(--text-primary);
+  border-radius: 16px;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238f3d42' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  color: var(--primary);
   font: inherit;
   font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.2s ease-in;
+}
+
+.sm-results-actions select:hover,
+.sm-results-actions select:focus-visible {
+  border-color: var(--primary);
+  outline: none;
 }
 
 .sm-grid {
@@ -3887,12 +3948,15 @@ main {
   height: 96px;
   place-items: center;
   border-radius: 16px;
-  background: white;
+  background: transparent;
 }
 
+/* как в карточке вина: max-height в % внутри grid не работает, высокие бутылки обрезались */
 .viewed-wine-photo img {
-  max-width: 100%;
-  max-height: 100%;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   padding: 6px;
 }
@@ -4358,6 +4422,11 @@ main {
 
   .wine-detail-photo img {
     padding: 6px;
+  }
+
+  /* блок фото на телефоне маленький — счётчик закрывал бутылку; число фото есть в галерее */
+  .wine-detail-photo-count {
+    display: none;
   }
 
   /* на телефоне галерея — лента с прокруткой */

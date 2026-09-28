@@ -261,7 +261,8 @@ const stats = computed(() => {
   const gap = rerank.value.visual_gap;
   const threshold = rerank.value.ocr_skip_visual_gap;
   let ocrValue = "не применён";
-  if (ocr.skipped) ocrValue = "пропущен";
+  if (ocr.reason === "timeout_budget") ocrValue = "не успел";
+  else if (ocr.skipped) ocrValue = "пропущен";
   else if (ocr.applied) ocrValue = ocr.cached ? "из кеша" : "применён";
   return [
     {
@@ -390,7 +391,15 @@ function featureRows(features) {
 
 const ocrNote = computed(() => {
   const ocr = response.value?.ocr || {};
-  if (ocr.skipped) return "OCR не понадобился: визуальный результат достаточно уверенный.";
+  const reasons = {
+    timeout_budget: "OCR не уложился во время: распознавание текста не успело, ответ — только по изображению.",
+    skipped_confident_visual: "OCR не понадобился: визуальный результат достаточно уверенный.",
+    llm_unavailable: "OCR недоступен: модель распознавания текста не подключена, ответ — только по изображению.",
+    ocr_failed: "OCR завершился ошибкой: ответ — только по изображению.",
+    empty_ocr_text: "OCR не нашёл текста на этикетке.",
+  };
+  if (reasons[ocr.reason]) return reasons[ocr.reason];
+  if (ocr.skipped) return reasons.skipped_confident_visual;
   const source = VIEW_LABELS[ocr.source_view] || ocr.source_view || "—";
   const status = rerank.value.ocr_status ? ` · статус ${rerank.value.ocr_status}` : "";
   return `Источник: ${source}${ocr.cached ? " · из кеша" : ""}${status}`;

@@ -1,11 +1,14 @@
 import asyncio
+import io
 import logging
+import time
 from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from PIL import Image
 
-from src.api.routes import router
+from src.api.routes import eval_router, router
 from src.api.services import WineService
 from src.api.services.achievement_service import AchievementService
 from src.api.services.notification_worker import ReminderWorker
@@ -37,6 +40,9 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
             logger.info("Assigned nicknames to %s existing users", assigned)
         if settings.auth.jwt_secret == DEFAULT_JWT_SECRET:
             logger.warning("AUTH__JWT_SECRET is not set: using the insecure default secret")
+        # модели (YOLO, SigLIP2) грузятся при первом поиске — прогреваем в фоне, чтобы первый
+        # настоящий запрос не ждал загрузки (проверочный скрипт даёт на ответ 10 с)
+        warmup_task = asyncio.create_task(_warm_up(app.state.wine_service))
         worker_task = None
         if settings.notifications.enabled:
             worker = ReminderWorker(user_service, settings.notifications.check_interval_seconds)
@@ -44,6 +50,7 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
         try:
             yield
         finally:
+            warmup_task.cancel()
             if worker_task is not None:
                 worker_task.cancel()
                 with suppress(asyncio.CancelledError):
@@ -112,5 +119,20 @@ def create_app(connection_manager: ConnectionManager) -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(router, prefix="/api/v1")
+    app.include_router(eval_router)
     app.include_router(user_router, prefix="/api/v1")
     return app
+
+
+async def _warm_up(wine_service: WineService) -> None:
+    """Один поиск по пустой картинке: загружает модели и прогревает Qdrant до первого пользователя."""
+    buffer = io.BytesIO()
+    Image.new("RGB", (640, 640), (200, 190, 180)).save(buffer, format="JPEG")
+    started = time.perf_counter()
+    try:
+        await wine_service.search(buffer.getvalue())
+        logger.info("Search warm-up done in %.1fs", time.perf_counter() - started)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.warning("Search warm-up failed; the first search will load models itself", exc_info=True)

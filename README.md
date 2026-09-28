@@ -90,6 +90,21 @@ docker compose logs -f models-init data-init qdrant-init minio-init app
 docker compose up -d app
 ```
 
+### Проверочный скрипт организаторов
+
+Сервис сразу отвечает на адрес, который скрипт использует по умолчанию —
+`POST http://127.0.0.1:8080/v1/eval/predict` (порт задаётся `EVAL_PORT` в `.env`):
+
+```bash
+cd eval
+bash participant_test.sh --images-dir ./queries --manifest ./queries.tsv \
+  --endpoint 'http://127.0.0.1:8080/v1/eval/predict' --output ./predictions.jsonl
+```
+
+Ответ — `{"slug": "..."}`, в историю поиска такие запросы не пишутся. Скрипт ждёт ответ не дольше
+10 секунд, поэтому распознавание текста ограничено `SEARCH__OCR_BUDGET_SECONDS` (7,5 с): если LLM не
+успела, сервис отвечает по изображению. Модели прогреваются при старте, первый запрос не ждёт их загрузки.
+
 ## Если что-то пошло не так
 
 - **Порт занят.** Поменяйте нужный порт в `.env` (`APP_PORT`, `FRONTEND_PORT`, `DATABASE__PORT`,

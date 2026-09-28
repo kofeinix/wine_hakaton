@@ -39,7 +39,7 @@ const { formatPercent } = useWineFormat();
 function openSimilar(match) {
   app.openWine(match.wine, {
     searchId: app.searchResponse.value?.search_id,
-    context: `Похожий вариант · совпадение ${formatPercent(match.final_score)}`,
+    context: `Похожий вариант · совпадение ${formatPercent(match.similarity)}`,
   });
 }
 </script>

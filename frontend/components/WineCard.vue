@@ -7,7 +7,7 @@
     <span v-else class="no-photo">Фото</span>
     <strong>{{ match.wine?.name || match.slug }}</strong>
     <small>{{ match.wine?.producer }}</small>
-    <em>{{ formatPercent(match.final_score) }}</em>
+    <em>{{ formatPercent(match.similarity) }}</em>
   </button>
 </template>
 

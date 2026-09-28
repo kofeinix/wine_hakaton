@@ -9,11 +9,15 @@ enrich_wines_from_site.py).
 Аккуратно с сайтом: не больше одного запроса в --delay секунд (по умолчанию 2), уже скачанное
 пропускается (скрипт можно перезапускать), на 403/429/503 — остановка.
 
+Прозрачные поля вокруг бутылки обрезаются (остаётся отступ TRIM_MARGIN), иначе у части вин
+бутылка в карточке выглядит мелкой. Уже скачанные файлы: --trim-existing.
+
 В конце в wine_images.json главным фото с webp проставляется webp_minio_path (<wine_id>/main.webp):
 API отдаёт webp вместо jpg, а build_photos_archive.py --webp собирает их в архив для MinIO.
 
     uv run python scripts/download_main_webp.py
     uv run python scripts/download_main_webp.py --limit 20     # проба
+    uv run python scripts/download_main_webp.py --trim-existing  # только обрезать поля у скачанных
 """
 
 from __future__ import annotations
@@ -36,6 +40,8 @@ DB_DIR = PROJECT_ROOT / "data" / "db"
 IMAGES_DIR = PROJECT_ROOT / "data" / "images_extended"
 RESIZE_URL = "https://api.vino-svoe.ru/v1/img/str-api/1200/1200/resize{path}"  # так фото отдаёт сам сайт
 USER_AGENT = "WineHakaton main photo import (one request per 2s)"
+TRIM_MARGIN = 0.03  # отступ вокруг бутылки после обрезки, доля от большей стороны
+ALPHA_THRESHOLD = 16  # почти прозрачные пиксели (тень, ореол) полем не считаем
 
 logger = logging.getLogger("download_main_webp")
 
@@ -67,6 +73,42 @@ def valid_webp(data: bytes) -> bool:
         return False
 
 
+def trim_margins(data: bytes) -> bytes:
+    """Обрезать прозрачные поля webp, оставив небольшой отступ; без прозрачности — как есть."""
+    with Image.open(io.BytesIO(data)) as image:
+        if image.mode != "RGBA":
+            return data
+        bbox = image.getchannel("A").point(lambda value: 255 if value > ALPHA_THRESHOLD else 0).getbbox()
+        if bbox is None:
+            return data
+        margin = round(max(image.size) * TRIM_MARGIN)
+        box = (
+            max(bbox[0] - margin, 0),
+            max(bbox[1] - margin, 0),
+            min(bbox[2] + margin, image.width),
+            min(bbox[3] + margin, image.height),
+        )
+        if box == (0, 0, image.width, image.height):
+            return data  # полей нет — не перекодируем
+        buffer = io.BytesIO()
+        image.crop(box).save(buffer, format="WEBP", quality=90, method=6)
+        return buffer.getvalue()
+
+
+def trim_existing() -> None:
+    files = sorted(IMAGES_DIR.glob("*/main/original.webp"))
+    trimmed = 0
+    for path in files:
+        data = path.read_bytes()
+        result = trim_margins(data)
+        if result is not data:
+            partial = path.with_suffix(".webp.part")
+            partial.write_bytes(result)
+            partial.replace(path)
+            trimmed += 1
+    logger.info("обрезаны поля у %s из %s webp", trimmed, len(files))
+
+
 def download(url: str, timeout: float) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
@@ -84,8 +126,12 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--limit", type=int, default=None, help="Обработать не больше N вин (проба)")
     parser.add_argument("--cache-dir", type=Path, default=PROJECT_ROOT / DEFAULT_CACHE_DIR)
+    parser.add_argument("--trim-existing", action="store_true", help="Только обрезать поля у скачанных webp")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
+    if args.trim_existing:
+        trim_existing()
+        return
 
     images_path = DB_DIR / "wine_images.json"
     rows = json.loads(images_path.read_text(encoding="utf-8"))
@@ -130,7 +176,7 @@ def main() -> None:
             target = webp_target(wine_id)
             target.parent.mkdir(parents=True, exist_ok=True)
             partial = target.with_suffix(".webp.part")
-            partial.write_bytes(data)
+            partial.write_bytes(trim_margins(data))
             partial.replace(target)
             stats["downloaded"] += 1
             if number % 50 == 0 or number == len(todo):

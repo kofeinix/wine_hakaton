@@ -50,6 +50,10 @@ class SearchMatch(BaseModel):
     visual_score: float = Field(description="Скор визуального поиска (SigLIP2 + Qdrant)")
     ocr_score: float = Field(description="OCR-бонус: совпадение текста этикетки с карточкой вина")
     final_score: float = Field(description="visual_score + ocr_score — по нему отсортированы результаты")
+    similarity: float = Field(
+        default=0.0,
+        description="Сходство 0–1: final_score / максимально возможный скор в этом поиске (search.max_score)",
+    )
     wine: WineResponse | None = None
 
 
@@ -84,7 +88,14 @@ class OcrInfo(BaseModel):
     cached: bool = Field(default=False, description="Текст взят из кеша (это фото уже распознавали)")
     skipped: bool = Field(
         default=False,
-        description="OCR не понадобился: визуальный результат уверенный (SEARCH__OCR_SKIP_VISUAL_GAP)",
+        description="OCR не участвовал: не понадобился или не успел (причина — в reason)",
+    )
+    reason: str | None = Field(
+        default=None,
+        description=(
+            "ok / skipped_confident_visual (визуальный результат уверенный) / timeout_budget (LLM не уложилась "
+            "в SEARCH__OCR_BUDGET_SECONDS) / llm_unavailable / ocr_failed / empty_ocr_text / no_source_image"
+        ),
     )
 
 
@@ -96,6 +107,10 @@ class SearchInfo(BaseModel):
     )
     labels_detected: int = Field(default=0, description="Сколько этикеток нашёл детектор на фото")
     candidates: int = Field(description="Сколько вин-кандидатов переранжировал OCR")
+    max_score: float = Field(
+        default=0.0,
+        description="Максимально возможный final_score для этих ракурсов (с OCR-бонусом, если OCR применён)",
+    )
 
 
 class SearchTimings(BaseModel):

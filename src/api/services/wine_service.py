@@ -30,6 +30,7 @@ from src.api.schemas import (
 )
 from src.api.services.ocr_match_service import OcrMatchService
 from src.api.services.photo_service import QueryImageViews, WinePhotoService
+from src.api.services.similarity import max_score, similarities
 from src.api.services.visual_search import (
     GLOBAL_CANDIDATE_LIMIT,
     LABEL_PHOTO_AREA_THRESHOLD,
@@ -78,6 +79,8 @@ class SearchOutcome:
     timings_ms: dict[str, float]
     diagnostics: dict[str, Any] = field(default_factory=dict)
     query_views: QueryImageViews | None = None
+    # сходство 0–1 для каждого кандидата: скор / максимально возможный в этом поиске
+    similarities: list[float] = field(default_factory=list)
 
 
 class WineService:
@@ -95,6 +98,7 @@ class WineService:
         )
         self.ocr_matcher = OcrMatchService(self.repository, SUGAR_VARIANTS)
         self.ocr_skip_visual_gap = connection_manager.settings.search.ocr_skip_visual_gap
+        self.ocr_budget_seconds = connection_manager.settings.search.ocr_budget_seconds
         # YOLO и SigLIP — CPU/GPU-работа: в отдельном потоке, чтобы не блокировать event loop.
         # Один воркер — модели не вызываются параллельно (Ultralytics не потокобезопасен).
         self._cv_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="cv")
@@ -126,6 +130,7 @@ class WineService:
                     visual_score=round(_visual_score(candidate), 4),
                     ocr_score=round(candidate.ocr_score, 4),
                     final_score=round(candidate.score, 4),
+                    similarity=round(outcome.similarities[rank - 1], 4) if outcome.similarities else 0.0,
                     wine=cards.get(candidate.wine_id),
                 )
                 for rank, candidate in enumerate(outcome.candidates, start=1)
@@ -136,6 +141,7 @@ class WineService:
                 text=outcome.ocr["text"],
                 cached=outcome.ocr["cached"],
                 skipped=outcome.ocr["skipped"],
+                reason=outcome.ocr["reason"],
             ),
             crops=outcome.crops,
             image=outcome.query_views.image if outcome.query_views else None,
@@ -146,6 +152,7 @@ class WineService:
                 multi_wine_mode=selection.multi_wine_mode,
                 labels_detected=selection.labels_detected,
                 candidates=outcome.reranked,
+                max_score=round(max_score(outcome.matches.weights, bool(outcome.ocr["applied"])), 4),
             ),
             timings_ms=SearchTimings(**outcome.timings_ms),
             diagnostics=outcome.diagnostics if debug else None,
@@ -228,7 +235,7 @@ class WineService:
             ocr = _ocr_result("skipped_confident_visual", ocr_source_view(query_views), skipped=True)
             timings["ocr_ms"] = 0.0
         else:
-            ocr = await ocr_task  # уже готов (например, из кеша) — используем
+            ocr = await self._await_ocr(ocr_task, started, query_views, timings)
         mark = perf_counter()
         candidates, ocr_diagnostics = await self._rerank_with_ocr(candidates[:OCR_RERANK_LIMIT], ocr["text"])
         timings["rerank_ms"] = ms(mark)
@@ -251,6 +258,9 @@ class WineService:
             },
         }
         return SearchOutcome(
+            similarities=similarities(
+                [candidate.score for candidate in candidates[:limit]], matches.weights, bool(ocr["applied"])
+            ),
             candidates=candidates[:limit],
             crops=query_views.crops,
             ocr=ocr,
@@ -281,6 +291,19 @@ class WineService:
         }
 
     # --- OCR ----------------------------------------------------------------------
+
+    async def _await_ocr(self, ocr_task: asyncio.Task, started: float, query_views, timings: dict) -> dict[str, Any]:
+        """Результат OCR, но не дольше бюджета от начала поиска: медленная LLM не должна держать ответ."""
+        if self.ocr_budget_seconds <= 0 or ocr_task.done():
+            return await ocr_task
+        remaining = self.ocr_budget_seconds - (perf_counter() - started)
+        try:
+            return await asyncio.wait_for(asyncio.shield(ocr_task), timeout=max(remaining, 0.0))
+        except TimeoutError:
+            await _cancel(ocr_task)
+            logger.warning("OCR did not finish within %.1fs budget; answering by image only", self.ocr_budget_seconds)
+            timings["ocr_ms"] = round((perf_counter() - started) * 1000, 1)
+            return _ocr_result("timeout_budget", ocr_source_view(query_views), skipped=True)
 
     async def _extract_ocr_text(self, query_views) -> dict[str, Any]:
         llm = self.connection_manager.llm
@@ -376,7 +399,10 @@ class WineService:
 def wine_to_response(wine: Wine) -> WineResponse:
     """Карточка вина для ответов API (поиск, история, избранное, уведомления)."""
     def photo(image) -> WinePhoto:
-        return WinePhoto(id=str(image.id), url=f"/api/v1/photos/{image.id}", is_main=image.is_main)
+        # ?v=webp — другой адрес для браузера: фото кешируются как immutable, и без него у тех, кто
+        # уже открывал сайт, неделю показывался бы старый jpg
+        suffix = "?v=webp2" if image.webp_minio_path else ""  # webp2 — после обрезки полей
+        return WinePhoto(id=str(image.id), url=f"/api/v1/photos/{image.id}{suffix}", is_main=image.is_main)
 
     # main первым, затем остальные настоящие по имени файла (yandex_1, yandex_2, ...)
     real = sorted((i for i in wine.images if not i.is_generated), key=lambda i: (not i.is_main, i.minio_path))
@@ -409,6 +435,12 @@ def wine_to_response(wine: Wine) -> WineResponse:
 
 def _visual_score(candidate: WineCandidate) -> float:
     return candidate.visual_score if candidate.visual_score is not None else candidate.score
+
+
+async def _cancel(task: asyncio.Task) -> None:
+    task.cancel()
+    with suppress(asyncio.CancelledError):
+        await task
 
 
 def _ocr_result(

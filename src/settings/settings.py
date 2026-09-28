@@ -116,6 +116,13 @@ class SearchSettings(BaseModel):
             "((v1 - v2) / v2). На eval при 0.10 — 14% поисков без OCR и без потери точности. 0 — всегда OCR."
         ),
     )
+    ocr_budget_seconds: float = Field(
+        default=7.5,
+        description=(
+            "Сколько секунд от начала поиска ждать OCR (LLM); не успела — ответ по изображению. "
+            "Проверочный скрипт организаторов ждёт ответ не дольше 10 с. 0 — ждать сколько угодно."
+        ),
+    )
 
 
 class LlmSettings(BaseModel):

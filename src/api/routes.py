@@ -20,6 +20,8 @@ from src.api.services.wine_service import SearchOutcome
 from src.api.utils import _read_image_upload
 
 router = APIRouter()
+# проверочный скрипт организаторов (eval/participant_test.sh): POST /v1/eval/predict, поле image → {"slug": ...}
+eval_router = APIRouter()
 
 IMAGE_ERRORS = {
     400: {"description": "Uploaded image is empty"},
@@ -61,7 +63,7 @@ async def _record_search(
     return await request.app.state.user_service.record_search(
         owner,
         [(candidate.wine_id, candidate.score) for candidate in candidates],
-        candidates[0].score if candidates else None,
+        outcome.similarities[0] if outcome.similarities else None,  # сходство top-1, как в интерфейсе
         from_camera=source == "camera",
     )
 
@@ -246,3 +248,19 @@ async def get_term(term_id: str, terms: TermServiceDep) -> WineTermDetail:
     if term is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Term not found")
     return term
+
+
+@eval_router.post(
+    "/v1/eval/predict",
+    response_model=SlugResponse,
+    tags=["search"],
+    summary="Проверка организаторов: Top-1 slug по фото",
+    description=(
+        "Формат проверочного скрипта (eval/participant_test.sh): multipart-поле `image`, ответ `{\"slug\": ...}`. "
+        "Тот же поиск, что `/api/v1/search/image`, но без записи в историю."
+    ),
+    responses=IMAGE_ERRORS,
+)
+async def eval_predict(wine_service: WineServiceDep, image: ImageUpload) -> SlugResponse:
+    outcome = await wine_service.search(await _read_image_upload(image))
+    return SlugResponse(slug=outcome.candidates[0].slug if outcome.candidates else None)
