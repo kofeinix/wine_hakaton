@@ -100,6 +100,7 @@ class WineService:
         )
         self.ocr_matcher = OcrMatchService(self.repository, SUGAR_VARIANTS)
         self.ocr_skip_visual_gap = connection_manager.settings.search.ocr_skip_visual_gap
+        self.ocr_skip_min_score = connection_manager.settings.search.ocr_skip_min_score
         self.ocr_budget_seconds = connection_manager.settings.search.ocr_budget_seconds
         # YOLO и SigLIP — CPU/GPU-работа: в отдельном потоке, чтобы не блокировать event loop.
         # Один воркер — модели не вызываются параллельно (Ultralytics не потокобезопасен).
@@ -229,8 +230,11 @@ class WineService:
         logger.info("Global search found top_%s candidates. %s", len(candidates), _format_top_gap(candidates))
 
         visual_gap = _relative_gap(candidates)
-        if not ocr_task.done() and 0 < self.ocr_skip_visual_gap < visual_gap:
-            # визуальный результат уверенный: OCR его не меняет (проверено на eval) — не ждём LLM
+        top_score = candidates[0].score if candidates else 0.0
+        if not ocr_task.done() and 0 < self.ocr_skip_visual_gap < visual_gap and top_score >= self.ocr_skip_min_score:
+            # визуальный результат уверенный: top-1 далеко впереди и сам по себе похож — OCR его не меняет
+            # (проверено на eval), не ждём LLM. Слабый top-1 с большим отрывом (вина нет в каталоге,
+            # сложное фото) — как раз случай, когда нужен текст этикетки
             ocr_task.cancel()
             with suppress(asyncio.CancelledError):
                 await ocr_task
@@ -255,6 +259,7 @@ class WineService:
                 "ocr_status": ocr["reason"],
                 "visual_gap": round(visual_gap, 4) if visual_gap != float("inf") else None,
                 "ocr_skip_visual_gap": self.ocr_skip_visual_gap,
+                "ocr_skip_min_score": self.ocr_skip_min_score,
                 "normalized_text": ocr["normalized_text"],
                 "formula": "final = visual_score + ocr_bonus (src/ml/ocr_matching.py)",
             },

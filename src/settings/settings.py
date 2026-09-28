@@ -127,6 +127,14 @@ class SearchSettings(BaseModel):
             "около 40% поисков без OCR и ни одной ошибки среди них. 0 — всегда OCR."
         ),
     )
+    ocr_skip_min_score: float = Field(
+        default=0.60,
+        description=(
+            "…и только если визуальный скор top-1 не ниже этого: слабый top-1 с большим отрывом (вина нет "
+            "в каталоге, сложное фото) проверяем текстом этикетки. На отложенных фото Vivino верные ответы "
+            "с отрывом > 0.30 имели скор от 0.48, медиана 0.82."
+        ),
+    )
     ocr_budget_seconds: float = Field(
         default=7.5,
         description=(
