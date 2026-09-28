@@ -3,7 +3,8 @@
 
 - models/yolo/label.pt   — своя модель детекции этикеток, лежит в репозитории;
 - models/yolo/yolo26x.pt — COCO-детектор бутылок, скачивается с релизов Ultralytics;
-- models/siglip2/        — SigLIP2 для эмбеддингов, скачивается с Hugging Face.
+- models/siglip2_384/    — SigLIP2 (384×384) для эмбеддингов, скачивается с Hugging Face;
+- models/adapter/        — дообученный адаптер векторов SigLIP2, лежит в репозитории.
 """
 
 from __future__ import annotations
@@ -17,10 +18,10 @@ from huggingface_hub import snapshot_download
 
 
 DEFAULT_MODEL_ROOT = Path("models")
-DEFAULT_SIGLIP2_MODEL_ID = "google/siglip2-base-patch16-224"
+DEFAULT_SIGLIP2_MODEL_ID = "google/siglip2-base-patch16-384"
 LABEL_MODEL = Path("yolo") / "label.pt"
 BOTTLE_MODEL = Path("yolo") / "yolo26x.pt"
-SIGLIP2_DIR_NAME = "siglip2"
+SIGLIP2_DIR_NAME = "siglip2_384"
 SIGLIP2_REQUIRED_FILES = (
     "config.json",
     "model.safetensors",

@@ -48,6 +48,7 @@ from src.api.services.visual_search import (
 )
 from src.connections.database.models import Wine
 from src.ml.text_normalization import normalize_match_text
+from src.ml.view_adapter import ViewAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ class WineService:
             embedder=connection_manager.embeddings,
             qdrant=connection_manager.qdrant,
             collection_encoder=connection_manager.settings.search.collection_encoder,
+            adapter=ViewAdapter.load(connection_manager.settings.embeddings.adapter_path),
         )
         self.ocr_matcher = OcrMatchService(self.repository, SUGAR_VARIANTS)
         self.ocr_skip_visual_gap = connection_manager.settings.search.ocr_skip_visual_gap

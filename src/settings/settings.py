@@ -91,11 +91,18 @@ class EmbeddingSettings(BaseModel):
     """SigLIP2 local model configuration."""
 
     model_id: str = Field(
-        default="google/siglip2-base-patch16-224",
+        default="google/siglip2-base-patch16-384",
         description="Hugging Face model id",
     )
     model_dir: str = Field(
-        default="/models/siglip2", description="Path to mounted SigLIP2 model files"
+        default="/models/siglip2_384", description="Path to mounted SigLIP2 model files"
+    )
+    adapter_path: str = Field(
+        default="/models/adapter/siglip2_384_views.npz",
+        description=(
+            "Дообученный адаптер векторов по ракурсам (scripts/train_view_adapter.py); "
+            "пусто — поиск по исходным векторам SigLIP2"
+        ),
     )
     device: str = Field(
         default="auto", description="Embedding device: auto, cpu, cuda, or mps"
@@ -106,14 +113,18 @@ class SearchSettings(BaseModel):
     """Runtime image search configuration."""
 
     collection_encoder: str = Field(
-        default="siglip2",
-        description="Suffix of Qdrant collections: wine_<view>_<collection_encoder>",
+        default="siglip2_384",
+        description=(
+            "Suffix of Qdrant collections: wine_<view>_<collection_encoder>, "
+            "с адаптером — wine_<view>_<collection_encoder>_<версия адаптера>"
+        ),
     )
     ocr_skip_visual_gap: float = Field(
-        default=0.10,
+        default=0.30,
         description=(
             "Не ждать OCR, если визуальный top-1 лучше top-2 больше чем на эту долю "
-            "((v1 - v2) / v2). На eval при 0.10 — 14% поисков без OCR и без потери точности. 0 — всегда OCR."
+            "((v1 - v2) / v2). Адаптер разводит скоры сильнее: на отложенных фото Vivino при 0.30 — "
+            "около 40% поисков без OCR и ни одной ошибки среди них. 0 — всегда OCR."
         ),
     )
     ocr_budget_seconds: float = Field(

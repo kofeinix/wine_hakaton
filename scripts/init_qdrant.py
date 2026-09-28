@@ -2,6 +2,10 @@
 
 Файлы <view>.npz в --embeddings-dir: vectors (N x D, float), point_ids, payloads_json
 (или wine_ids/photo_ids/views/slugs), collection — имя коллекции.
+
+Если задан адаптер (EMBEDDINGS__ADAPTER_PATH, scripts/train_view_adapter.py), векторы проходят через него —
+как и векторы запроса в сервисе, — а коллекция называется wine_<view>_<SEARCH__COLLECTION_ENCODER>_<версия
+адаптера>. Коллекции прежних версий (wine_* кроме текущих) удаляются: они больше не используются.
 Если коллекция уже содержит столько же точек, загрузка пропускается (--recreate — перезалить).
 """
 
@@ -21,9 +25,10 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.connections.qdrant import QdrantClient
+from src.ml.view_adapter import ViewAdapter, collection_encoder, resolve_model_path
 from src.settings.settings import all_settings
 
-DEFAULT_EMBEDDINGS_DIR = Path("/data/embeddings")
+DEFAULT_EMBEDDINGS_DIR = Path("/data/embeddings/siglip2_384")
 NPZ_FILES = ("original.npz", "bottle_crop.npz", "label_crop.npz")
 
 logger = logging.getLogger(__name__)
@@ -107,19 +112,37 @@ async def load_collection(qdrant: QdrantClient, data: NpzEmbeddings, batch_size:
         logger.info("%s: загружено %s/%s", name, end, expected)
 
 
+def adapt(data: NpzEmbeddings, view: str, adapter: ViewAdapter | None) -> NpzEmbeddings:
+    if adapter is None:
+        return data
+    name = f"wine_{view}_{collection_encoder(all_settings.search.collection_encoder, adapter)}"
+    return NpzEmbeddings(name, adapter.apply(view, data.vectors), data.point_ids, data.payloads)
+
+
+async def drop_stale_collections(qdrant: QdrantClient, current: set[str]) -> None:
+    for collection in (await qdrant.client.get_collections()).collections:
+        if collection.name.startswith("wine_") and collection.name not in current:
+            logger.info("Коллекция %s от прежней модели или адаптера не используется — удаляю", collection.name)
+            await qdrant.client.delete_collection(collection.name)
+
+
 async def init_qdrant(embeddings_dir: Path, batch_size: int, recreate: bool) -> None:
     paths = [embeddings_dir / name for name in NPZ_FILES if (embeddings_dir / name).is_file()]
     if not paths:
         raise FileNotFoundError(
             f"Нет эмбеддингов в {embeddings_dir}: скачайте их (см. README, шаг «Данные») в data/embeddings/"
         )
+    adapter = ViewAdapter.load(resolve_model_path(all_settings.embeddings.adapter_path, PROJECT_ROOT))
     qdrant = QdrantClient(all_settings.qdrant)
     await qdrant.connect()
     try:
+        loaded = set()
         for path in paths:
-            data = read_npz(path)
+            data = adapt(read_npz(path), path.stem, adapter)
             logger.info("%s -> коллекция %s, %s векторов", path.name, data.collection_name, len(data.vectors))
             await load_collection(qdrant, data, batch_size, recreate)
+            loaded.add(data.collection_name)
+        await drop_stale_collections(qdrant, loaded)
     finally:
         await qdrant.close()
 

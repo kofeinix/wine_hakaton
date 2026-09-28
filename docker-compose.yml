@@ -274,12 +274,14 @@ services:
     environment: *internal-services
     volumes:
       - ./data:/data:ro
+      # адаптер векторов (models/adapter, лежит в репозитории) — векторы каталога проходят через него
+      - ./models:/models:ro
     # коллекции уже загружены -> пропускает; перезалить: docker compose run --rm qdrant-init python scripts/init_qdrant.py --recreate
     command:
       - python
       - scripts/init_qdrant.py
       - --embeddings-dir
-      - /data/embeddings
+      - /data/embeddings/siglip2_384
 
   redis:
     image: redis:7-alpine

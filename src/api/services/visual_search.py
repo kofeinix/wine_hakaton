@@ -12,6 +12,8 @@ from typing import Any
 from PIL import Image
 from qdrant_client import models as qdrant_models
 
+from src.ml.view_adapter import ViewAdapter, collection_encoder as adapter_collection_encoder
+
 logger = logging.getLogger(__name__)
 
 # Вес каждого view в итоговом визуальном скоре (нормализуется по views с результатами).
@@ -189,10 +191,14 @@ def image_to_jpeg_bytes(image: Image.Image) -> bytes:
 
 
 class VisualSearcher:
-    def __init__(self, embedder, qdrant, collection_encoder: str = "siglip2") -> None:
+    def __init__(
+        self, embedder, qdrant, collection_encoder: str = "siglip2_384", adapter: ViewAdapter | None = None
+    ) -> None:
         self.embedder = embedder
         self.qdrant = qdrant
-        self.collection_encoder = collection_encoder
+        self.adapter = adapter
+        # коллекции с векторами, пропущенными через тот же адаптер (scripts/init_qdrant.py)
+        self.collection_encoder = adapter_collection_encoder(collection_encoder, adapter)
 
     def collection(self, view: str) -> str:
         return f"wine_{view}_{self.collection_encoder}"
@@ -201,7 +207,10 @@ class VisualSearcher:
         """Синхронная CPU/GPU-часть — можно вынести в поток."""
         if not selection.active_views:
             return []
-        return self.embedder.embed_many([query_views.images[view] for view in selection.active_views])
+        vectors = self.embedder.embed_many([query_views.images[view] for view in selection.active_views])
+        if self.adapter is None:
+            return vectors
+        return [self.adapter.apply(view, vector).tolist() for view, vector in zip(selection.active_views, vectors)]
 
     async def search(
         self,

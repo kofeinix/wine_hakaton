@@ -27,6 +27,9 @@ models/*
 !models/yolo/
 models/yolo/*
 !models/yolo/label.pt
+!models/adapter/
+models/adapter/*
+!models/adapter/siglip2_384_views.npz
 
 # данные: большие артефакты скачиваются отдельно (см. README), в репозитории — только data/db
 data/photos.tar.gz
