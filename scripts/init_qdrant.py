@@ -19,6 +19,7 @@ from pathlib import Path
 
 import numpy as np
 from qdrant_client.http import models as qdrant_models
+from tenacity import before_sleep_log, retry, stop_after_attempt, wait_exponential_jitter
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -30,8 +31,19 @@ from src.settings.settings import all_settings
 
 DEFAULT_EMBEDDINGS_DIR = Path("/data/embeddings/siglip2_384")
 NPZ_FILES = ("original.npz", "bottle_crop.npz", "label_crop.npz")
+# таймаут запросов при загрузке: по умолчанию у клиента 5 с, а на Windows (Docker через WSL2) создание
+# коллекции и запись пачки векторов бывают дольше — загрузка обрывалась на середине
+INIT_TIMEOUT_SECONDS = 120
 
 logger = logging.getLogger(__name__)
+
+# временные ошибки Qdrant (таймаут, разрыв соединения) — повторяем, а не роняем инициализацию
+retry_transient = retry(
+    wait=wait_exponential_jitter(initial=2, max=30),
+    stop=stop_after_attempt(5),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+    reraise=True,
+)
 
 
 @dataclass(frozen=True)
@@ -89,27 +101,37 @@ async def load_collection(qdrant: QdrantClient, data: NpzEmbeddings, batch_size:
             return
         logger.info("Коллекция %s: %s точек вместо %s — перезаливаю", name, existing, expected)
 
-    await client.recreate_collection(
-        collection_name=name,
-        vectors_config=qdrant_models.VectorParams(
-            size=int(data.vectors.shape[1]),
-            distance=qdrant_models.Distance.COSINE,
-        ),
-        optimizers_config=qdrant_models.OptimizersConfigDiff(indexing_threshold=1),
-    )
+    await recreate_collection(client, name, int(data.vectors.shape[1]))
     for offset in range(0, expected, batch_size):
         end = min(offset + batch_size, expected)
-        await client.upsert(
-            collection_name=name,
-            points=[
+        await upsert_batch(
+            client,
+            name,
+            [
                 qdrant_models.PointStruct(id=str(point_id), vector=vector.tolist(), payload=payload)
                 for point_id, vector, payload in zip(
                     data.point_ids[offset:end], data.vectors[offset:end], data.payloads[offset:end], strict=True
                 )
             ],
-            wait=True,
         )
         logger.info("%s: загружено %s/%s", name, end, expected)
+
+
+@retry_transient
+async def recreate_collection(client, name: str, size: int) -> None:
+    if await client.collection_exists(name):
+        await client.delete_collection(name)
+    await client.create_collection(
+        collection_name=name,
+        vectors_config=qdrant_models.VectorParams(size=size, distance=qdrant_models.Distance.COSINE),
+        optimizers_config=qdrant_models.OptimizersConfigDiff(indexing_threshold=1),
+    )
+
+
+@retry_transient
+async def upsert_batch(client, name: str, points: list[qdrant_models.PointStruct]) -> None:
+    # upsert идемпотентен: повтор той же пачки после таймаута не создаёт дублей
+    await client.upsert(collection_name=name, points=points, wait=True)
 
 
 def adapt(data: NpzEmbeddings, view: str, adapter: ViewAdapter | None) -> NpzEmbeddings:
@@ -133,7 +155,8 @@ async def init_qdrant(embeddings_dir: Path, batch_size: int, recreate: bool) -> 
             f"Нет эмбеддингов в {embeddings_dir}: скачайте их (см. README, шаг «Данные») в data/embeddings/"
         )
     adapter = ViewAdapter.load(resolve_model_path(all_settings.embeddings.adapter_path, PROJECT_ROOT))
-    qdrant = QdrantClient(all_settings.qdrant)
+    timeout = max(all_settings.qdrant.timeout or 0, INIT_TIMEOUT_SECONDS)
+    qdrant = QdrantClient(all_settings.qdrant.model_copy(update={"timeout": timeout}))
     await qdrant.connect()
     try:
         loaded = set()
