@@ -49,6 +49,7 @@ from src.api.services.visual_search import (
     select_views,
 )
 from src.connections.database.models import Wine
+from src.settings.logging_setup import set_request_log_fields
 from src.ml.text_normalization import normalize_match_text
 from src.ml.view_adapter import ViewAdapter
 
@@ -199,13 +200,40 @@ class WineService:
         """Кропы -> (OCR || визуальный поиск) -> OCR-реранк."""
         started = perf_counter()
         timings: dict[str, float] = {}
+        logger.info(
+            "image_search_started",
+            image_bytes=len(image_bytes),
+            limit=limit,
+            requested_views=views,
+            main_photos_only=main_photos_only,
+        )
 
         def ms(since: float) -> float:
             return round((perf_counter() - since) * 1000, 1)
 
         query_views = await self._cv(self.photo_service.build_query_views, image_bytes)
         timings["crops_ms"] = ms(started)
+        logger.info(
+            "image_crops",
+            image_size=_image_size(query_views),
+            bottle_crop=_crop_log(query_views.crops.get("bottle_crop")),
+            label_crop=_crop_log(query_views.crops.get("label_crop")),
+            detections={
+                "bottles": len(query_views.detections.bottles),
+                "labels": len(query_views.detections.labels),
+            },
+            duration_ms=timings["crops_ms"],
+        )
         selection = select_views(query_views, views)
+        logger.info(
+            "image_views_selected",
+            views=selection.active_views,
+            label_area_ratio=round(selection.label_area_ratio, 4),
+            label_confidence=round(selection.label_confidence, 4),
+            label_photo_mode=selection.label_photo_mode,
+            labels_detected=selection.labels_detected,
+            multi_wine_mode=selection.multi_wine_mode,
+        )
 
         async def ocr_stage() -> dict[str, Any]:
             since = perf_counter()
@@ -242,6 +270,14 @@ class WineService:
             ocr_task.cancel()
             with suppress(asyncio.CancelledError):
                 await ocr_task
+            logger.info(
+                "ocr_skipped",
+                reason="confident_visual",
+                visual_gap=round(visual_gap, 4),
+                top_score=round(top_score, 4),
+                skip_gap=self.ocr_skip_visual_gap,
+                skip_min_score=self.ocr_skip_min_score,
+            )
             ocr = _ocr_result("skipped_confident_visual", ocr_source_view(query_views), skipped=True)
             timings["ocr_ms"] = 0.0
         else:
@@ -269,6 +305,14 @@ class WineService:
             },
         }
         top = candidates[0] if candidates else None
+        set_request_log_fields(
+            search_top1_slug=top.slug if top else None,
+            search_top1_score=round(top.score, 4) if top else None,
+            search_ocr_status=ocr["reason"],
+            search_candidates=len(candidates),
+            search_views=selection.active_views,
+            search_timings_ms=timings,
+        )
         logger.info(
             "image_search",
             image_bytes=len(image_bytes),
@@ -451,6 +495,25 @@ def wine_to_response(wine: Wine) -> WineResponse:
 
 def _visual_score(candidate: WineCandidate) -> float:
     return candidate.visual_score if candidate.visual_score is not None else candidate.score
+
+
+def _image_size(query_views: QueryImageViews) -> str | None:
+    if query_views.image is None:
+        return None
+    return f"{query_views.image.width}x{query_views.image.height}"
+
+
+def _crop_log(crop: Any) -> dict[str, Any]:
+    if crop is None or not getattr(crop, "available", False):
+        return {"available": False}
+    width = getattr(crop, "width", None)
+    height = getattr(crop, "height", None)
+    return {
+        "available": True,
+        "source_view": getattr(crop, "source_view", None),
+        "confidence": getattr(crop, "confidence", None),
+        "size": f"{width}x{height}" if width and height else None,
+    }
 
 
 async def _cancel(task: asyncio.Task) -> None:

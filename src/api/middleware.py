@@ -96,6 +96,7 @@ class RequestLoggingMiddleware:
                 duration_ms=round(elapsed * 1000, 1),
                 bytes_in=state["received"],
                 bytes_out=state["sent"],
+                **context.request_log_fields,
             )
         finally:
             reset_request_context(token)
@@ -125,4 +126,3 @@ def _query_keys(query_string: bytes) -> list[str]:
 
 def _ms(started: float) -> float:
     return (perf_counter() - started) * 1000
-
