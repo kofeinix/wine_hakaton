@@ -478,6 +478,11 @@ main {
   margin-top: 96px;
 }
 
+/* прокрутка к результату после поиска: заголовок не прячется под закреплённой шапкой */
+.result-section {
+  scroll-margin-top: 96px;
+}
+
 .bottle-picker {
   display: grid;
   gap: 20px;

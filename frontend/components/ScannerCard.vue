@@ -38,7 +38,7 @@
       class="ui-button primary large"
       type="button"
       :disabled="!app.selectedFile.value || app.isSearching.value"
-      @click="app.searchWine()"
+      @click="search"
     >
       <LoaderCircle v-if="app.isSearching.value" :size="18" class="spin" />
       <Search v-else :size="18" />
@@ -57,6 +57,22 @@ const { prettyBytes } = useWineFormat();
 
 const cameraInput = ref(null);
 const galleryInput = ref(null);
+
+// на телефоне карточка результата — ниже кнопки, за экраном: после поиска прокручиваем к ней
+async function search() {
+  await app.searchWine();
+  if (!app.bestMatch.value || !window.matchMedia("(max-width: 767px)").matches) return;
+  await nextTick();
+  const result = document.querySelector(".result-section");
+  if (!result) return;
+  result.scrollIntoView({ behavior: "smooth", block: "start" });
+  // плавная прокрутка не анимируется во вкладке в фоне и в части встроенных браузеров — тогда сразу к карточке
+  setTimeout(() => {
+    if (Math.abs(result.getBoundingClientRect().top - parseFloat(getComputedStyle(result).scrollMarginTop)) > 40) {
+      result.scrollIntoView({ block: "start" });
+    }
+  }, 1200);
+}
 
 function onFileInput(event, camera) {
   app.setSelectedFile(event.target.files?.[0], { camera });
