@@ -3,6 +3,8 @@
 
 - models/yolo/label.pt   — своя модель детекции этикеток, лежит в репозитории;
 - models/yolo/yolo26x.pt — COCO-детектор бутылок, скачивается с релизов Ultralytics;
+- models/yolo/*_openvino_model/ — обе модели YOLO в OpenVINO для OPTIMIZED_CPU=true (без них сервис
+  сконвертирует веса сам при старте);
 - models/siglip2_384/    — SigLIP2 (384×384) для эмбеддингов, скачивается с Hugging Face;
 - models/adapter/        — дообученный адаптер векторов SigLIP2, лежит в репозитории.
 """
@@ -12,9 +14,14 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import sys
 from pathlib import Path
 
 from huggingface_hub import snapshot_download
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 DEFAULT_MODEL_ROOT = Path("models")
@@ -74,6 +81,14 @@ def prepare_yolo(model_root: Path) -> None:
     if not bottle.is_file():
         raise FileNotFoundError(f"Не удалось скачать {bottle}")
     print(f"YOLO ready: {label}, {bottle}")
+    # OpenVINO-версии для OPTIMIZED_CPU=true: заранее, чтобы сервис не конвертировал при каждом старте
+    from src.ml.yolo import ensure_openvino_model
+
+    for weights in (label, bottle):
+        try:
+            print(f"OpenVINO ready: {ensure_openvino_model(weights)}")
+        except Exception as exc:  # noqa: BLE001 — не мешает режиму по умолчанию; сервис попробует сам
+            print(f"WARNING: OpenVINO export of {weights} failed: {exc}")
 
 
 def download_siglip2(

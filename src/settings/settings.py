@@ -88,6 +88,9 @@ class YoloSettings(BaseModel):
     device: str = Field(
         default="auto", description="YOLO device: auto (cuda -> mps -> cpu), cpu, cuda, or mps"
     )
+    optimized_cpu: bool = Field(
+        default=False, description="Задаётся общим OPTIMIZED_CPU (AllSettings), см. ConnectionManager"
+    )
 
 
 class EmbeddingSettings(BaseModel):
@@ -242,6 +245,13 @@ class AllSettings(BaseSettings):
     )
     log_level: str = Field(default="INFO")
     log_format: str = Field(default="json", description="json — строка JSON на запись, text — читаемый текст")
+    optimized_cpu: bool = Field(
+        default=False,
+        description=(
+            "OPTIMIZED_CPU=true — режим для сервера без GPU: YOLO в OpenVINO (веса .pt конвертируются в "
+            "scripts/prepare_models.py или при старте). false — исходные .pt на YOLO__DEVICE"
+        ),
+    )
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)

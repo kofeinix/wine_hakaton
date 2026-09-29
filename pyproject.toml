@@ -33,6 +33,7 @@ dependencies = [
     "bcrypt>=4.2",
     "structlog>=25.4",
     "pi-heif>=1.1",
+    "openvino>=2025.0",
 ]
 
 [[tool.uv.index]]

@@ -1,5 +1,10 @@
 import logging
+import os
+import shutil
+import tempfile
+import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -9,6 +14,41 @@ from src.ml.utils import resolve_device
 from src.settings.settings import YoloSettings
 
 logger = logging.getLogger(__name__)
+
+# куда конвертировать, если папка с весами только для чтения (в контейнере /models смонтирован :ro)
+OPENVINO_CACHE_DIR = Path(tempfile.gettempdir()) / "yolo_openvino"
+
+
+def openvino_model_dir(weights: str | Path, base_dir: Path | None = None) -> Path:
+    """Папка экспорта OpenVINO: models/yolo/label.pt -> models/yolo/label_openvino_model."""
+    weights = Path(weights)
+    return (base_dir or weights.parent) / f"{weights.stem}_openvino_model"
+
+
+def ensure_openvino_model(weights: str | Path) -> Path:
+    """Готовая OpenVINO-версия весов YOLO: уже экспортированная (рядом с весами или в кеше) или только что.
+
+    dynamic=True — вход любого размера, как у .pt: рамки совпадают с PyTorch (на 200 фото найденные бутылки
+    и этикетки те же, IoU ~0.99); статический вход 640×640 расходился на ~7% фото.
+    """
+    weights = Path(weights)
+    for candidate in (openvino_model_dir(weights), openvino_model_dir(weights, OPENVINO_CACHE_DIR)):
+        if (candidate / f"{weights.stem}.xml").is_file():
+            return candidate
+    if not weights.is_file():
+        raise FileNotFoundError(f"Нет весов YOLO {weights}")
+    source = weights
+    if not os.access(weights.parent, os.W_OK):
+        OPENVINO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        source = OPENVINO_CACHE_DIR / weights.name
+        shutil.copy2(weights, source)
+    started = time.perf_counter()
+    exported = Path(YOLO(str(source)).export(format="openvino", imgsz=640, dynamic=True))
+    target = openvino_model_dir(source)
+    if exported.resolve() != target.resolve():
+        shutil.move(str(exported), str(target))
+    logger.info("YOLO %s exported to OpenVINO %s in %.1fs", weights.name, target, time.perf_counter() - started)
+    return target
 
 
 @dataclass(frozen=True)
@@ -40,6 +80,7 @@ class UltralyticsCropper:
     def __init__(self, settings: YoloSettings) -> None:
         self.model_ref = settings.model_path
         self.device_setting = settings.device
+        self.optimized_cpu = settings.optimized_cpu
         self.device: str | None = None
         self._model: YOLO | None = None
         logger.info("YOLO cropper initialized for %s", self.model_ref)
@@ -47,9 +88,16 @@ class UltralyticsCropper:
     async def start(self) -> None:
         if self._model is not None:
             return
-        self._model = YOLO(self.model_ref)
-        self.device = resolve_device(self.device_setting)
-        logger.info("YOLO model loaded: %s on %s", self.model_ref, self.device)
+        model_ref, device = self.model_ref, resolve_device(self.device_setting)
+        if self.optimized_cpu:
+            # OPTIMIZED_CPU: YOLO в OpenVINO на CPU — быстрее PyTorch, найденные рамки те же
+            try:
+                model_ref, device = str(ensure_openvino_model(self.model_ref)), "cpu"
+            except Exception:
+                logger.warning("OpenVINO export of %s failed — using PyTorch", self.model_ref, exc_info=True)
+        self._model = YOLO(model_ref, task="detect")
+        self.device = device
+        logger.info("YOLO model loaded: %s on %s", model_ref, self.device)
 
     async def stop(self) -> None:
         self._model = None

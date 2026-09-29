@@ -38,11 +38,12 @@ class ConnectionManager:
                                                self.redis)
         self.llm = ChatOpenAIWrapper(self.settings.llm)
         self.minio = MinioClient(self.settings.minio)
+        optimized_cpu = self.settings.optimized_cpu
         bottle_yolo_settings = self.settings.yolo.model_copy(
-            update={"model_path": self.settings.yolo.bottle_model_path}
+            update={"model_path": self.settings.yolo.bottle_model_path, "optimized_cpu": optimized_cpu}
         )
         label_yolo_settings = self.settings.yolo.model_copy(
-            update={"model_path": self.settings.yolo.label_model_path}
+            update={"model_path": self.settings.yolo.label_model_path, "optimized_cpu": optimized_cpu}
         )
         self.bottle_yolo = YoloBottleCropper(bottle_yolo_settings)
         self.label_yolo = YoloLabelCropper(label_yolo_settings)

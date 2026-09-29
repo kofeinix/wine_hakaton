@@ -250,6 +250,7 @@ bash participant_test.sh --images-dir ./queries --manifest ./queries.tsv \
 | `YOLO__BOTTLE_MODEL_PATH` | `/models/yolo/yolo26x.pt` | детектор бутылок |
 | `YOLO__LABEL_MODEL_PATH` | `/models/yolo/label.pt` | детектор этикеток |
 | `YOLO__DEVICE` | `auto` | `auto` (CUDA → MPS → CPU), `cpu`, `cuda`, `mps` |
+| `OPTIMIZED_CPU` | `false` | `true` — режим для сервера без GPU: YOLO в OpenVINO на CPU, в 1,3–1,5 раза быстрее, найденные бутылки и этикетки те же. Веса конвертирует `models-init`, а если конвертации нет — сервис при старте (~10 с) |
 | `EMBEDDINGS__MODEL_ID` | `google/siglip2-base-patch16-384` | SigLIP2 на Hugging Face, если нет локальной папки |
 | `EMBEDDINGS__MODEL_DIR` | `/models/siglip2_384` | локальная папка SigLIP2 |
 | `EMBEDDINGS__DEVICE` | `auto` | как `YOLO__DEVICE` |
